@@ -1,0 +1,2654 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>兵工廠人員分配系統 Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montenegrin+Gothic+One&family=Noto+Sans+HK:wght@500;700;900&family=Share+Tech+Mono&family=ZCOOL+Xiaowei&display=swap"
+      rel="stylesheet"
+    />
+    <!-- 引入網頁畫面截圖庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link
+      rel="icon"
+      type="image/webp"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/foundry.webp"
+    />
+
+    <style>
+      :root {
+        --bg-cyber: #080b11;
+        --panel-bg: #0f1524;
+        --panel-border: #1a233a;
+        --text-neon: #00ffcc;
+        --text-main: #e2e8f0;
+        --text-muted: #4e6178;
+
+        --color-g0: #ff3838;
+        --color-g1: #bc4fff;
+        --color-g2: #00ff66;
+        --color-g3: #ffb300;
+      }
+
+      * {
+        box-sizing: border-box;
+        user-select: none;
+      }
+
+      input,
+      textarea,
+      select,
+      textarea *,
+      [contenteditable="true"] {
+        user-select: text !important;
+      }
+
+      body {
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        background-color: var(--bg-cyber);
+        background-image:
+          linear-gradient(rgba(26, 35, 58, 0.4) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(26, 35, 58, 0.4) 1px, transparent 1px);
+        background-size: 25px 25px;
+        color: var(--text-main);
+        margin: 0;
+        padding: 40px 20px;
+        overflow-x: hidden;
+      }
+
+      body.lang-en h1,
+      body.lang-en h2,
+      body.lang-en .building-title,
+      body.lang-en .logo,
+      body.lang-en .logo_text {
+        font-family: "Montenegrin Gothic One", sans-serif !important;
+      }
+
+      #intro {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        font-family:
+          "Montenegrin Gothic One", "Bebas Neue", "Noto Sans HK", serif;
+      }
+
+      .logo-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #000000;
+      }
+
+      .logo_img {
+        background: #000000;
+        width: 250px;
+        height: auto;
+        margin-bottom: 20px;
+        animation: fadeInOut 2.2s ease forwards;
+      }
+
+      .logo {
+        background: #000000;
+        font-size: 3.5rem;
+        color: white;
+        margin: 0 0 10px 0;
+        letter-spacing: 4px;
+        text-shadow: 0 0 15px rgba(0, 255, 204, 0.6);
+        animation: fadeInOut 2.2s ease forwards;
+      }
+
+      .logo_text {
+        background: #000000;
+        font-size: 1.2rem;
+        color: #7ee8cc;
+        margin: 0;
+        letter-spacing: 2px;
+        text-align: center;
+        animation: fadeInOut 2.2s ease forwards;
+      }
+
+      @keyframes fadeInOut {
+        0% {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        25% {
+          opacity: 1;
+          transform: scale(1.02);
+        }
+        75% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1);
+        }
+      }
+
+      #main-content {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
+
+      .container {
+        max-width: 1500px;
+        margin: 0 auto;
+        background: var(--panel-bg);
+        border: 2px solid var(--panel-border);
+        padding: 40px;
+        border-radius: 4px;
+        box-shadow:
+          0 25px 60px rgba(0, 0, 0, 0.7),
+          inset 0 0 30px rgba(0, 255, 204, 0.03);
+        position: relative;
+      }
+
+      .container::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        width: 20px;
+        height: 20px;
+        border-top: 4px solid var(--text-neon);
+        border-left: 4px solid var(--text-neon);
+      }
+      .container::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 20px;
+        height: 20px;
+        border-bottom: 4px solid var(--text-neon);
+        border-right: 4px solid var(--text-neon);
+      }
+
+      .top-control-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .btn-lang {
+        background: #141c30;
+        color: var(--text-muted);
+        border: 1px solid #223052;
+        padding: 5px 16px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.85rem;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-lang.active {
+        background: transparent;
+        color: var(--text-neon);
+        border-color: var(--text-neon);
+        text-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
+      }
+
+      .btn-load-history {
+        background: linear-gradient(135deg, #141c30, #1f2d4d);
+        color: var(--text-neon);
+        border: 1px solid var(--text-neon);
+        padding: 8px 18px;
+        font-family: "Montenegrin Gothic One", sans-serif;
+        font-size: 0.9rem;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(0, 255, 204, 0.15);
+        transition: all 0.2s;
+      }
+      .btn-load-history:hover {
+        background: var(--text-neon);
+        color: #080b11;
+        box-shadow: 0 0 18px rgba(0, 255, 204, 0.4);
+      }
+
+      .editing-notice-bar {
+        display: none;
+        background: rgba(255, 179, 0, 0.1);
+        border: 1px solid #ffb300;
+        color: #ffe066;
+        padding: 10px 16px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      h1 {
+        text-align: center;
+        color: #fff;
+        font-family:
+          "ZCOOL Xiaowei", "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        font-size: 2.8rem;
+        font-weight: 900;
+        letter-spacing: 4px;
+        margin-top: 0;
+        margin-bottom: 30px;
+        text-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+      }
+
+      h2 {
+        font-family:
+          "ZCOOL Xiaowei", "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 2px;
+        border-left: 4px solid var(--text-neon);
+        padding-left: 12px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+      }
+
+      .info-box {
+        background: #090e1a;
+        border: 1px solid #1a233a;
+        padding: 22px;
+        border-radius: 4px;
+        margin-bottom: 35px;
+      }
+      .info-box strong {
+        color: var(--text-neon);
+        font-size: 0.95rem;
+        letter-spacing: 1px;
+      }
+      .info-box ul {
+        margin: 15px 0 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 10px;
+      }
+      .info-box li {
+        background: #121929;
+        padding: 10px 14px;
+        border-radius: 2px;
+        font-size: 0.9rem;
+        border-left: 3px solid #223052;
+        font-family:
+          "Share Tech Mono", "Montenegrin Gothic One", "Noto Sans HK",
+          sans-serif;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 35px;
+      }
+      @media (max-width: 900px) {
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: #090e1a;
+        border: 1px solid #1a233a;
+        padding: 24px;
+        border-radius: 4px;
+        margin-bottom: 18px;
+        transition: border-color 0.3s;
+      }
+      .card:hover {
+        border-color: #253354;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #7ee8cc;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      input[type="password"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px 14px;
+        background: #121929;
+        border: 1px solid #223052;
+        color: #fff;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        transition: all 0.2s;
+      }
+      input[type="number"] {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+      }
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      input[type="password"]:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--text-neon);
+        background: #151e33;
+        box-shadow: 0 0 12px rgba(0, 255, 204, 0.15);
+      }
+      textarea {
+        height: 150px;
+      }
+
+      .btn {
+        width: 100%;
+        background: linear-gradient(135deg, #00ffcc, #00aaff);
+        color: #080b11;
+        border: none;
+        padding: 15px;
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        font-size: 1.1rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 20px rgba(0, 255, 204, 0.15);
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 25px rgba(0, 255, 204, 0.3);
+        filter: brightness(1.05);
+      }
+
+      .btn-publish {
+        background: linear-gradient(135deg, #ffb300, #ff5500);
+        color: #080b11;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+      }
+
+      .btn-screenshot {
+        background: linear-gradient(135deg, #ff3838, #c00000);
+        color: #ffffff;
+        margin-bottom: 20px;
+        font-size: 1.1rem;
+        display: flex; /* 啟用 Flex 布局 */
+        align-items: center; /* 圖示與文字垂直居中 */
+        justify-content: center; /* 圖示與文字水平居中 */
+        gap: 10px; /* 圖示與文字間距 */
+        padding: 10px 20px; /* 微調內邊距 */
+      }
+
+      /* 調整 SVG 圖示大小與動畫 */
+      .btn-screenshot .button__icon {
+        width: 28px;
+        height: 28px;
+        transition: transform 0.2s;
+      }
+
+      /* 滑鼠懸停時讓小圖示微幅往下跳動 */
+      .btn-screenshot:hover .button__icon {
+        transform: translateY(2px);
+      }
+      .quick-assign-box {
+        margin-top: 25px;
+        padding: 18px;
+        background: #060a12;
+        border: 1px dashed #223052;
+        border-radius: 4px;
+      }
+      .quick-assign-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+      }
+      .quick-btn-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 8px;
+      }
+      .btn-assign {
+        background: #121929;
+        color: #94a3b8;
+        border: 1px solid #223052;
+        padding: 9px;
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-assign:hover {
+        border-color: var(--text-neon);
+        color: #fff;
+        background: #182238;
+      }
+
+      .action-bar-copy {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .btn-copy {
+        background: linear-gradient(135deg, #00ff66, #00b344);
+        color: #080b11;
+        width: auto;
+        padding: 10px 24px;
+        font-size: 0.95rem;
+      }
+
+      .copy-lang-switch {
+        display: flex;
+        gap: 4px;
+        background: #060a12;
+        padding: 4px;
+        border: 1px solid #1a233a;
+        border-radius: 4px;
+      }
+      .btn-copy-lang {
+        background: transparent;
+        color: var(--text-muted);
+        border: none;
+        padding: 6px 12px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.8rem;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: all 0.2s;
+      }
+      .btn-copy-lang.active {
+        background: #1a233a;
+        color: var(--text-neon);
+        text-shadow: 0 0 5px rgba(0, 255, 204, 0.4);
+      }
+
+      .error {
+        color: #ff3838;
+        background: rgba(255, 56, 56, 0.1);
+        border: 1px solid rgba(255, 56, 56, 0.3);
+        padding: 14px;
+        border-radius: 4px;
+        margin-bottom: 25px;
+        display: none;
+        font-weight: bold;
+        font-size: 0.95rem;
+      }
+
+      .shimmer-loader {
+        display: none;
+        width: 100%;
+        margin-top: 30px;
+      }
+      .shimmer-block {
+        height: 100px;
+        background: linear-gradient(
+          90deg,
+          #121929 25%,
+          #1a233a 50%,
+          #121929 75%
+        );
+        background-size: 200% 100%;
+        animation: cyberShimmer 1.4s infinite linear;
+        border-radius: 4px;
+        margin-bottom: 15px;
+      }
+      @keyframes cyberShimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+
+      .summary-box {
+        background: #090e1a;
+        border: 1px solid #1a233a;
+        padding: 22px;
+        border-radius: 4px;
+        margin-bottom: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+      }
+      .summary-box p {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        font-weight: 700;
+      }
+      .summary-box strong {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 1.7rem;
+        color: var(--text-neon);
+        display: block;
+        margin-top: 4px;
+        letter-spacing: 1px;
+      }
+
+      .copy-textarea {
+        background-color: #060a12;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.95rem;
+        letter-spacing: 0.5px;
+        line-height: 1.6;
+        border-color: #1a233a;
+        color: #a7f3d0;
+        height: 280px;
+      }
+
+      .building-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      @media (max-width: 1400px) {
+        .building-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .building-grid {
+          grid-template-columns: repeat(1, 1fr);
+        }
+      }
+
+      .building-card {
+        background: #090e1a;
+        border: 1px solid #1a233a;
+        border-radius: 4px;
+        padding: 18px;
+        min-height: 180px;
+        transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .b-group-0 {
+        border-top: 4px solid var(--color-g0);
+      }
+      .b-group-1 {
+        border-top: 4px solid var(--color-g1);
+      }
+      .b-group-2 {
+        border-top: 4px solid var(--color-g2);
+      }
+      .b-group-3 {
+        border-top: 4px solid var(--color-g3);
+      }
+
+      .b-group-spec {
+        border-top: 4px solid #00ffcc;
+        background: rgba(0, 255, 204, 0.02);
+        grid-row: span 2;
+      }
+
+      @media (max-width: 1400px) {
+        .b-group-spec {
+          grid-row: span 1;
+        }
+      }
+
+      .building-card.drag-over {
+        background-color: #111a2e !important;
+        border-color: var(--text-neon);
+        box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .building-title {
+        font-weight: 900;
+        font-size: 1rem;
+        color: #fff;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+        font-family:
+          "ZCOOL Xiaowei", "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+      }
+      .building-power {
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #1a233a;
+      }
+      .building-power strong {
+        font-family: "Share Tech Mono", monospace;
+        color: #fff;
+        font-size: 1.1rem;
+        margin-left: 6px;
+        letter-spacing: 1px;
+      }
+      .drop-zone {
+        flex-grow: 1;
+        min-height: 90px;
+      }
+
+      .player-tag {
+        background-color: #121929;
+        border: 1px solid #223052;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        border-radius: 2px;
+        cursor: grab;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #cbd5e1;
+        transition: all 0.15s;
+      }
+      .player-tag span {
+        font-weight: 700;
+      }
+      .player-tag inherit-strong {
+        font-family: "Share Tech Mono", monospace;
+        color: var(--text-neon);
+        font-size: 1rem;
+      }
+      .player-tag:hover {
+        background: #182238;
+        border-color: #324675;
+        transform: scale(1.02);
+      }
+      .player-tag:active {
+        cursor: grabbing;
+        opacity: 0.4;
+      }
+
+      .player-tag.is-leader {
+        border: 1px solid rgba(255, 179, 0, 0.4);
+        background-color: rgba(255, 179, 0, 0.05);
+        color: #ffe066;
+      }
+      .player-tag.is-leader inherit-strong {
+        color: #ffb300;
+      }
+      .tag-leader-label {
+        background: #ffb300;
+        color: #080b11;
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        font-size: 0.7rem;
+        padding: 1px 5px;
+        border-radius: 1px;
+        font-weight: 900;
+        margin-right: 6px;
+      }
+
+      .player-tag.is-vice {
+        border: 1px solid rgba(0, 170, 255, 0.4);
+        background-color: rgba(0, 170, 255, 0.08);
+        color: #99d6ff;
+      }
+      .player-tag.is-vice inherit-strong {
+        color: #00aaff;
+      }
+      .tag-vice-label {
+        background: #00aaff;
+        color: #080b11;
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        font-size: 0.7rem;
+        padding: 1px 5px;
+        border-radius: 1px;
+        font-weight: 900;
+        margin-right: 6px;
+      }
+
+      .fade-in-view {
+        animation: cyberFade 0.35s ease-out forwards;
+      }
+      @keyframes cyberFade {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .cyber-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(4, 6, 10, 0.85);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      }
+      .cyber-modal {
+        background: #0f1524;
+        border: 2px solid var(--text-neon);
+        box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
+        width: 90%;
+        max-width: 500px;
+        padding: 30px;
+        border-radius: 4px;
+        position: relative;
+      }
+      .cyber-modal h3 {
+        margin-top: 0;
+        color: #fff;
+        font-family: "ZCOOL Xiaowei", sans-serif;
+        letter-spacing: 1px;
+        border-bottom: 1px solid #1a233a;
+        padding-bottom: 10px;
+      }
+      .cyber-modal-content {
+        margin: 20px 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #cbd5e1;
+      }
+      .modal-data-box {
+        background: #060a12;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid #1a233a;
+        margin-top: 10px;
+        max-height: 180px;
+        overflow-y: auto;
+        font-family: monospace;
+      }
+      .cyber-modal-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+      }
+      .btn-modal-confirm {
+        background: linear-gradient(135deg, #00ffcc, #00aaff);
+        color: #080b11;
+        font-weight: 900;
+      }
+      .btn-modal-cancel {
+        background: #141c30;
+        color: #94a3b8;
+        border: 1px solid #223052;
+      }
+
+      .changelog-trigger {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 45px;
+        height: 45px;
+        cursor: pointer;
+        z-index: 9999;
+        transition:
+          transform 0.2s,
+          filter 0.2s;
+        filter: drop-shadow(0 0 5px rgba(0, 255, 204, 0.4));
+      }
+      .changelog-trigger:hover {
+        transform: scale(1.1) rotate(5deg);
+        filter: drop-shadow(0 0 12px rgba(0, 255, 204, 0.8)) brightness(1.2);
+      }
+      .changelog-trigger img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .changelog-box {
+        max-height: 250px;
+        overflow-y: auto;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        background: #060a12;
+        padding: 15px;
+        border-radius: 4px;
+        border: 1px solid #1a233a;
+        margin-top: 15px;
+      }
+      .changelog-item {
+        margin-bottom: 12px;
+        border-bottom: 1px dashed #1a233a;
+        padding-bottom: 8px;
+      }
+      .changelog-item:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .changelog-version {
+        color: var(--text-neon);
+        font-family: "Share Tech Mono", monospace;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="intro">
+      <div class="logo-container">
+        <img
+          class="logo_img"
+          src="https://jeremytseng12.github.io/2647WOSFOUNDRY/3.gif"
+          alt="Loading..."
+        />
+        <h1 class="logo">TSENG PRO</h1>
+        <h3 class="logo_text">兵工廠人員分配系統準備中...</h3>
+      </div>
+    </div>
+    <!-- 預載入飛機 GIF 替代 -->
+    <div style="display: none">
+      <img
+        id="preloadGif"
+        src="https://jeremytseng12.github.io/2647WOSFOUNDRY/3.gif"
+        alt="preload"
+      />
+    </div>
+
+    <div id="main-content">
+      <div class="container">
+        <div class="top-control-bar">
+          <button class="btn-load-history" onclick="openLoadHistoryModal()">
+            📂 編輯歷史分配紀錄
+          </button>
+          <div class="lang-switch-top">
+            <button
+              id="btnLangZht"
+              class="btn-lang active"
+              onclick="changeLanguage('zht')"
+            >
+              ZH-TW
+            </button>
+            <button
+              id="btnLangEn"
+              class="btn-lang"
+              onclick="changeLanguage('en')"
+            >
+              EN-US
+            </button>
+          </div>
+        </div>
+
+        <!-- 微調編輯提示列 -->
+        <div id="editingNoticeBar" class="editing-notice-bar">
+          <span id="editingNoticeText">✏️ 目前正在編輯：第 X 筆紀錄</span>
+          <button
+            style="
+              background: transparent;
+              border: 1px solid #ffb300;
+              color: #ffe066;
+              border-radius: 2px;
+              cursor: pointer;
+              padding: 2px 8px;
+            "
+            onclick="exitEditMode()"
+          >
+            取消編輯 (恢復全新發布)
+          </button>
+        </div>
+
+        <h1 id="uiMainTitle">兵工廠人員分配系統 PRO</h1>
+
+        <div class="info-box">
+          <strong id="uiInfoTitle">當前兵工廠建築清單：</strong>
+          <ul id="uiInfoList">
+            <li>1號武器試驗場 (6000)</li>
+            <li>2號武器試驗場 (6000)</li>
+            <li>1號武器維修站 (3000)</li>
+            <li>2號武器維修站 (3000)</li>
+            <li>3號武器維修站 (3000)</li>
+            <li>4號武器維修站 (3000)</li>
+            <li>中繼站 (1200)</li>
+            <li>蒸氣鍋爐 (1700)</li>
+          </ul>
+        </div>
+
+        <div id="errorMessage" class="error"></div>
+
+        <div class="grid-2">
+          <div>
+            <h2 id="uiLeaderTitle">各組隊長設定 (戰力需 ≥ 4000)</h2>
+
+            <div class="card">
+              <div class="form-group">
+                <label id="uiLabelG0"
+                  >第一組隊長（1號武器試驗場 & 1號武器維修廠）</label
+                >
+                <input
+                  type="text"
+                  id="leaderName0"
+                  placeholder="輸入或點擊指派隊長名字"
+                />
+                <input
+                  type="number"
+                  id="leaderPower0"
+                  placeholder="輸入隊長戰力"
+                  style="margin-top: 8px"
+                  onkeydown="handlePowerEnter(event, 0)"
+                />
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="form-group">
+                <label id="uiLabelG1"
+                  >第二組隊長（2號武器試驗場 & 2號武器維修廠）</label
+                >
+                <input
+                  type="text"
+                  id="leaderName1"
+                  placeholder="輸入或點擊指派隊長名字"
+                />
+                <input
+                  type="number"
+                  id="leaderPower1"
+                  placeholder="輸入隊長戰力"
+                  style="margin-top: 8px"
+                  onkeydown="handlePowerEnter(event, 1)"
+                />
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="form-group">
+                <label id="uiLabelG2"
+                  >第三組隊長（3號武器維修廠 & 中轉站.）</label
+                >
+                <input
+                  type="text"
+                  id="leaderName2"
+                  placeholder="輸入或點擊指派隊長名字"
+                />
+                <input
+                  type="number"
+                  id="leaderPower2"
+                  placeholder="輸入隊長戰力"
+                  style="margin-top: 8px"
+                  onkeydown="handlePowerEnter(event, 2)"
+                />
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="form-group">
+                <label id="uiLabelG3"
+                  >第四組隊長（4號武器維修廠 & 蒸氣鍋爐）</label
+                >
+                <input
+                  type="text"
+                  id="leaderName3"
+                  placeholder="輸入或點擊指派隊長名字"
+                />
+                <input
+                  type="number"
+                  id="leaderPower3"
+                  placeholder="輸入隊長戰力"
+                  style="margin-top: 8px"
+                  onkeydown="handlePowerEnter(event, 3)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 id="uiMemberTitle">戰術參戰隊員分配區</h2>
+
+            <div class="card">
+              <div class="form-group">
+                <label id="uiLabelMainList" style="color: var(--text-neon)"
+                  >⚔️ 1. 主平衡分配名單 (一行為一筆：名字 戰力)</label
+                >
+                <p
+                  id="uiMemberDesc"
+                  style="
+                    font-size: 0.85rem;
+                    color: #94a3b8;
+                    margin: 4px 0 10px 0;
+                  "
+                >
+                  填入此區的人員會自動依戰力<strong>平均拆分</strong>進入 8
+                  大建築。
+                </p>
+                <textarea
+                  id="memberInput"
+                  style="height: 120px"
+                  placeholder="名字A 3500&#10;名字B 2800"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="card" style="border-color: rgba(0, 255, 204, 0.2)">
+              <div class="form-group">
+                <label id="uiLabelGatherList" style="color: #ffb300"
+                  >⚡ 2. 採集小隊名單 (手動填寫)</label
+                >
+                <textarea
+                  id="gatherInput"
+                  style="height: 70px"
+                  placeholder="輸入負責採集的人名，一行為一人 (例：塔卡)"
+                ></textarea>
+              </div>
+              <div class="form-group" style="margin-top: 15px">
+                <label id="uiLabelAmmoList" style="color: #ff3838"
+                  >🎒 3. 子彈小隊名單 (手動填寫)</label
+                >
+                <textarea
+                  id="ammoInput"
+                  style="height: 70px"
+                  placeholder="輸入撿子彈的 8 人名單，一行為一人"
+                ></textarea>
+              </div>
+            </div>
+
+            <button
+              id="btnDistribute"
+              class="btn"
+              style="margin-top: 10px"
+              onclick="openConfirmationModal()"
+            >
+              開始戰力平衡分配
+            </button>
+
+            <div class="quick-assign-box">
+              <div id="uiQuickTitle" class="quick-assign-title">
+                ⚡ 快速指派隊長（點擊填入左側空缺）
+              </div>
+              <div class="quick-btn-grid">
+                <button
+                  class="btn-assign"
+                  onclick="quickAssignLeader('塔卡 Taca')"
+                >
+                  1. 塔卡 Taca
+                </button>
+                <button
+                  class="btn-assign"
+                  onclick="quickAssignLeader('城市酒桶')"
+                >
+                  2. 城市酒桶
+                </button>
+                <button class="btn-assign" onclick="quickAssignLeader('Larry')">
+                  3. Larry
+                </button>
+                <button class="btn-assign" onclick="quickAssignLeader('Iris')">
+                  4. Iris
+                </button>
+                <button
+                  class="btn-assign"
+                  onclick="quickAssignLeader('Penguin')"
+                >
+                  5. Penguin
+                </button>
+                <button
+                  class="btn-assign"
+                  onclick="quickAssignLeader('LazyGoat')"
+                >
+                  6. LazyGoat
+                </button>
+                <button
+                  class="btn-assign"
+                  onclick="quickAssignLeader('Baby shark')"
+                >
+                  7. Baby shark
+                </button>
+                <button
+                  class="btn-assign"
+                  onclick="quickAssignLeader('馬拉桑')"
+                >
+                  8. 馬拉桑
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="shimmerLoader" class="shimmer-loader">
+          <div class="shimmer-block"></div>
+          <div class="shimmer-block" style="height: 250px"></div>
+        </div>
+
+        <div id="resultSection" style="display: none; margin-top: 40px">
+          <hr
+            style="
+              border: 0;
+              border-top: 2px solid #1a233a;
+              margin-bottom: 25px;
+            "
+          />
+
+          <!-- 發布按鈕 -->
+          <button
+            id="btnPublish"
+            class="btn btn-publish"
+            onclick="openPublishModal()"
+          >
+            ☁️ 發布最新分配結果 (公開給所有人檢視)
+          </button>
+
+          <h2 id="uiSummaryTitle">📊 數據總計</h2>
+          <div class="summary-box" id="summaryBox"></div>
+
+          <h2 id="uiCopyTitle">📋 分配後的人員清單 (可直接複製)</h2>
+          <div class="action-bar-copy">
+            <button
+              id="btnCopyText"
+              class="btn btn-copy"
+              onclick="copyTextOutput()"
+            >
+              點擊一鍵複製名單
+            </button>
+            <div class="copy-lang-switch">
+              <button
+                id="btnCopyLangZht"
+                class="btn-copy-lang active"
+                onclick="toggleCopyLanguage('zht')"
+              >
+                ZH-TW
+              </button>
+              <button
+                id="btnCopyLangEn"
+                class="btn-copy-lang"
+                onclick="toggleCopyLanguage('en')"
+              >
+                EN-US
+              </button>
+            </div>
+          </div>
+          <textarea id="copyTextarea" class="copy-textarea" readonly></textarea>
+
+          <h2 id="uiTweakTitle">
+            ⚡ 建築物人調整區 (可直接滑鼠拖曳名字更換位置)
+          </h2>
+
+          <!-- 紅色截圖按鈕 -->
+          <button
+            id="btnScreenshot"
+            class="btn btn-screenshot"
+            onclick="captureBuildingGrid()"
+          >
+            <svg
+              stroke-linejoin="round"
+              stroke-linecap="round"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+              height="40"
+              width="40"
+              class="button__icon"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path fill="none" d="M0 0h24v24H0z" stroke="none"></path>
+              <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+              <path d="M7 11l5 5l5 -5"></path>
+              <path d="M12 4l0 12"></path></svg
+            >點擊截圖表格區並儲存
+          </button>
+
+          <div class="building-grid" id="buildingGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 戰前名單確認 Modal -->
+    <div id="confirmModal" class="cyber-modal-overlay">
+      <div class="cyber-modal">
+        <h3 id="modalTitle">🛡️ 戰前名單資料確認</h3>
+        <div class="cyber-modal-content">
+          <p id="modalDesc">請確認以下輸入的作戰人員數據是否準確：</p>
+          <div id="modalDataContent" class="modal-data-box"></div>
+        </div>
+        <div class="cyber-modal-actions">
+          <button
+            id="btnModalCancel"
+            class="btn btn-modal-cancel"
+            onclick="closeConfirmationModal()"
+          >
+            重回修改
+          </button>
+          <button
+            id="btnModalConfirm"
+            class="btn btn-modal-confirm"
+            onclick="confirmAndAllocate()"
+          >
+            確認無誤，開始分配
+          </button>
+        </div>
+        <p id="modalDesc" style="color: red">
+          IF THE TRANSLATION SYSTEM IS NOT FUNCTIONING PROPERLY, PLEASE TRY
+          TRANSLATING AGAIN.
+        </p>
+      </div>
+    </div>
+
+    <!-- 發布確認 Modal -->
+    <div id="publishModal" class="cyber-modal-overlay">
+      <div class="cyber-modal">
+        <h3 id="publishModalHeaderTitle">☁️ 發布戰況分配結果</h3>
+        <div class="cyber-modal-content">
+          <div class="form-group">
+            <label style="color: #7ee8cc">1. 請選擇發布軍團 (Legion)：</label>
+            <select id="publishLegionSelect">
+              <option value="LegionA">[軍團1] Legion 1</option>
+              <option value="LegionB">[軍團2] Legion 2</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-top: 15px">
+            <label style="color: #7ee8cc"
+              >2. 請輸入本次戰事的對外公開標題：</label
+            >
+            <input
+              type="text"
+              id="publishTitleInput"
+              placeholder="例：2026/07/22 兵工廠聯賽 - 第15戰"
+            />
+          </div>
+          <div class="form-group" style="margin-top: 15px">
+            <label style="color: #00ffcc">3. 分配員 / 指揮官暱稱：</label>
+            <input type="text" id="publishAuthorInput" placeholder="例：塔卡" />
+          </div>
+          <div class="form-group" style="margin-top: 15px">
+            <label style="color: #ff3838"
+              >4. 設定存取密碼 (選填/留空表示無密碼)：</label
+            >
+            <input
+              type="password"
+              id="publishPasscodeInput"
+              placeholder="若原紀錄有密碼，覆寫時請填寫相同密碼"
+            />
+          </div>
+        </div>
+        <div class="cyber-modal-actions">
+          <button class="btn btn-modal-cancel" onclick="closePublishModal()">
+            取消
+          </button>
+          <button
+            id="btnConfirmPublish"
+            class="btn btn-modal-confirm"
+            onclick="submitToGoogleSheet()"
+          >
+            確認並發布
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- [新增] 載入雲端戰局 Modal -->
+    <div id="loadHistoryModal" class="cyber-modal-overlay">
+      <div class="cyber-modal">
+        <h3>📂 編輯歷史分配紀錄</h3>
+        <div class="cyber-modal-content">
+          <div class="form-group">
+            <label style="color: #7ee8cc">選擇要載入的分配紀錄：</label>
+            <select id="loadHistorySelect"></select>
+          </div>
+          <div class="form-group" style="margin-top: 15px">
+            <label style="color: #00ffcc">選擇要載入的軍團：</label>
+            <select id="loadLegionSelect">
+              <option value="LegionA">軍團 1 (Legion 1)</option>
+              <option value="LegionB">軍團 2 (Legion 2)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-top: 15px">
+            <label style="color: #ff3838"
+              >解鎖密碼 (若該紀錄受密碼保護需填寫)：</label
+            >
+            <input
+              type="password"
+              id="loadPasscodeInput"
+              placeholder="請輸入該紀錄的存取密碼"
+            />
+          </div>
+        </div>
+        <div class="cyber-modal-actions">
+          <button
+            class="btn btn-modal-cancel"
+            onclick="closeLoadHistoryModal()"
+          >
+            取消
+          </button>
+          <button
+            id="btnConfirmLoad"
+            class="btn btn-modal-confirm"
+            onclick="fetchAndRestoreGridData()"
+          >
+            繼續
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 更新日誌 Modal -->
+    <div id="changelogModal" class="cyber-modal-overlay">
+      <div class="cyber-modal">
+        <h3 id="uiChangelogTitle">💾 系統更新紀錄 / Changelog</h3>
+        <div class="cyber-modal-content">
+          <p id="uiChangelogDesc">本系統之歷史重構與優化明細項目：</p>
+          <div class="changelog-box">
+            <!-- [自動新增] 最新更新紀錄 -->
+            <div class="changelog-item">
+              <div class="changelog-version">v2.8.5 (Current)</div>
+              <div>
+                • 新增「📂
+                載入雲端舊戰局微調」功能：直接讀取雲端分配表格至微調區，拖曳調整後可直接覆寫更新！
+              </div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.7.0</div>
+              <div>
+                •
+                發布視窗新增「軍團切換下拉選單」與「存取密碼設定盒」，全面對接後端雙軍團與權限驗證。
+              </div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.6.4</div>
+              <div>
+                • 精準修正看板佈局：前 4 建築 + 採集小隊 + 子彈小隊(第一列,
+                特殊小隊各跨2列)，後 4 建築位於第二列，完美實現 6x2 看板佈局。
+              </div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.6.0</div>
+              <div>• 新增「📸 點擊截圖表格區並儲存」功能 (紅色按鈕)。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.5.1</div>
+              <div>• 發布視窗新增「分配員名稱」輸入框。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.5.0</div>
+              <div>• 新增「☁️ 發布分配結果」雲端同步功能。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.4.3</div>
+              <div>• 修正翻譯漏洞，修正翻譯錯誤名稱。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.4.2</div>
+              <div>• 修正翻譯漏洞。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.4.1</div>
+              <div>
+                • 移除體積過大的分配中動畫 GIF，全面替換為輕量紙飛機 GIF。
+              </div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.3.0</div>
+              <div>• 加入更新紀錄。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.2.0</div>
+              <div>• 鎖定選取功能，並加入enter 換行功能。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.1.0</div>
+              <div>• 加入載入畫面。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.0.0</div>
+              <div>• 迎來全新介面。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v1.3.0</div>
+              <div>• 將表格細分成8個建築。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v1.2.0</div>
+              <div>• 加入表格拖曳編輯功能。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v1.1.0</div>
+              <div>• 加入翻譯系統。</div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v1.0.0</div>
+              <div>• 系統誕生。</div>
+            </div>
+          </div>
+        </div>
+        <div class="cyber-modal-actions">
+          <button
+            class="btn btn-modal-cancel"
+            style="width: 100%"
+            onclick="closeChangelogModal()"
+          >
+            關閉視窗 / Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右下角懸浮按鈕 -->
+    <div class="changelog-trigger" onclick="openChangelogModal()">
+      <img
+        src="https://jeremytseng12.github.io/2647WOSFOUNDRY/log%20icon.png"
+        alt="Changelog"
+      />
+    </div>
+
+    <script>
+      // ⚠️ 請在此處貼上您從步驟一獲得的 GAS Web App URL ⚠️
+      const GAS_WEB_APP_URL =
+        "https://script.google.com/macros/s/AKfycbwumQQy5I04ZOhmfRg2dwLZozx7xDIL9CwK2wSr2H-Nk-mkFF4N_4Ke53I1GQtQpwNc/exec";
+
+      const langPack = {
+        zht: {
+          mainTitle: "兵工廠人員分配系統 PRO",
+          infoTitle: "當前兵工廠建築清單：",
+          infoItems: [
+            "1號武器試驗場 (6000)",
+            "2號武器試驗場 (6000)",
+            "1號武器維修站 (3000)",
+            "2號武器維修站 (3000)",
+            "3號武器維修站 (3000)",
+            "4號武器維修站 (3000)",
+            "中繼站 (1200)",
+            "蒸氣鍋爐 (1700)",
+          ],
+          leaderTitle: "各組隊長設定 (戰力需 ≥ 4000)",
+          labels: [
+            "第一組隊長（1號武器試驗場 & 1號武器維修廠）",
+            "第二組隊長（2號武器試驗場 & 2號武器維修廠）",
+            "第三組隊長（3號武器維修廠 & 中轉站.）",
+            "第四組隊長（4號武器維修廠 & 蒸氣鍋爐）",
+          ],
+          placeholders: {
+            name: "輸入或點擊指派隊長名字",
+            power: "輸入隊長戰力",
+            list: "請在此輸入整隊隊員名單...",
+          },
+          memberTitle: "戰術參戰隊員分配區",
+          labelMainList: "⚔️ 1. 主平衡分配名單 (一行為一筆：名字 戰力)",
+          memberDesc:
+            "填入此區的人員會自動依戰力<strong>平均拆分</strong>進入 8 大建築。",
+          labelGatherList: "⚡ 2. 採集小隊名單 (手動填寫)",
+          labelAmmoList: "🎒 3. 子彈小隊名單 (手動填寫)",
+          gatherPlaceholder: "輸入負責採集的人名，一行為一人 (例：塔卡)",
+          ammoPlaceholder: "輸入撿子彈的 8 人名單，一行為一人",
+          btnDistribute: "開始戰力平衡分配",
+          quickTitle: "⚡ 快速指派隊長（點擊填入左側空缺）",
+          summaryTitle: "📊 數據總計",
+          copyTitle: "📋 分配後的人員清單 (可直接複製)",
+          btnCopyText: "點擊一鍵複製名單",
+          tweakTitle: "⚡ 建築物人員微調區 (可直接滑鼠拖曳名字更換位置)",
+          summaryText: ["總參戰人數", "總體總戰力", "每大組平均戰力"],
+          buildingPower: "目前戰力：",
+          leaderTag: "隊長",
+          viceTag: "副隊長",
+          alertRepeat: "已經被指派為其中一組的隊長囉！",
+          alertFull: "目前的 4 個組別皆已有隊長名字，無剩餘空缺。",
+          alertSuccess: "分配名單已成功複製到剪貼簿！",
+          modalTitle: "🛡️ 戰前名單資料確認",
+          modalDesc: "請確認以下輸入的作戰人員數據是否準確：",
+          modalCancel: "重回修改",
+          modalConfirm: "確認無誤，開始分配",
+          overviewTitle: "[戰力人數總覽]",
+          overviewCountText: "去重後預計出征：",
+          overviewCountUnit: " 人",
+          leaderPreviewTitle: "[四大組隊長預覽]",
+          leaderGText: "第 ",
+          leaderGUnit: " 組隊長: ",
+          mainPoolTitle: "[主平衡分配組 (",
+          gatherPoolTitle: "[手動指派：採集小隊 (",
+          ammoPoolTitle: "[手動指派：子彈小隊 (",
+          poolUnit: " 人)]",
+          emptyText: "(空)",
+          specLabelGather: "戰場開啟15分鐘後負責幫忙採集",
+          specLabelAmmo: "當建築防守失敗時幫忙撿散落子彈",
+          specTitleGather: "採集小隊",
+          specTitleAmmo: "子彈小隊",
+          specPowerLabel: "手動指派支援",
+          specPowerLabelAmmo: "手動負責人員",
+          changelogTitle: "💾 系統更新紀錄",
+          changelogDesc: "本系統之歷史重構與優化明細項目：",
+        },
+        en: {
+          mainTitle: "Foundry Personnel Allocation System PRO",
+          infoTitle: "Current Arsenal Buildings:",
+          infoItems: [
+            "Prototype Site I (6000)",
+            "Prototype Site II (6000)",
+            "Repair Facility I (3000)",
+            "Repair Facility II (3000)",
+            "Repair Facility III (3000)",
+            "Repair Facility IV (3000)",
+            "Transit Station (1200)",
+            "Boiler Room (1700)",
+          ],
+          leaderTitle: "Leader Settings (Power ≥ 4000)",
+          labels: [
+            "Group 1 (Prototype Site I & Repair Facility I)",
+            "Group 2 (Prototype Site II & Repair Facility II)",
+            "Group 3 (Repair Facility III & Transit Station)",
+            "Group 4 (Repair Facility IV & Boiler Room)",
+          ],
+          placeholders: {
+            name: "Enter or click to assign leader",
+            power: "Enter leader power",
+            list: "Enter player roster here...",
+          },
+          memberTitle: "Tactical Personnel Dashboard",
+          labelMainList:
+            "⚔️ 1. Main Balancing Roster (One per line: Name Power)",
+          memberDesc:
+            "Players in this pool will be automatically balanced into the 8 buildings.",
+          labelGatherList: "⚡ 2. Gathering Squad Roster (Manual)",
+          labelAmmoList: "🎒 3. Ammo Squad Roster (Manual)",
+          gatherPlaceholder:
+            "Enter names for gathering, one per line (e.g., Taca)",
+          ammoPlaceholder: "Enter up to 8 names for ammo squad, one per line",
+          btnDistribute: "Start Balance Allocation",
+          quickTitle: "⚡ Quick Assign Leader (Click to fill empty slot below)",
+          summaryTitle: "📊 Summary",
+          copyTitle: "📋 Allocation Roster (Ready to copy)",
+          btnCopyText: "Click to Copy Roster",
+          tweakTitle:
+            "⚡ Drag & Drop adjustment zone (Drag name tags to re-allocate)",
+          summaryText: [
+            "Total Players",
+            "Total Power",
+            "Average Power / Group",
+          ],
+          buildingPower: "Power: ",
+          leaderTag: "CDR",
+          viceTag: "V-CDR",
+          alertRepeat: " has already been assigned as a leader!",
+          alertFull: "All 4 groups already have leaders assigned.",
+          alertSuccess: "Roster copied to clipboard successfully!",
+          modalTitle: "🛡️ Pre-match Roster Verification",
+          modalDesc: "Please verify that the inputted combat data is correct:",
+          modalCancel: "Back to Edit",
+          modalConfirm: "Confirm & Allocate",
+          overviewTitle: "[Personnel Overview]",
+          overviewCountText: "Est. Deployment (Deduplicated): ",
+          overviewCountUnit: " players",
+          leaderPreviewTitle: "[Group Leaders Preview]",
+          leaderGText: "Group ",
+          leaderGUnit: " CDR: ",
+          mainPoolTitle: "[Main Balanced Pool (",
+          gatherPoolTitle: "[Manual: Gathering Squad (",
+          ammoPoolTitle: "[Manual: Ammo Squad (",
+          poolUnit: " players)]",
+          emptyText: "(Empty)",
+          specLabelGather:
+            "Responsible for gathering 15 mins after match start",
+          specLabelAmmo:
+            "Responsible for collecting scattered ammo if building falls",
+          specTitleGather: "Gathering Squad",
+          specTitleAmmo: "Ammo Squad",
+          specPowerLabel: "Manual Assigned",
+          specPowerLabelAmmo: "Manual Assigned",
+          changelogTitle: "💾 System Changelog",
+          changelogDesc:
+            "History of system restructuring and optimization details:",
+        },
+      };
+
+      const buildingsConfig = [
+        {
+          id: "b0",
+          nameZht: "1號武器試驗場",
+          nameEn: "Prototype Site I",
+          gIdx: 0,
+          needVice: false,
+        },
+        {
+          id: "b1",
+          nameZht: "1號武器維修廠",
+          nameEn: "Repair Facility I",
+          gIdx: 0,
+          needVice: true,
+        },
+        {
+          id: "b2",
+          nameZht: "2號武器試驗場",
+          nameEn: "Prototype Site II",
+          gIdx: 1,
+          needVice: false,
+        },
+        {
+          id: "b3",
+          nameZht: "2號武器維修廠",
+          nameEn: "Repair Facility II",
+          gIdx: 1,
+          needVice: true,
+        },
+        {
+          id: "b4",
+          nameZht: "3號武器維修廠",
+          nameEn: "Repair Facility III",
+          gIdx: 2,
+          needVice: false,
+        },
+        {
+          id: "b5",
+          nameZht: "中轉站.",
+          nameEn: "Transit Station",
+          gIdx: 2,
+          needVice: true,
+        },
+        {
+          id: "b6",
+          nameZht: "4號武器維修廠",
+          nameEn: "Repair Facility IV",
+          gIdx: 3,
+          needVice: false,
+        },
+        {
+          id: "b7",
+          nameZht: "蒸氣鍋爐",
+          nameEn: "Boiler Room",
+          gIdx: 3,
+          needVice: true,
+        },
+      ];
+
+      let currentData = {
+        totalPeople: 0,
+        totalPower: 0,
+        avgPower: 0,
+        currentLang: "zht",
+        copyLang: "zht",
+        buildings: {
+          b0: [],
+          b1: [],
+          b2: [],
+          b3: [],
+          b4: [],
+          b5: [],
+          b6: [],
+          b7: [],
+        },
+        manualGatherText: "",
+        manualAmmoText: "",
+      };
+
+      // 追蹤微調編輯狀態
+      let currentEditingRowIndex = null;
+      let currentEditingLegion = "LegionA";
+      let historyRecordsList = [];
+
+      window.addEventListener("load", function () {
+        setTimeout(() => {
+          const intro = document.getElementById("intro");
+          const mainContent = document.getElementById("main-content");
+          intro.style.display = "none";
+          mainContent.style.display = "block";
+          setTimeout(() => {
+            mainContent.style.opacity = "1";
+          }, 50);
+        }, 2200);
+      });
+
+      function handlePowerEnter(event, currentIdx) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          let nextFocusField = null;
+          for (let i = 1; i <= 4; i++) {
+            let checkIdx = (currentIdx + i) % 4;
+            let val = document
+              .getElementById(`leaderPower${checkIdx}`)
+              .value.trim();
+            if (val === "") {
+              nextFocusField = document.getElementById(
+                `leaderPower${checkIdx}`,
+              );
+              break;
+            }
+          }
+          if (nextFocusField) {
+            nextFocusField.focus();
+          } else {
+            document.getElementById("memberInput").focus();
+          }
+        }
+      }
+
+      function changeLanguage(lang) {
+        currentData.currentLang = lang;
+        const p = langPack[lang];
+
+        if (lang === "zht") {
+          document.getElementById("btnLangZht").classList.add("active");
+          document.getElementById("btnLangEn").classList.remove("active");
+          document.body.classList.remove("lang-en");
+        } else {
+          document.getElementById("btnLangEn").classList.add("active");
+          document.getElementById("btnLangZht").classList.remove("active");
+          document.body.classList.add("lang-en");
+        }
+
+        document.getElementById("uiMainTitle").innerText = p.mainTitle;
+        document.getElementById("uiInfoTitle").innerText = p.infoTitle;
+        document.getElementById("uiLeaderTitle").innerText = p.leaderTitle;
+        document.getElementById("uiMemberTitle").innerText = p.memberTitle;
+        document.getElementById("uiLabelMainList").innerText = p.labelMainList;
+        document.getElementById("uiMemberDesc").innerHTML = p.memberDesc;
+        document.getElementById("uiLabelGatherList").innerText =
+          p.labelGatherList;
+        document.getElementById("uiLabelAmmoList").innerText = p.labelAmmoList;
+        document.getElementById("gatherInput").placeholder =
+          p.gatherPlaceholder;
+        document.getElementById("ammoInput").placeholder = p.ammoPlaceholder;
+        document.getElementById("btnDistribute").innerText = p.btnDistribute;
+        document.getElementById("uiQuickTitle").innerText = p.quickTitle;
+
+        document.getElementById("modalTitle").innerText = p.modalTitle;
+        document.getElementById("modalDesc").innerText = p.modalDesc;
+        document.getElementById("btnModalCancel").innerText = p.modalCancel;
+        document.getElementById("btnModalConfirm").innerText = p.modalConfirm;
+        document.getElementById("uiChangelogTitle").innerText =
+          p.changelogTitle;
+        document.getElementById("uiChangelogDesc").innerText = p.changelogDesc;
+
+        const infoList = document.getElementById("uiInfoList");
+        infoList.innerHTML = "";
+        p.infoItems.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerText = item;
+          infoList.appendChild(li);
+        });
+
+        for (let i = 0; i < 4; i++) {
+          document.getElementById(`uiLabelG${i}`).innerText = p.labels[i];
+          document.getElementById(`leaderName${i}`).placeholder =
+            p.placeholders.name;
+          document.getElementById(`leaderPower${i}`).placeholder =
+            p.placeholders.power;
+        }
+
+        if (document.getElementById("resultSection").style.display !== "none") {
+          document.getElementById("uiSummaryTitle").innerText = p.summaryTitle;
+          document.getElementById("uiCopyTitle").innerText = p.copyTitle;
+          document.getElementById("btnCopyText").innerText = p.btnCopyText;
+          document.getElementById("uiTweakTitle").innerText = p.tweakTitle;
+          renderAll();
+        }
+      }
+
+      function toggleCopyLanguage(lang) {
+        currentData.copyLang = lang;
+        if (lang === "zht") {
+          document.getElementById("btnCopyLangZht").classList.add("active");
+          document.getElementById("btnCopyLangEn").classList.remove("active");
+        } else {
+          document.getElementById("btnCopyLangEn").classList.add("active");
+          document.getElementById("btnCopyLangZht").classList.remove("active");
+        }
+        updateTextOutputOnly();
+      }
+
+      function quickAssignLeader(name) {
+        const p = langPack[currentData.currentLang];
+        for (let i = 0; i < 4; i++) {
+          if (document.getElementById(`leaderName${i}`).value.trim() === name) {
+            alert(
+              currentData.currentLang === "zht"
+                ? `「${name}」${p.alertRepeat}`
+                : `"${name}"${p.alertRepeat}`,
+            );
+            return;
+          }
+        }
+        for (let i = 0; i < 4; i++) {
+          const inputField = document.getElementById(`leaderName${i}`);
+          if (inputField.value.trim() === "") {
+            inputField.value = name;
+            document.getElementById(`leaderPower${i}`).focus();
+            return;
+          }
+        }
+        alert(p.alertFull);
+      }
+
+      function parseLines(text) {
+        let results = [];
+        const lines = text.split("\n");
+        for (let line of lines) {
+          line = line.trim();
+          if (!line) continue;
+          const lastSpaceIdx = line.lastIndexOf(" ");
+          if (lastSpaceIdx !== -1) {
+            const name = line.substring(0, lastSpaceIdx).trim();
+            const power = parseInt(line.substring(lastSpaceIdx).trim());
+            if (!isNaN(power)) {
+              results.push({ name, power });
+              continue;
+            }
+          }
+          results.push({ name: line, power: 0 });
+        }
+        return results;
+      }
+
+      function parseCurrentInputs() {
+        let parsed = {
+          leaders: [],
+          mainMembers: [],
+          gatherMembers: [],
+          ammoMembers: [],
+          uniqueNames: new Set(),
+        };
+
+        for (let i = 0; i < 4; i++) {
+          const name = document.getElementById(`leaderName${i}`).value.trim();
+          const power = parseInt(
+            document.getElementById(`leaderPower${i}`).value,
+          );
+          parsed.leaders.push({ name, power });
+          if (name) parsed.uniqueNames.add(name);
+        }
+
+        parseLines(document.getElementById("memberInput").value).forEach(
+          (p) => {
+            parsed.mainMembers.push(p);
+            parsed.uniqueNames.add(p.name);
+          },
+        );
+        parseLines(document.getElementById("gatherInput").value).forEach(
+          (p) => {
+            parsed.gatherMembers.push(p);
+            parsed.uniqueNames.add(p.name);
+          },
+        );
+        parseLines(document.getElementById("ammoInput").value).forEach((p) => {
+          parsed.ammoMembers.push(p);
+          parsed.uniqueNames.add(p.name);
+        });
+
+        return parsed;
+      }
+
+      function openConfirmationModal() {
+        document.getElementById("errorMessage").style.display = "none";
+        if (!validateInputs()) return;
+
+        const data = parseCurrentInputs();
+        const totalCount = data.uniqueNames.size;
+        const p = langPack[currentData.currentLang];
+
+        if (totalCount < 15) {
+          showError(
+            currentData.currentLang === "zht"
+              ? `錯誤：目前去重後總報名人數為 ${totalCount} 人，未達參戰基本門檻（15人以上）！`
+              : `Error: Total unique players is ${totalCount}, which is below the required 15 players!`,
+          );
+          return;
+        }
+
+        const dataBox = document.getElementById("modalDataContent");
+        let html = `<strong>${p.overviewTitle}</strong><br>${p.overviewCountText}${totalCount}${p.overviewCountUnit}<br><br>`;
+        html += `<strong>${p.leaderPreviewTitle}</strong><br>`;
+        data.leaders.forEach((l, idx) => {
+          html += `${p.leaderGText}${idx + 1}${p.leaderGUnit}${l.name || p.emptyText} (${l.power || 0})<br>`;
+        });
+        html += `<br><strong>${p.mainPoolTitle}${data.mainMembers.length}${p.poolUnit}</strong><br>`;
+        html += data.mainMembers.map((m) => m.name).join("、") || p.emptyText;
+        html += `<br><br><strong style="color:#ffb300;">${p.gatherPoolTitle}${data.gatherMembers.length}${p.poolUnit}</strong><br>`;
+        html += data.gatherMembers.map((m) => m.name).join("、") || p.emptyText;
+        html += `<br><br><strong style="color:#ff3838;">${p.ammoPoolTitle}${data.ammoMembers.length}${p.poolUnit}</strong><br>`;
+        html += data.ammoMembers.map((m) => m.name).join("、") || p.emptyText;
+
+        dataBox.innerHTML = html;
+        document.getElementById("confirmModal").style.display = "flex";
+      }
+
+      function closeConfirmationModal() {
+        document.getElementById("confirmModal").style.display = "none";
+      }
+
+      function openChangelogModal() {
+        document.getElementById("changelogModal").style.display = "flex";
+      }
+      function closeChangelogModal() {
+        document.getElementById("changelogModal").style.display = "none";
+      }
+
+      function confirmAndAllocate() {
+        closeConfirmationModal();
+        triggerAllocation();
+      }
+
+      function triggerAllocation() {
+        document.getElementById("resultSection").style.display = "none";
+        const shimmer = document.getElementById("shimmerLoader");
+        shimmer.innerHTML = "";
+
+        const container = document.createElement("div");
+        container.style.cssText =
+          "display: flex; justify-content: center; align-items: center; width: 100%; padding: 20px 0;";
+
+        const preloadImage = document.getElementById("preloadGif");
+        if (preloadImage) {
+          const activeGif = preloadImage.cloneNode(true);
+          activeGif.style.cssText =
+            "width: 250px; height: auto; border-radius: 4px;";
+          container.appendChild(activeGif);
+        } else {
+          container.innerHTML = `<img src="https://i.ibb.co/HTd6TVYF/Loading-40-Paperplane.gif" style="width: 250px; height: auto; border-radius: 4px;" />`;
+        }
+
+        shimmer.appendChild(container);
+        shimmer.style.display = "block";
+        shimmer.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        setTimeout(() => {
+          shimmer.style.display = "none";
+          distributeMembers();
+        }, 2000);
+      }
+
+      function validateInputs() {
+        for (let i = 0; i < 4; i++) {
+          const name = document.getElementById(`leaderName${i}`).value.trim();
+          const power = parseInt(
+            document.getElementById(`leaderPower${i}`).value,
+          );
+
+          if (!name) {
+            showError(
+              currentData.currentLang === "zht"
+                ? `請填寫第 ${i + 1} 組的隊長名字！`
+                : `Please enter the leader name for Group ${i + 1}!`,
+            );
+            return false;
+          }
+          if (isNaN(power)) {
+            showError(
+              currentData.currentLang === "zht"
+                ? `請填寫隊長「${name}」的戰力數值！`
+                : `Please enter the power for leader "${name}"!`,
+            );
+            return false;
+          }
+          if (power < 4000) {
+            showError(
+              currentData.currentLang === "zht"
+                ? `錯誤：隊長「${name}」戰力低於 4000！`
+                : `Error: Leader "${name}" power is below 4000!`,
+            );
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function distributeMembers() {
+        currentData.buildings = {
+          b0: [],
+          b1: [],
+          b2: [],
+          b3: [],
+          b4: [],
+          b5: [],
+          b6: [],
+          b7: [],
+        };
+
+        let groups = [];
+        let totalLeadersPower = 0;
+        let pool = parseCurrentInputs();
+
+        for (let i = 0; i < 4; i++) {
+          let lData = pool.leaders[i];
+          let leaderObj = {
+            name: lData.name,
+            power: lData.power,
+            isLeader: true,
+            isVice: false,
+          };
+          groups.push({
+            index: i,
+            leader: leaderObj,
+            members: [],
+            totalPower: lData.power,
+          });
+          totalLeadersPower += lData.power;
+        }
+
+        let totalMembersPower = 0;
+        pool.mainMembers.forEach((m) => {
+          totalMembersPower += m.power;
+        });
+
+        currentData.totalPeople = pool.uniqueNames.size;
+        currentData.totalPower = totalLeadersPower + totalMembersPower;
+        currentData.avgPower = Math.round(currentData.totalPower / 4);
+
+        let sortedMain = [...pool.mainMembers].sort(
+          (a, b) => b.power - a.power,
+        );
+        for (let member of sortedMain) {
+          groups.sort((a, b) => a.totalPower - b.totalPower);
+          groups[0].members.push({
+            name: member.name,
+            power: member.power,
+            isLeader: false,
+            isVice: false,
+          });
+          groups[0].totalPower += member.power;
+        }
+        groups.sort((a, b) => a.index - b.index);
+
+        groups.forEach((g) => {
+          let allPeopleInGroup = [g.leader];
+          g.members.forEach((m) => allPeopleInGroup.push(m));
+          const bId1 = `b${g.index * 2}`;
+          const bId2 = `b${g.index * 2 + 1}`;
+          allPeopleInGroup.forEach((person, idx) => {
+            if (idx % 2 === 0) currentData.buildings[bId1].push(person);
+            else currentData.buildings[bId2].push(person);
+          });
+        });
+
+        currentData.manualGatherText = document
+          .getElementById("gatherInput")
+          .value.trim();
+        currentData.manualAmmoText = document
+          .getElementById("ammoInput")
+          .value.trim();
+
+        renderAll();
+        const resSec = document.getElementById("resultSection");
+        resSec.style.display = "block";
+        resSec.classList.add("fade-in-view");
+        resSec.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function getFormattedText(isEn) {
+        let textOutput = "";
+        buildingsConfig.forEach((b) => {
+          const bName = isEn ? b.nameEn : b.nameZht;
+          let formattedNames = currentData.buildings[b.id].map((player) => {
+            if (player.isLeader) return `${player.name}`;
+            if (player.isVice) return `${player.name}`;
+            return player.name;
+          });
+          textOutput += `${bName}～ ${formattedNames.join(" & ")}\n`;
+        });
+
+        textOutput += "========================\n";
+
+        if (isEn) {
+          textOutput += `[Gathering Squad]:${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (None)"}\n`;
+          textOutput += `[Ammo Squad]:${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (None)"}`;
+        } else {
+          textOutput += `【採集小隊】：${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (無)"}\n`;
+          textOutput += `【子彈小隊】：${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (無)"}`;
+        }
+        return textOutput.trim();
+      }
+
+      function updateTextOutputOnly() {
+        let textOutput = "";
+        const isEn = currentData.copyLang === "en";
+
+        buildingsConfig.forEach((b) => {
+          const bName = isEn ? b.nameEn : b.nameZht;
+          let formattedNames = currentData.buildings[b.id].map((player) => {
+            if (player.isLeader) return `${player.name}`;
+            if (player.isVice) return `${player.name}`;
+            return player.name;
+          });
+          textOutput += `${bName}～ ${formattedNames.join(" & ")}\n`;
+        });
+
+        textOutput += "========================\n";
+
+        if (isEn) {
+          textOutput += `[Gathering Squad]:${currentData.manualGatherText ? "" + currentData.manualGatherText : " (None)"}\n`;
+          textOutput += `[Ammo Squad]:${currentData.manualAmmoText ? "" + currentData.manualAmmoText : " (None)"}`;
+        } else {
+          textOutput += `【採集小隊】：${currentData.manualGatherText ? "" + currentData.manualGatherText : " (無)"}\n`;
+          textOutput += `【子彈小隊】：${currentData.manualAmmoText ? "" + currentData.manualAmmoText : " (無)"}`;
+        }
+
+        document.getElementById("copyTextarea").value = textOutput.trim();
+      }
+
+      function reorderCommanders() {
+        buildingsConfig.forEach((b) => {
+          let list = currentData.buildings[b.id];
+          if (!list || list.length === 0) return;
+
+          list.forEach((p) => {
+            if (!p.isLeader) p.isVice = false;
+          });
+
+          let leaderIdx = list.findIndex((p) => p.isLeader);
+          let leaderObj =
+            leaderIdx !== -1 ? list.splice(leaderIdx, 1)[0] : null;
+
+          if (leaderObj) {
+            if (b.needVice) {
+              list.sort((a, b) => b.power - a.power);
+              if (list[0]) list[0].isVice = true;
+            } else {
+              list.sort((a, b) => b.power - a.power);
+            }
+            list.unshift(leaderObj);
+          } else {
+            list.sort((a, b) => b.power - a.power);
+            if (b.needVice) {
+              let candidateIdx = list.findIndex((p) => p.power >= 4000);
+              if (candidateIdx === -1) candidateIdx = 0;
+              if (list[candidateIdx]) {
+                list[candidateIdx].isVice = true;
+                let viceObj = list.splice(candidateIdx, 1)[0];
+                list.unshift(viceObj);
+              }
+            }
+          }
+        });
+      }
+
+      // 計算目前畫面上所有建築與隊員的總人數與戰力
+      function calculateCurrentGridTotals() {
+        let totalPower = 0;
+        let uniqueNames = new Set();
+
+        buildingsConfig.forEach((b) => {
+          (currentData.buildings[b.id] || []).forEach((p) => {
+            totalPower += p.power || 0;
+            if (p.name) uniqueNames.add(p.name);
+          });
+        });
+
+        let gatherArr = currentData.manualGatherText
+          ? currentData.manualGatherText.split("\n")
+          : [];
+        gatherArr.forEach((n) => {
+          if (n.trim()) uniqueNames.add(n.trim());
+        });
+
+        let ammoArr = currentData.manualAmmoText
+          ? currentData.manualAmmoText.split("\n")
+          : [];
+        ammoArr.forEach((n) => {
+          if (n.trim()) uniqueNames.add(n.trim());
+        });
+
+        currentData.totalPeople = uniqueNames.size;
+        currentData.totalPower = totalPower;
+        currentData.avgPower = Math.round(totalPower / 4);
+      }
+
+      function renderAll() {
+        reorderCommanders();
+        calculateCurrentGridTotals();
+
+        const p = langPack[currentData.currentLang];
+
+        document.getElementById("summaryBox").innerHTML = `
+            <p>${p.summaryText[0]} <strong>${currentData.totalPeople}</strong></p>
+            <p>${p.summaryText[1]} <strong>${currentData.totalPower.toLocaleString()}</strong></p>
+            <p>${p.summaryText[2]} <strong>${currentData.avgPower.toLocaleString()}</strong></p>
+        `;
+
+        const grid = document.getElementById("buildingGrid");
+        grid.innerHTML = "";
+
+        // 建立「採集小隊」卡片
+        const gatherCard = document.createElement("div");
+        gatherCard.className = "building-card b-group-spec";
+        let gatherArr = currentData.manualGatherText
+          ? currentData.manualGatherText.split("\n")
+          : [];
+        let gatherTags = gatherArr
+          .map((name) =>
+            name.trim()
+              ? `
+          <div class="player-tag" style="cursor:default;">
+            <span>⚡ ${name.trim()}</span><inherit-strong></inherit-strong>
+          </div>`
+              : "",
+          )
+          .join("");
+        gatherCard.innerHTML = `
+          <div class="building-title">${p.specTitleGather}</div>
+          <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabel : p.specLabelGather}</div>
+          <div class="drop-zone">${gatherTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
+        `;
+
+        // 建立「子彈小隊」卡片
+        const ammoCard = document.createElement("div");
+        ammoCard.className = "building-card b-group-spec";
+        let ammoArr = currentData.manualAmmoText
+          ? currentData.manualAmmoText.split("\n")
+          : [];
+        let ammoTags = ammoArr
+          .map((name) =>
+            name.trim()
+              ? `
+          <div class="player-tag" style="cursor:default; border-color:#ff3838;">
+            <span>🎒 ${name.trim()}</span><inherit-strong></inherit-strong>
+          </div>`
+              : "",
+          )
+          .join("");
+        ammoCard.innerHTML = `
+          <div class="building-title">${p.specTitleAmmo}</div>
+          <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabelAmmo : p.specLabelAmmo}</div>
+          <div class="drop-zone">${ammoTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
+        `;
+
+        buildingsConfig.forEach((b, idx) => {
+          const card = document.createElement("div");
+          card.className = `building-card b-group-${b.gIdx}`;
+          card.id = b.id;
+
+          card.addEventListener("dragover", dragOver);
+          card.addEventListener("dragenter", dragEnter);
+          card.addEventListener("dragleave", dragLeave);
+          card.addEventListener("drop", dragDrop);
+
+          let bPower = 0;
+          (currentData.buildings[b.id] || []).forEach(
+            (p) => (bPower += p.power),
+          );
+
+          let pTagsHtml = "";
+          (currentData.buildings[b.id] || []).forEach((player, pIdx) => {
+            let roleClass = "";
+            let roleLabel = "";
+            if (player.isLeader) {
+              roleClass = "is-leader";
+              roleLabel = `<span class="tag-leader-label">${p.leaderTag}</span>`;
+            } else if (player.isVice) {
+              roleClass = "is-vice";
+              roleLabel = `<span class="tag-vice-label">${p.viceTag}</span>`;
+            }
+
+            pTagsHtml += `
+                    <div class="player-tag ${roleClass}" draggable="true" ondragstart="dragStart(event, '${b.id}', ${pIdx})">
+                        <span>${roleLabel}${player.name}</span>
+                        <inherit-strong>${player.power || 0}</inherit-strong>
+                    </div>
+                `;
+          });
+
+          card.innerHTML = `
+                <div class="building-title">${currentData.currentLang === "en" ? b.nameEn : b.nameZht}</div>
+                <div class="building-power">${p.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
+                <div class="drop-zone">${pTagsHtml}</div>
+            `;
+          grid.appendChild(card);
+
+          if (idx === 3) {
+            grid.appendChild(gatherCard);
+            grid.appendChild(ammoCard);
+          }
+        });
+
+        updateTextOutputOnly();
+      }
+
+      let draggedFromBuildingId = null;
+      let draggedPlayerIdx = null;
+
+      function dragStart(e, bId, pIdx) {
+        draggedFromBuildingId = bId;
+        draggedPlayerIdx = pIdx;
+        e.dataTransfer.setData("text/plain", bId);
+      }
+      function dragOver(e) {
+        e.preventDefault();
+      }
+      function dragEnter(e) {
+        e.preventDefault();
+        this.classList.add("drag-over");
+      }
+      function dragLeave() {
+        this.classList.remove("drag-over");
+      }
+
+      function dragDrop() {
+        this.classList.remove("drag-over");
+        const targetBuildingId = this.id;
+
+        if (targetBuildingId === "" || !currentData.buildings[targetBuildingId])
+          return;
+        if (draggedFromBuildingId === targetBuildingId) return;
+
+        const movingPlayer = currentData.buildings[
+          draggedFromBuildingId
+        ].splice(draggedPlayerIdx, 1)[0];
+        currentData.buildings[targetBuildingId].push(movingPlayer);
+
+        renderAll();
+      }
+
+      function copyTextOutput() {
+        const copyTextarea = document.getElementById("copyTextarea");
+        copyTextarea.select();
+        copyTextarea.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyTextarea.value);
+        alert(langPack[currentData.currentLang].alertSuccess);
+      }
+
+      function showError(msg) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.innerText = msg;
+        errorDiv.style.display = "block";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      /* 表格區截圖並儲存功能 */
+      function captureBuildingGrid() {
+        const target = document.getElementById("buildingGrid");
+        const btn = document.getElementById("btnScreenshot");
+        const originalText = btn.innerText;
+
+        btn.innerText = "⏳ 截圖處理中...";
+        btn.disabled = true;
+
+        html2canvas(target, {
+          backgroundColor: "#0f1524",
+          scale: 2,
+          useCORS: true,
+        })
+          .then((canvas) => {
+            const link = document.createElement("a");
+            const now = new Date();
+            const timestamp = `${now.getFullYear()}${now.getMonth() + 1}${now.getDate()}_${now.getHours()}${now.getMinutes()}`;
+            link.download = `兵工廠人員分配表_${timestamp}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+
+            btn.innerText = originalText;
+            btn.disabled = false;
+          })
+          .catch((err) => {
+            console.error("截圖失敗：", err);
+            alert("截圖失敗，請稍後再試！");
+            btn.innerText = originalText;
+            btn.disabled = false;
+          });
+      }
+
+      // ===== [新增] 直接載入雲端表格資料並進行微調 =====
+      function openLoadHistoryModal() {
+        if (
+          !GAS_WEB_APP_URL ||
+          GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL_HERE"
+        ) {
+          alert("請先設定 GAS_WEB_APP_URL！");
+          return;
+        }
+
+        fetch(GAS_WEB_APP_URL)
+          .then((res) => res.json())
+          .then((res) => {
+            if (
+              res.status === "empty" ||
+              !res.history ||
+              res.history.length === 0
+            ) {
+              alert("雲端目前尚無歷史戰局紀錄！");
+              return;
+            }
+            historyRecordsList = res.history;
+            const select = document.getElementById("loadHistorySelect");
+            select.innerHTML = "";
+
+            for (let i = historyRecordsList.length - 1; i >= 0; i--) {
+              const item = historyRecordsList[i];
+              const option = document.createElement("option");
+              option.value = item.rowIndex;
+              const lockIcon = item.hasPasscode ? "🔒 " : "";
+              option.innerText = `${lockIcon}[${item.updateTime}] ${item.title} (${item.author})`;
+              select.appendChild(option);
+            }
+
+            document.getElementById("loadPasscodeInput").value = "";
+            document.getElementById("loadHistoryModal").style.display = "flex";
+          })
+          .catch((err) => {
+            console.error("無法取得歷史紀錄：", err);
+            alert("無法連線至雲端讀取歷史紀錄。");
+          });
+      }
+
+      function closeLoadHistoryModal() {
+        document.getElementById("loadHistoryModal").style.display = "none";
+      }
+
+      function fetchAndRestoreGridData() {
+        const rowIndex = parseInt(
+          document.getElementById("loadHistorySelect").value,
+        );
+        const selectedLegion =
+          document.getElementById("loadLegionSelect").value;
+        const passcode = document
+          .getElementById("loadPasscodeInput")
+          .value.trim();
+
+        let url = `${GAS_WEB_APP_URL}?rowIndex=${rowIndex}`;
+        if (passcode) {
+          url += `&passcode=${encodeURIComponent(passcode)}`;
+        }
+
+        fetch(url)
+          .then((res) => res.json())
+          .then((res) => {
+            if (res.status === "locked") {
+              alert("密碼驗證失敗！該紀錄受密碼保護，請輸入正確密碼。");
+              return;
+            }
+
+            if (res.status === "success" && res.payload) {
+              const payload = res.payload;
+              let legionData = payload;
+
+              // 提取選擇之軍團資料
+              if (payload.legions && payload.legions[selectedLegion]) {
+                legionData = payload.legions[selectedLegion];
+              }
+
+              // 直接寫入 currentData 的建築物卡片資料與手動小隊
+              if (legionData.buildings) {
+                currentData.buildings = legionData.buildings;
+              }
+              currentData.manualGatherText = legionData.manualGatherText || "";
+              currentData.manualAmmoText = legionData.manualAmmoText || "";
+
+              // 設定編輯模式變數與軍團預設選單
+              currentEditingRowIndex = rowIndex;
+              currentEditingLegion = selectedLegion;
+
+              document.getElementById("publishLegionSelect").value =
+                selectedLegion;
+              document.getElementById("publishTitleInput").value =
+                res.title || "";
+              document.getElementById("publishAuthorInput").value =
+                res.author || "";
+
+              document.getElementById("editingNoticeText").innerText =
+                `✏️ 目前正在編輯：第 ${rowIndex} 筆紀錄「${res.title}」(${selectedLegion === "LegionA" ? "軍團1" : "軍團2"})`;
+              document.getElementById("editingNoticeBar").style.display =
+                "flex";
+
+              closeLoadHistoryModal();
+
+              // 渲染微調區與數據，並滑動至微調區
+              renderAll();
+              const resSec = document.getElementById("resultSection");
+              resSec.style.display = "block";
+              resSec.classList.add("fade-in-view");
+              resSec.scrollIntoView({ behavior: "smooth", block: "start" });
+
+              alert(
+                `🎉 成功載入【${res.title}】表格！您可以直接用滑鼠拖曳人員更換建築，調整後點擊下方按鈕覆寫。`,
+              );
+            } else {
+              alert("讀取失敗，資料格式有誤。");
+            }
+          })
+          .catch((err) => {
+            console.error("載入舊紀錄失敗：", err);
+            alert("載入舊紀錄時發生錯誤。");
+          });
+      }
+
+      function exitEditMode() {
+        currentEditingRowIndex = null;
+        document.getElementById("editingNoticeBar").style.display = "none";
+        alert("已退出微調模式，接下來發布將建立「全新戰局紀錄」。");
+      }
+
+      // ===== 發布雲端相關邏輯 (支援覆寫與新建) =====
+      function openPublishModal() {
+        const now = new Date();
+        const defaultTitle = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} 兵工廠人員分配`;
+
+        if (!document.getElementById("publishTitleInput").value) {
+          document.getElementById("publishTitleInput").value = defaultTitle;
+        }
+
+        const savedAuthor = localStorage.getItem("lastAuthorName") || "";
+        if (!document.getElementById("publishAuthorInput").value) {
+          document.getElementById("publishAuthorInput").value = savedAuthor;
+        }
+
+        const headerTitle = document.getElementById("publishModalHeaderTitle");
+        const confirmBtn = document.getElementById("btnConfirmPublish");
+
+        if (currentEditingRowIndex) {
+          headerTitle.innerText = `💾 覆寫更新雲端戰局 (列號: ${currentEditingRowIndex})`;
+          confirmBtn.innerText = "確認並覆寫更新";
+        } else {
+          headerTitle.innerText = "☁️ 發布戰況分配結果";
+          confirmBtn.innerText = "確認並發布";
+        }
+
+        document.getElementById("publishModal").style.display = "flex";
+      }
+
+      function closePublishModal() {
+        document.getElementById("publishModal").style.display = "none";
+      }
+
+      function submitToGoogleSheet() {
+        const title = document.getElementById("publishTitleInput").value.trim();
+        const author =
+          document.getElementById("publishAuthorInput").value.trim() ||
+          "匿名指揮官";
+        const passcode = document
+          .getElementById("publishPasscodeInput")
+          .value.trim();
+        const activeLegion = document.getElementById(
+          "publishLegionSelect",
+        ).value;
+
+        if (!title) {
+          alert("請輸入戰局標題！");
+          return;
+        }
+
+        if (
+          GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL_HERE" ||
+          !GAS_WEB_APP_URL
+        ) {
+          alert("錯誤：尚未在 HTML 原始碼中設定 GAS_WEB_APP_URL！");
+          return;
+        }
+
+        localStorage.setItem("lastAuthorName", author);
+
+        const btn = document.getElementById("btnConfirmPublish");
+        btn.innerText = "資料傳送中...";
+        btn.disabled = true;
+
+        // 包裝當前畫面上微調後的分配數據
+        const legionData = {
+          summary: {
+            totalPeople: currentData.totalPeople,
+            totalPower: currentData.totalPower,
+            avgPower: currentData.avgPower,
+          },
+          buildings: currentData.buildings,
+          manualGatherText: currentData.manualGatherText,
+          manualAmmoText: currentData.manualAmmoText,
+          copyTextZht: getFormattedText(false),
+          copyTextEn: getFormattedText(true),
+        };
+
+        const legionsObj = {};
+        legionsObj[activeLegion] = legionData;
+
+        const payload = {
+          title: title,
+          author: author,
+          passcode: passcode,
+          activeLegion: activeLegion,
+          legions: legionsObj,
+        };
+
+        // 若處於編輯模式，帶入 rowIndex
+        if (currentEditingRowIndex) {
+          payload.rowIndex = currentEditingRowIndex;
+        }
+
+        fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            btn.innerText = "確認並發布";
+            btn.disabled = false;
+            closePublishModal();
+
+            if (data.status === "error") {
+              alert("作業失敗：" + data.message);
+            } else {
+              const actionText = data.action === "update" ? "覆寫更新" : "發布";
+              alert(
+                `🎉 成功${actionText}戰況！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}`,
+              );
+            }
+          })
+          .catch((err) => {
+            btn.innerText = "確認並發布";
+            btn.disabled = false;
+            console.error("發布完成：", err);
+            alert(`🎉 成功處理戰況！\n標題：${title}\n分配員：${author}`);
+            closePublishModal();
+          });
+      }
+    </script>
+  </body>
+  <link
+    rel="icon"
+    href="https://gom-s3-user-avatar.s3.us-west-2.amazonaws.com/wp-content/uploads/2025/07/jump_icon_40104-%E5%89%AF%E6%9C%AC-1.png"
+    type="image/png"
+  />
+</html>
