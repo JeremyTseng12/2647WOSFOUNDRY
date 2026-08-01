@@ -206,16 +206,29 @@
         margin-bottom: 25px;
       }
       .btn-reaction {
-        background: #090e1a;
-        border: 1px solid #1a233a;
-        padding: 8px 16px;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      }
+  background: #121929;
+  border: 1px solid #223052;
+  padding: 8px 16px; /* 稍微放大按鈕空間 */
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-reaction img {
+  width: 32px;  /* 將原本的 22px 放大到 32px */
+  height: 32px; /* 將原本的 22px 放大到 32px */
+  object-fit: contain;
+}
+
+.reaction-count {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 1.1rem; /* 字體跟著稍微調大一點點 */
+  font-weight: bold;
+  color: #fff;
+}
       .btn-reaction:hover {
         background: #141c30;
         border-color: var(--text-neon);
@@ -228,17 +241,6 @@
         border-color: var(--text-neon);
         background: rgba(0, 255, 204, 0.08);
         box-shadow: 0 0 12px rgba(0, 255, 204, 0.2);
-      }
-      .btn-reaction img {
-        width: 26px;
-        height: 26px;
-        object-fit: contain;
-      }
-      .reaction-count {
-        font-family: "Share Tech Mono", monospace;
-        font-size: 1.1rem;
-        font-weight: bold;
-        color: #fff;
       }
 
       .summary-box {
