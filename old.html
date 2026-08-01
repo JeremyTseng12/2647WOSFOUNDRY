@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>兵工廠人員分配</title>
+    <style>
+      body {
+        font-family:
+          "Helvetica Neue", Helvetica, Arial, "Microsoft JhengHei", sans-serif;
+        background-color: #f4f6f9;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      }
+      .lang-switch-top {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .btn-lang {
+        background-color: #e2e8f0;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        padding: 6px 15px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .btn-lang.active {
+        background-color: #3498db;
+        color: white;
+        border-color: #2980b9;
+      }
+      h1 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 25px;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+      }
+      h2 {
+        color: #34495e;
+        font-size: 1.2rem;
+        margin-top: 20px;
+        border-left: 4px solid #3498db;
+        padding-left: 10px;
+      }
+      .info-box {
+        background-color: #ecf0f1;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+      }
+      .info-box ul {
+        margin: 5px 0 0 0;
+        padding-left: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 5px;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 768px) {
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: #fdfdfd;
+        border: 1px solid #e2e8f0;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+      }
+      .form-group {
+        margin-bottom: 12px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+      input[type="text"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 1rem;
+      }
+      textarea {
+        height: 180px;
+        resize: vertical;
+      }
+      .btn {
+        display: block;
+        width: 100%;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 12px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: background 0.2s;
+      }
+      .btn:hover {
+        background-color: #2980b9;
+      }
+
+      .quick-assign-box {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+      }
+      .quick-assign-title {
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: #64748b;
+        margin-bottom: 10px;
+      }
+      .quick-btn-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .btn-assign {
+        background-color: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        padding: 8px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-assign:hover {
+        background-color: #e2e8f0;
+        border-color: #94a3b8;
+      }
+
+      .btn-copy {
+        background-color: #2ecc71;
+        margin-top: 5px;
+        margin-bottom: 10px;
+      }
+      .btn-copy:hover {
+        background-color: #27ae60;
+      }
+      .error {
+        color: #e74c3c;
+        background: #fadbd8;
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 15px;
+        display: none;
+        font-weight: bold;
+      }
+      .summary-box {
+        background-color: #e8f4fd;
+        border: 1px solid #bee3f8;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+      }
+      .summary-box p {
+        margin: 5px 0;
+        font-size: 1rem;
+      }
+      .copy-textarea {
+        width: 100%;
+        height: 180px;
+        font-family: monospace;
+        background-color: #fafafa;
+        margin-top: 10px;
+        padding: 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      /* 建築物卡片樣式 */
+      .building-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .building-card {
+        background: #fff;
+        border: 2px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 15px;
+        min-height: 150px;
+        transition:
+          background-color 0.2s,
+          border-color 0.2s;
+      }
+      .b-group-0 {
+        border-top: 5px solid #e67e22;
+      }
+      .b-group-1 {
+        border-top: 5px solid #9b59b6;
+      }
+      .b-group-2 {
+        border-top: 5px solid #1abc9c;
+      }
+      .b-group-3 {
+        border-top: 5px solid #34495e;
+      }
+
+      .building-card.drag-over {
+        background-color: #f0fdf4;
+        border-color: #22c55e;
+      }
+
+      .building-title {
+        font-weight: bold;
+        font-size: 1rem;
+        color: #1e293b;
+        margin-bottom: 4px;
+      }
+      .building-power {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .drop-zone {
+        min-height: 80px;
+      }
+
+      /* 可拖曳人員標籤 */
+      .player-tag {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 6px 10px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        cursor: grab;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.95rem;
+        user-select: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        transition: transform 0.1s;
+      }
+      .player-tag:active {
+        cursor: grabbing;
+        transform: scale(0.98);
+      }
+      .player-tag.is-leader {
+        border-left: 4px solid #f1c40f;
+        background-color: #fffbeb;
+      }
+      .tag-leader-label {
+        background: #f1c40f;
+        color: #333;
+        font-size: 0.75rem;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-weight: bold;
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="lang-switch-top">
+        <button
+          id="btnLangZht"
+          class="btn-lang active"
+          onclick="changeLanguage('zht')"
+        >
+          繁體中文
+        </button>
+        <button id="btnLangEn" class="btn-lang" onclick="changeLanguage('en')">
+          English
+        </button>
+      </div>
+
+      <h1 id="uiMainTitle">兵工廠人員分配</h1>
+
+      <div class="info-box">
+        <strong id="uiInfoTitle">當前兵工廠建築清單：</strong>
+        <ul id="uiInfoList">
+          <li>1號武器試驗場 (6000)</li>
+          <li>2號武器試驗場 (6000)</li>
+          <li>1號武器維修站 (3000)</li>
+          <li>2號武器維修站 (3000)</li>
+          <li>3號武器維修站 (3000)</li>
+          <li>4號武器維修站 (3000)</li>
+          <li>中繼站 (1200)</li>
+          <li>蒸氣鍋爐 (1700)</li>
+        </ul>
+      </div>
+
+      <div id="errorMessage" class="error"></div>
+
+      <div class="grid-2">
+        <div>
+          <h2 id="uiLeaderTitle">各組隊長設定 (戰力需 ≥ 4000)</h2>
+
+          <div class="card">
+            <div class="form-group">
+              <label id="uiLabelG0"
+                >第一組隊長（1號武器試驗場 & 1號武器維修廠）</label
+              >
+              <input
+                type="text"
+                id="leaderName0"
+                placeholder="輸入或點擊指派隊長名字"
+              />
+              <input
+                type="number"
+                id="leaderPower0"
+                placeholder="輸入隊長戰力"
+                style="margin-top: 5px"
+              />
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="form-group">
+              <label id="uiLabelG1"
+                >第二組隊長（2號武器試驗場 & 2號武器維修廠）</label
+              >
+              <input
+                type="text"
+                id="leaderName1"
+                placeholder="輸入或點擊指派隊長名字"
+              />
+              <input
+                type="number"
+                id="leaderPower1"
+                placeholder="輸入隊長戰力"
+                style="margin-top: 5px"
+              />
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="form-group">
+              <label id="uiLabelG2"
+                >第三組隊長（3號武器維修廠 & 中轉站.）</label
+              >
+              <input
+                type="text"
+                id="leaderName2"
+                placeholder="輸入或點擊指派隊長名字"
+              />
+              <input
+                type="number"
+                id="leaderPower2"
+                placeholder="輸入隊長戰力"
+                style="margin-top: 5px"
+              />
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="form-group">
+              <label id="uiLabelG3"
+                >第四組隊長（4號武器維修廠 & 蒸氣鍋爐）</label
+              >
+              <input
+                type="text"
+                id="leaderName3"
+                placeholder="輸入或點擊指派隊長名字"
+              />
+              <input
+                type="number"
+                id="leaderPower3"
+                placeholder="輸入隊長戰力"
+                style="margin-top: 5px"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 id="uiMemberTitle">本次參戰隊員名單</h2>
+          <div class="card">
+            <p
+              id="uiMemberDesc"
+              style="font-size: 0.85rem; color: #666; margin-top: 0"
+            >
+              請輸入隊員名字與戰力，格式：<strong>名字 戰力</strong>
+              (一行為一筆)<br />
+              例如：<br />白骨Kadota 3500<br />麥香紅茶 2800
+            </p>
+            <textarea
+              id="memberInput"
+              placeholder="請在此輸入整隊隊員名單..."
+            ></textarea>
+            <button
+              id="btnDistribute"
+              class="btn"
+              onclick="distributeMembers()"
+            >
+              開始戰力平衡分配
+            </button>
+
+            <div class="quick-assign-box">
+              <div id="uiQuickTitle" class="quick-assign-title">
+                ⚡ 快速指派隊長（點擊填入左側空缺）
+              </div>
+              <div class="quick-btn-grid">
+                <button class="btn-assign" onclick="quickAssignLeader('塔卡')">
+                  1. 塔卡
+                </button>
+                <button
+                  class="btn-assign"
+                  onclick="quickAssignLeader('城市酒桶')"
+                >
+                  2. 城市酒桶
+                </button>
+                <button class="btn-assign" onclick="quickAssignLeader('Larry')">
+                  3. Larry
+                </button>
+                <button class="btn-assign" onclick="quickAssignLeader('Iris')">
+                  4. Iris
+                </button>
+                <button class="btn-assign" onclick="quickAssignLeader('BBQ')">
+                  5. BBQ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="resultSection" style="display: none; margin-top: 30px">
+        <hr
+          style="border: 0; border-top: 1px solid #cbd5e1; margin-bottom: 20px"
+        />
+
+        <h2 id="uiSummaryTitle">📊 數據總計</h2>
+        <div class="summary-box" id="summaryBox"></div>
+
+        <h2 id="uiCopyTitle">📋 分配後的人員清單 (可直接複製)</h2>
+        <button
+          id="btnCopyText"
+          class="btn btn-copy"
+          onclick="copyTextOutput()"
+        >
+          點擊一鍵複製名單
+        </button>
+        <textarea id="copyTextarea" class="copy-textarea" readonly></textarea>
+
+        <h2 id="uiTweakTitle">
+          ⚡ 建築物人員微調區 (可直接滑鼠拖曳名字更換位置)
+        </h2>
+        <div class="building-grid" id="buildingGrid"></div>
+      </div>
+    </div>
+
+    <script>
+      // 語言字典檔
+      const langPack = {
+        zht: {
+          mainTitle: "兵工廠人員分配",
+          infoTitle: "當前兵工廠建築清單：",
+          infoItems: [
+            "1號武器試驗場 (6000)",
+            "2號武器試驗場 (6000)",
+            "1號武器維修站 (3000)",
+            "2號武器維修站 (3000)",
+            "3號武器維修站 (3000)",
+            "4號武器維修站 (3000)",
+            "中繼站 (1200)",
+            "蒸氣鍋爐 (1700)",
+          ],
+          leaderTitle: "各組隊長設定 (戰力需 ≥ 4000)",
+          labels: [
+            "第一組隊長（1號武器試驗場 & 1號武器維修廠）",
+            "第二組隊長（2號武器試驗場 & 2號武器維修廠）",
+            "第三組隊長（3號武器維修廠 & 中轉站.）",
+            "第四組隊長（4號武器維修廠 & 蒸氣鍋爐）",
+          ],
+          placeholders: {
+            name: "輸入或點擊指派隊長名字",
+            power: "輸入隊長戰力",
+            list: "請在此輸入整隊隊員名單...",
+          },
+          memberTitle: "本次參戰隊員名單",
+          memberDesc:
+            "請輸入隊員名字與戰力，格式：<strong>名字 戰力</strong> (一行為一筆)<br>例如：<br>白骨Kadota 3500<br>麥香紅茶 2800",
+          btnDistribute: "開始戰力平衡分配",
+          quickTitle: "⚡ 快速指派隊長（點擊填入左側空缺）",
+          summaryTitle: "📊 數據總計",
+          copyTitle: "📋 分配後的人員清單 (可直接複製)",
+          btnCopyText: "點擊一鍵複製名單",
+          tweakTitle: "⚡ 建築物人員微調區 (可直接滑鼠拖曳名字更換位置)",
+          summaryText: [
+            "總參戰人數：",
+            "人",
+            "總體總戰力：",
+            "每大組平均戰力：",
+          ],
+          buildingPower: "目前戰力：",
+          leaderTag: "隊長",
+          alertRepeat: "已經被指派為其中一組的隊長囉！",
+          alertFull: "目前的 4 個組別皆已有隊長名字，無剩餘空缺。",
+          alertSuccess: "名單已成功複製到剪貼簿！",
+        },
+        en: {
+          mainTitle: "Arsenal Personnel Allocation",
+          infoTitle: "Current Arsenal Buildings:",
+          infoItems: [
+            "Weapon Prototyping I (6000)",
+            "Weapon Prototyping II (6000)",
+            "Weapon Repair I (3000)",
+            "Weapon Repair II (3000)",
+            "Weapon Repair III (3000)",
+            "Weapon Repair IV (3000)",
+            "Transit Station (1200)",
+            "Boiler Room (1700)",
+          ],
+          leaderTitle: "Leader Settings (Power ≥ 4000)",
+          labels: [
+            "Group 1 (Weapon Prototyping I & Weapon Repair I)",
+            "Group 2 (Weapon Prototyping II & Weapon Repair II)",
+            "Group 3 (Weapon Repair III & Transit Station)",
+            "Group 4 (Weapon Repair IV & Boiler Room)",
+          ],
+          placeholders: {
+            name: "Enter or click to assign leader",
+            power: "Enter leader power",
+            list: "Enter player roster here...",
+          },
+          memberTitle: "Player Roster",
+          memberDesc:
+            "Enter name and power, format: <strong>Name Power</strong> (one per line)<br>E.g.:<br>Kadota 3500<br>BlackTea 2800",
+          btnDistribute: "Start Balance Allocation",
+          quickTitle: "⚡ Quick Assign Leader (Click to fill empty slot below)",
+          summaryTitle: "📊 Summary",
+          copyTitle: "📋 Allocation Roster (Ready to copy)",
+          btnCopyText: "Click to Copy Roster",
+          tweakTitle:
+            "⚡ Drag & Drop adjustment zone (Drag name tags to re-allocate)",
+          summaryText: [
+            "Total Players: ",
+            " Players",
+            "Total Power: ",
+            "Average Power per Group: ",
+          ],
+          buildingPower: "Current Power: ",
+          leaderTag: "Leader",
+          alertRepeat: " has already been assigned as a leader!",
+          alertFull: "All 4 groups already have leaders assigned.",
+          alertSuccess: "Roster copied to clipboard successfully!",
+        },
+      };
+
+      const buildingsConfig = [
+        {
+          id: "b0",
+          nameZht: "1號武器試驗場",
+          nameEn: "Weapon Prototyping I",
+          gIdx: 0,
+        },
+        {
+          id: "b1",
+          nameZht: "1號武器維修廠",
+          nameEn: "Weapon Repair I",
+          gIdx: 0,
+        },
+        {
+          id: "b2",
+          nameZht: "2號武器試驗場",
+          nameEn: "Weapon Prototyping II",
+          gIdx: 1,
+        },
+        {
+          id: "b3",
+          nameZht: "2號武器維修廠",
+          nameEn: "Weapon Repair II",
+          gIdx: 1,
+        },
+        {
+          id: "b4",
+          nameZht: "3號武器維修廠",
+          nameEn: "Weapon Repair III",
+          gIdx: 2,
+        },
+        { id: "b5", nameZht: "中轉站.", nameEn: "Transit Station", gIdx: 2 },
+        {
+          id: "b6",
+          nameZht: "4號武器維修廠",
+          nameEn: "Weapon Repair IV",
+          gIdx: 3,
+        },
+        { id: "b7", nameZht: "蒸氣鍋爐", nameEn: "Boiler Room", gIdx: 3 },
+      ];
+
+      let currentData = {
+        totalPeople: 0,
+        totalPower: 0,
+        avgPower: 0,
+        currentLang: "zht",
+        buildings: {
+          b0: [],
+          b1: [],
+          b2: [],
+          b3: [],
+          b4: [],
+          b5: [],
+          b6: [],
+          b7: [],
+        },
+      };
+
+      // 切換語言主邏輯 (更新UI)
+      function changeLanguage(lang) {
+        currentData.currentLang = lang;
+        const p = langPack[lang];
+
+        // 更新按鈕狀態
+        if (lang === "zht") {
+          document.getElementById("btnLangZht").classList.add("active");
+          document.getElementById("btnLangEn").classList.remove("active");
+        } else {
+          document.getElementById("btnLangEn").classList.add("active");
+          document.getElementById("btnLangZht").classList.remove("active");
+        }
+
+        // 刷新所有介面靜態文字
+        document.getElementById("uiMainTitle").innerText = p.mainTitle;
+        document.getElementById("uiInfoTitle").innerText = p.infoTitle;
+        document.getElementById("uiLeaderTitle").innerText = p.leaderTitle;
+        document.getElementById("uiMemberTitle").innerText = p.memberTitle;
+        document.getElementById("uiMemberDesc").innerHTML = p.memberDesc;
+        document.getElementById("btnDistribute").innerText = p.btnDistribute;
+        document.getElementById("uiQuickTitle").innerText = p.quickTitle;
+
+        // 建築清單
+        const infoList = document.getElementById("uiInfoList");
+        infoList.innerHTML = "";
+        p.infoItems.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerText = item;
+          infoList.appendChild(li);
+        });
+
+        // 隊長區標籤與 Placeholder
+        for (let i = 0; i < 4; i++) {
+          document.getElementById(`uiLabelG${i}`).innerText = p.labels[i];
+          document.getElementById(`leaderName${i}`).placeholder =
+            p.placeholders.name;
+          document.getElementById(`leaderPower${i}`).placeholder =
+            p.placeholders.power;
+        }
+        document.getElementById("memberInput").placeholder =
+          p.placeholders.list;
+
+        // 結果區標頭
+        if (document.getElementById("resultSection").style.display !== "none") {
+          document.getElementById("uiSummaryTitle").innerText = p.summaryTitle;
+          document.getElementById("uiCopyTitle").innerText = p.copyTitle;
+          document.getElementById("btnCopyText").innerText = p.btnCopyText;
+          document.getElementById("uiTweakTitle").innerText = p.tweakTitle;
+          renderAll(); // 重新渲染動態結果區
+        }
+      }
+
+      function quickAssignLeader(name) {
+        const p = langPack[currentData.currentLang];
+        for (let i = 0; i < 4; i++) {
+          if (document.getElementById(`leaderName${i}`).value.trim() === name) {
+            alert(
+              currentData.currentLang === "zht"
+                ? `「${name}」${p.alertRepeat}`
+                : `"${name}"${p.alertRepeat}`,
+            );
+            return;
+          }
+        }
+        for (let i = 0; i < 4; i++) {
+          const inputField = document.getElementById(`leaderName${i}`);
+          if (inputField.value.trim() === "") {
+            inputField.value = name;
+            return;
+          }
+        }
+        alert(p.alertFull);
+      }
+
+      function distributeMembers() {
+        const errorDiv = document.getElementById("errorMessage");
+        const resultSection = document.getElementById("resultSection");
+
+        errorDiv.style.display = "none";
+        resultSection.style.display = "none";
+        currentData.buildings = {
+          b0: [],
+          b1: [],
+          b2: [],
+          b3: [],
+          b4: [],
+          b5: [],
+          b6: [],
+          b7: [],
+        };
+
+        // 1. 驗證隊長
+        let groups = [];
+        let totalLeadersPower = 0;
+        for (let i = 0; i < 4; i++) {
+          const name = document.getElementById(`leaderName${i}`).value.trim();
+          const power = parseInt(
+            document.getElementById(`leaderPower${i}`).value,
+          );
+
+          if (!name) {
+            showError(
+              currentData.currentLang === "zht"
+                ? `請填寫第 ${i + 1} 組的隊長名字！`
+                : `Please enter the leader name for Group ${i + 1}!`,
+            );
+            return;
+          }
+          if (isNaN(power)) {
+            showError(
+              currentData.currentLang === "zht"
+                ? `請填寫隊長「${name}」的戰力數值！`
+                : `Please enter the power for leader "${name}"!`,
+            );
+            return;
+          }
+          if (power < 4000) {
+            showError(
+              currentData.currentLang === "zht"
+                ? `錯誤：隊長「${name}」戰力低於 4000！`
+                : `Error: Leader "${name}" power is below 4000!`,
+            );
+            return;
+          }
+
+          groups.push({
+            index: i,
+            leader: { name: name, power: power, isLeader: true },
+            members: [],
+            totalPower: power,
+          });
+          totalLeadersPower += power;
+        }
+
+        // 2. 解析隊員
+        const txt = document.getElementById("memberInput").value;
+        const lines = txt.split("\n");
+        let members = [];
+        let totalMembersPower = 0;
+
+        for (let line of lines) {
+          line = line.trim();
+          if (!line) continue;
+
+          const lastSpaceIdx = line.lastIndexOf(" ");
+          if (lastSpaceIdx !== -1) {
+            const mName = line.substring(0, lastSpaceIdx).trim();
+            const mPower = parseInt(line.substring(lastSpaceIdx).trim());
+            if (!isNaN(mPower)) {
+              members.push({ name: mName, power: mPower, isLeader: false });
+              totalMembersPower += mPower;
+            }
+          }
+        }
+
+        currentData.totalPeople = 4 + members.length;
+        currentData.totalPower = totalLeadersPower + totalMembersPower;
+        currentData.avgPower = Math.round(currentData.totalPower / 4);
+
+        // 3. 戰力平衡分配
+        members.sort((a, b) => b.power - a.power);
+        for (let member of members) {
+          groups.sort((a, b) => a.totalPower - b.totalPower);
+          groups[0].members.push(member);
+          groups[0].totalPower += member.power;
+        }
+        groups.sort((a, b) => a.index - b.index);
+
+        // 4. 交錯分進 8 個建築物
+        groups.forEach((g) => {
+          let allPeopleInGroup = [g.leader];
+          g.members.forEach((m) => allPeopleInGroup.push(m));
+          const bId1 = `b${g.index * 2}`;
+          const bId2 = `b${g.index * 2 + 1}`;
+          allPeopleInGroup.forEach((person, idx) => {
+            if (idx % 2 === 0) currentData.buildings[bId1].push(person);
+            else currentData.buildings[bId2].push(person);
+          });
+        });
+
+        // 補齊動態區文字
+        const p = langPack[currentData.currentLang];
+        document.getElementById("uiSummaryTitle").innerText = p.summaryTitle;
+        document.getElementById("uiCopyTitle").innerText = p.copyTitle;
+        document.getElementById("btnCopyText").innerText = p.btnCopyText;
+        document.getElementById("uiTweakTitle").innerText = p.tweakTitle;
+
+        renderAll();
+        resultSection.style.display = "block";
+      }
+
+      function updateTextOutputOnly() {
+        let textOutput = "";
+        const isEn = currentData.currentLang === "en";
+        buildingsConfig.forEach((b) => {
+          const bName = isEn ? b.nameEn : b.nameZht;
+          let formattedNames = currentData.buildings[b.id].map((p) => {
+            if (p.isLeader) return isEn ? `${p.name} (Leader)` : `${p.name}`;
+            return p.name;
+          });
+          textOutput += `${bName}～ ${formattedNames.join(" & ")}\n`;
+        });
+        document.getElementById("copyTextarea").value = textOutput.trim();
+      }
+
+      function renderAll() {
+        const p = langPack[currentData.currentLang];
+
+        // 渲染數據數據
+        document.getElementById("summaryBox").innerHTML = `
+            <p>▪ <strong>${p.summaryText[0]}</strong> ${currentData.totalPeople}${p.summaryText[1]}</p>
+            <p>▪ <strong>${p.summaryText[2]}</strong> ${currentData.totalPower.toLocaleString()}</p>
+            <p>▪ <strong>${p.summaryText[3]}</strong> ${currentData.avgPower.toLocaleString()}</p>
+        `;
+
+        // 渲染 8 個微調方塊
+        const grid = document.getElementById("buildingGrid");
+        grid.innerHTML = "";
+
+        buildingsConfig.forEach((b) => {
+          const card = document.createElement("div");
+          card.className = `building-card b-group-${b.gIdx}`;
+          card.id = b.id;
+
+          card.addEventListener("dragover", dragOver);
+          card.addEventListener("dragenter", dragEnter);
+          card.addEventListener("dragleave", dragLeave);
+          card.addEventListener("drop", dragDrop);
+
+          let bPower = 0;
+          currentData.buildings[b.id].forEach((p) => (bPower += p.power));
+
+          let pTagsHtml = "";
+          currentData.buildings[b.id].forEach((player, pIdx) => {
+            pTagsHtml += `
+                    <div class="player-tag ${player.isLeader ? "is-leader" : ""}" 
+                         draggable="true" 
+                         ondragstart="dragStart(event, '${b.id}', ${pIdx})">
+                        <span>${player.isLeader ? `<span class="tag-leader-label">${p.leaderTag}</span>` : ""}${player.name}</span>
+                        <strong>${player.power}</strong>
+                    </div>
+                `;
+          });
+
+          card.innerHTML = `
+                <div class="building-title">${currentData.currentLang === "en" ? b.nameEn : b.nameZht}</div>
+                <div class="building-power">${p.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
+                <div class="drop-zone">${pTagsHtml}</div>
+            `;
+          grid.appendChild(card);
+        });
+
+        updateTextOutputOnly();
+      }
+
+      // --- Drag and Drop ---
+      let draggedFromBuildingId = null;
+      let draggedPlayerIdx = null;
+
+      function dragStart(e, bId, pIdx) {
+        draggedFromBuildingId = bId;
+        draggedPlayerIdx = pIdx;
+        e.dataTransfer.setData("text/plain", bId);
+      }
+      function dragOver(e) {
+        e.preventDefault();
+      }
+      function dragEnter(e) {
+        e.preventDefault();
+        this.classList.add("drag-over");
+      }
+      function dragLeave() {
+        this.classList.remove("drag-over");
+      }
+      function dragDrop() {
+        this.classList.remove("drag-over");
+        const targetBuildingId = this.id;
+        if (draggedFromBuildingId === targetBuildingId) return;
+
+        const movingPlayer = currentData.buildings[
+          draggedFromBuildingId
+        ].splice(draggedPlayerIdx, 1)[0];
+        currentData.buildings[targetBuildingId].push(movingPlayer);
+        renderAll();
+      }
+
+      function copyTextOutput() {
+        const copyTextarea = document.getElementById("copyTextarea");
+        copyTextarea.select();
+        copyTextarea.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyTextarea.value);
+        alert(langPack[currentData.currentLang].alertSuccess);
+      }
+
+      function showError(msg) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.innerText = msg;
+        errorDiv.style.display = "block";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    </script>
+  </body>
+</html>
