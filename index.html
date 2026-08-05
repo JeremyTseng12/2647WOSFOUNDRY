@@ -184,6 +184,13 @@
         gap: 12px;
         margin-bottom: 20px;
       }
+      .top-control-bar-left {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
       .btn-lang {
         background: #141c30;
         color: var(--text-muted);
@@ -851,12 +858,14 @@
         margin-bottom: 4px;
       }
       /* 禁用狀態的輸入盒樣式 */
-      input:disabled, textarea:disabled, select:disabled {
+      input:disabled,
+      textarea:disabled,
+      select:disabled {
         background-color: #060a12 !important; /* 更暗的背景 */
-        color: #4e6178 !important;            /* 變灰的文字 */
-        border-color: #1a233a !important;     /* 暗色邊框 */
-        cursor: not-allowed !important;       /* 鼠標顯示禁止圖示 */
-        opacity: 0.6;                         /* 降低透明度 */
+        color: #4e6178 !important; /* 變灰的文字 */
+        border-color: #1a233a !important; /* 暗色邊框 */
+        cursor: not-allowed !important; /* 鼠標顯示禁止圖示 */
+        opacity: 0.6; /* 降低透明度 */
       }
     </style>
   </head>
@@ -884,9 +893,34 @@
     <div id="main-content">
       <div class="container">
         <div class="top-control-bar">
-          <button class="btn-load-history" onclick="openLoadHistoryModal()">
-            📂 編輯歷史分配紀錄
-          </button>
+          <div class="top-control-bar-left">
+            <button class="btn-load-history" onclick="openLoadHistoryModal()">
+              📂 編輯歷史分配紀錄
+            </button>
+            <button
+              class="btn-load-history"
+              onclick="
+                window.open(
+                  'https://jeremytseng12.github.io/2647WOSFOUNDRY/view1',
+                  '_blank',
+                )
+              "
+            >
+              📲 進入檢視系統
+            </button>
+            <button
+              class="btn-load-history"
+              onclick="
+                window.open(
+                  'https://jeremytseng12.github.io/2647WOSFOUNDRY/old',
+                  '_blank',
+                )
+              "
+            >
+              📲 查看舊版本分配系統
+            </button>
+          </div>
+
           <div class="lang-switch-top">
             <button
               id="btnLangZht"
@@ -1269,9 +1303,7 @@
             </select>
           </div>
           <div class="form-group" style="margin-top: 15px">
-            <label style="color: #7ee8cc"
-              >2. 請輸入本次分配結果的標題：</label
-            >
+            <label style="color: #7ee8cc">2. 請輸入本次分配結果的標題：</label>
             <input
               type="text"
               id="publishTitleInput"
@@ -1290,7 +1322,8 @@
               type="password"
               id="publishPasscodeInput"
               placeholder="若原紀錄有密碼，覆寫時請填寫相同密碼"
-            disabled/>
+              disabled
+            />
           </div>
         </div>
         <div class="cyber-modal-actions">
@@ -1332,7 +1365,8 @@
               type="password"
               id="loadPasscodeInput"
               placeholder="請輸入該紀錄的存取密碼"
-            disabled/>
+              disabled
+            />
           </div>
         </div>
         <div class="cyber-modal-actions">
