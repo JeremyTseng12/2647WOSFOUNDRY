@@ -106,7 +106,26 @@
         align-items: center;
         gap: 10px;
         flex-grow: 1;
+        max-width: 600px; /* 稍微拉長容器以容納跑馬燈 */
+      }
+
+      /* 跑馬燈外層容器與文字樣式 */
+      .marquee-box {
+        flex-grow: 1;
+        min-width: 600px;
         max-width: 600px;
+        background: rgba(0, 255, 204, 0.05);
+        border: 1px solid rgba(0, 255, 204, 0.2);
+        border-radius: 4px;
+        padding: 3px 8px;
+        overflow: hidden;
+      }
+
+      .marquee-box marquee {
+        color: var(--text-neon);
+        font-size: 1.3rem;
+        font-weight: bold;
+        vertical-align: middle;
       }
       .history-selector-box label {
         color: var(--text-neon);
@@ -489,6 +508,9 @@
         border-radius: 4px;
         cursor: pointer;
       }
+      .mqimg {
+        max-width: 1.6rem;
+      }
     </style>
   </head>
   <body>
@@ -501,6 +523,30 @@
             class="history-select"
             onchange="onSelectHistoryChange()"
           ></select>
+        </div>
+        <!-- 新增跑馬燈容器 -->
+        <div class="marquee-box">
+          <marquee
+            id="announcementMarquee"
+            behavior="scroll"
+            direction="left"
+            scrollamount="6"
+          >
+            <img
+              class="mqimg"
+              src="https://jeremytseng12.github.io/2647WOSFOUNDRY/019.png"
+              alt="ann"
+            />
+            系統初始化可能會比較慢，請稍等一下，如果載入超過一分鐘請聯絡TSENG，請在兵工廠活動開始之前確認您被分配到的位置，查看完成後不要忘記點擊"戰局表情回覆"告訴我們你對本次分配結果的想法喔！感謝你<img
+              class="mqimg"
+              src="https://jeremytseng12.github.io/2647WOSFOUNDRY/heart.png"
+              alt="Heart"
+            /><img
+              class="mqimg"
+              src="https://jeremytseng12.github.io/2647WOSFOUNDRY/heart.png"
+              alt="Heart"
+            />
+          </marquee>
         </div>
         <div class="lang-switch-top">
           <button
