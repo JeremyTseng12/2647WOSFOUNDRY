@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
@@ -766,7 +766,7 @@
             const mergedHistoryMap = {};
 
             res.history.forEach((item) => {
-              const titleKey = (item.title || "未命名戰役").trim();
+              const titleKey = (item.title || "未命名分配結果").trim();
               if (!mergedHistoryMap[titleKey]) {
                 mergedHistoryMap[titleKey] = {
                   title: item.title,
@@ -777,7 +777,8 @@
                 };
               } else {
                 mergedHistoryMap[titleKey].rowIndices.push(item.rowIndex);
-                if (item.hasPasscode) mergedHistoryMap[titleKey].hasPasscode = true;
+                if (item.hasPasscode)
+                  mergedHistoryMap[titleKey].hasPasscode = true;
               }
             });
 
@@ -790,8 +791,9 @@
               const option = document.createElement("option");
               option.value = i;
               const lockIcon = item.hasPasscode ? "🔒 " : "";
-              const legionCountText = item.rowIndices.length > 1 ? " [雙軍團]" : "";
-              option.innerText = `${lockIcon}[${item.updateTime}] ${item.title}${legionCountText} (${item.author})`;
+              const legionCountText =
+                item.rowIndices.length > 1 ? " [雙軍團]" : "";
+              option.innerText = `${lockIcon} ${item.title}${legionCountText} (By ${item.author})`;
               select.appendChild(option);
             }
 
@@ -845,9 +847,9 @@
                 reactions: { heart: 0, angry: 0 },
                 legions: {
                   LegionA: {},
-                  LegionB: {}
-                }
-              }
+                  LegionB: {},
+                },
+              },
             };
 
             results.forEach((res) => {
@@ -855,15 +857,23 @@
                 const p = res.payload;
 
                 if (p.reactions) {
-                  combinedRecord.payload.reactions.heart += (p.reactions.heart || 0);
-                  combinedRecord.payload.reactions.angry += (p.reactions.angry || 0);
+                  combinedRecord.payload.reactions.heart +=
+                    p.reactions.heart || 0;
+                  combinedRecord.payload.reactions.angry +=
+                    p.reactions.angry || 0;
                 }
 
                 if (p.legions) {
-                  if (p.legions.LegionA && Object.keys(p.legions.LegionA).length > 0) {
+                  if (
+                    p.legions.LegionA &&
+                    Object.keys(p.legions.LegionA).length > 0
+                  ) {
                     combinedRecord.payload.legions.LegionA = p.legions.LegionA;
                   }
-                  if (p.legions.LegionB && Object.keys(p.legions.LegionB).length > 0) {
+                  if (
+                    p.legions.LegionB &&
+                    Object.keys(p.legions.LegionB).length > 0
+                  ) {
                     combinedRecord.payload.legions.LegionB = p.legions.LegionB;
                   }
                 } else {
@@ -929,7 +939,7 @@
 
         const storageKey = `reacted_${currentRecord.rowIndex}`;
         if (localStorage.getItem(storageKey)) {
-          alert("您已經對此戰役表達過想法囉！");
+          alert("您已經對此分配結果表達過想法囉！");
           return;
         }
 
@@ -976,8 +986,10 @@
           const userReaction = localStorage.getItem(
             `reacted_${currentRecord.rowIndex}`,
           );
-          if (userReaction === "heart" && btnHeart) btnHeart.classList.add("reacted");
-          if (userReaction === "angry" && btnAngry) btnAngry.classList.add("reacted");
+          if (userReaction === "heart" && btnHeart)
+            btnHeart.classList.add("reacted");
+          if (userReaction === "angry" && btnAngry)
+            btnAngry.classList.add("reacted");
         }
       }
 
@@ -989,7 +1001,8 @@
         const lang = langPack[currentUIClassLang];
 
         document.getElementById("uiSelectLabel").innerText = lang.selectLabel;
-        document.getElementById("uiMetaAuthorLabel").innerText = lang.metaAuthor;
+        document.getElementById("uiMetaAuthorLabel").innerText =
+          lang.metaAuthor;
         document.getElementById("uiMetaTimeLabel").innerText = lang.metaTime;
         document.getElementById("uiCopyTitle").innerText = lang.copyTitle;
         document.getElementById("btnCopyText").innerText = lang.btnCopyText;
