@@ -1118,7 +1118,14 @@
             >
               開始戰力平衡分配
             </button>
-
+            <button
+              id="btnDistribute"
+              class="btn"
+              style="margin-top: 10px"
+              onclick="InputTestData()"
+            >
+              載入測試用資料
+            </button>
             <div class="quick-assign-box">
               <div id="uiQuickTitle" class="quick-assign-title">
                 ⚡ 快速指派隊長（點擊填入左側空缺）
@@ -2686,11 +2693,18 @@
             closePublishModal();
           });
       }
+      function InputTestData() {
+        document.getElementById("leaderName0").value = "炙炎梵天";
+        document.getElementById("leaderName1").value = "Classic 陀螺";
+        document.getElementById("leaderName2").value = "AKB";
+        document.getElementById("leaderName3").value = "SleepJay 胖虎";
+        document.getElementById("leaderPower0").value = "40000";
+        document.getElementById("leaderPower1").value = "50000";
+        document.getElementById("leaderPower2").value = "35000";
+        document.getElementById("leaderPower3").value = "38000";
+        document.getElementById("memberInput").value =
+          "TSENG 8888 \nSophia 3089 \nLiam 4732 \nEmma 3540 \nOliver 4891 \nAva 3167\nLucas 4423 \nMia 3805 \nNoah 4158 \nIsabella 3290 \nJames 4612 \nCharlotte 3945 \nAlexander 4380 \nAmelia 3418 \nBenjamin 4073 \nHarper 3629";
+      }
     </script>
   </body>
-  <link
-    rel="icon"
-    href="https://gom-s3-user-avatar.s3.us-west-2.amazonaws.com/wp-content/uploads/2025/07/jump_icon_40104-%E5%89%AF%E6%9C%AC-1.png"
-    type="image/png"
-  />
 </html>
