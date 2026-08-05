@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>兵工廠人員分配系統 Pro</title>
+    <title>兵工廠人員分配系統 Pro-檢視分配結果</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -106,10 +106,9 @@
         align-items: center;
         gap: 10px;
         flex-grow: 1;
-        max-width: 600px; /* 稍微拉長容器以容納跑馬燈 */
+        max-width: 600px;
       }
 
-      /* 跑馬燈外層容器與文字樣式 */
       .marquee-box {
         flex-grow: 1;
         min-width: 600px;
@@ -216,7 +215,6 @@
         font-weight: bold;
       }
 
-      /* 整合至 summary-box 內的表情互動區樣式 */
       .summary-box {
         background: #090e1a;
         border: 1px solid #1a233a;
@@ -524,7 +522,6 @@
             onchange="onSelectHistoryChange()"
           ></select>
         </div>
-        <!-- 新增跑馬燈容器 -->
         <div class="marquee-box">
           <marquee
             id="announcementMarquee"
@@ -688,7 +685,6 @@
     </div>
 
     <script>
-      // 帶入最新 GAS Web App URL
       const GAS_WEB_APP_URL =
         "https://script.google.com/macros/s/AKfycbzdjIxv4-vwdpFuWJgXsM5cm31tfKMSnb9Bwl5aDRNvNI9GXiLhimDDDzDCk8NM1k6T/exec";
 
@@ -787,9 +783,31 @@
       let currentCopyLang = "zht";
       let pendingHistoryIndex = null;
 
-      window.addEventListener("load", fetchHistoryList);
+      // [新增] 檢查網址 Hashtag 是否指定軍團 2
+      function checkHashtagLegion() {
+        const hash = window.location.hash.toLowerCase();
+        if (
+          hash.includes("legion2") ||
+          hash.includes("legionb") ||
+          hash.includes("legion-2") ||
+          hash === "#l2"
+        ) {
+          currentLegion = "LegionB";
+        } else {
+          currentLegion = "LegionA";
+        }
+      }
 
-      // 1. 取得歷史戰局選單 (前端自動合併同標題戰役)
+      window.addEventListener("hashchange", () => {
+        checkHashtagLegion();
+        switchLegion(currentLegion);
+      });
+
+      window.addEventListener("load", () => {
+        checkHashtagLegion();
+        fetchHistoryList();
+      });
+
       function fetchHistoryList() {
         if (!GAS_WEB_APP_URL) {
           alert("請在 HTML 中設定 GAS_WEB_APP_URL！");
@@ -808,7 +826,6 @@
               return;
             }
 
-            // 按「標題 (Title)」自動合併多筆紀錄
             const mergedHistoryMap = {};
 
             res.history.forEach((item) => {
@@ -859,7 +876,6 @@
         loadDetailDataByIndex(selectedIndex);
       }
 
-      // 2. 載入特定戰局 (併發請求並自動融合同名戰役的雙軍團資料)
       function loadDetailDataByIndex(historyIndex, passcode = "") {
         const targetGroup = historyList[historyIndex];
         if (!targetGroup) return;
@@ -933,7 +949,8 @@
             document.getElementById("loadingScreen").style.display = "none";
             document.getElementById("contentSection").style.display = "block";
 
-            renderViewer();
+            // 確保介面上的軍團切換按鈕狀態與 currentLegion 一致
+            switchLegion(currentLegion);
           })
           .catch((err) => {
             console.error("載入詳細資料失敗：", err);
@@ -979,7 +996,6 @@
         renderViewer();
       }
 
-      // 表情回覆互動邏輯
       function sendReaction(type) {
         if (!currentRecord || !currentRecord.rowIndex) return;
 
@@ -1065,7 +1081,6 @@
           p = payload.legions[currentLegion];
         }
 
-        // 渲染數據總計 + 右側表情回覆卡片
         document.getElementById("summaryBox").innerHTML = `
           <p>${lang.summaryText[0]} <strong>${p.summary ? p.summary.totalPeople : 0}</strong></p>
           <p>${lang.summaryText[1]} <strong>${p.summary ? p.summary.totalPower.toLocaleString() : 0}</strong></p>
