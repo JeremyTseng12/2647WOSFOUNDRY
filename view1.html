@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>兵工廠人員分配系統 Pro-檢視分配結果</title>
+    <title>兵工廠人員分配系統 Pro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -509,6 +509,27 @@
       .mqimg {
         max-width: 1.6rem;
       }
+      /* [新增] 分享按鈕樣式 */
+      .btn-share {
+        background: linear-gradient(135deg, #141c30, #1f2d4d);
+        color: var(--text-neon);
+        border: 1px solid var(--text-neon);
+        padding: 6px 16px;
+        font-family: "Montenegrin Gothic One", sans-serif;
+        font-size: 0.85rem;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(0, 255, 204, 0.15);
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+
+      .btn-share:hover {
+        background: var(--text-neon);
+        color: #080b11;
+        box-shadow: 0 0 18px rgba(0, 255, 204, 0.4);
+      }
     </style>
   </head>
   <body>
@@ -545,6 +566,10 @@
             />
           </marquee>
         </div>
+        <!-- [新增] 分享按鈕 -->
+        <button class="btn-share" onclick="openShareModal()">
+          🔗 分享連結
+        </button>
         <div class="lang-switch-top">
           <button
             id="btnLangZht"
@@ -683,6 +708,68 @@
         </div>
       </div>
     </div>
+    <!-- [新增] 分享網址彈窗 -->
+    <div id="shareModal" class="cyber-modal-overlay">
+      <div class="cyber-modal">
+        <h3>🔗 分享戰場分配連結</h3>
+        <div style="margin: 20px 0">
+          <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 10px">
+            請選擇要分享的軍團，系統將自動產生對應的專屬連結：
+          </p>
+
+          <label
+            style="
+              color: var(--text-neon);
+              font-size: 0.85rem;
+              font-weight: bold;
+            "
+            >選擇分享軍團：</label
+          >
+          <select
+            id="shareLegionSelect"
+            class="history-select"
+            style="margin-top: 6px; margin-bottom: 15px"
+            onchange="updateShareUrlInput()"
+          >
+            <option value="LegionA">🛡️ 軍團 1 (Legion 1)</option>
+            <option value="LegionB">⚔️ 軍團 2 (Legion 2)</option>
+          </select>
+
+          <label
+            style="
+              color: var(--text-neon);
+              font-size: 0.85rem;
+              font-weight: bold;
+            "
+            >生成之分享網址：</label
+          >
+          <input
+            type="text"
+            id="shareUrlInput"
+            readonly
+            style="
+              width: 100%;
+              padding: 10px;
+              background: #060a12;
+              border: 1px solid #223052;
+              color: #a7f3d0;
+              border-radius: 4px;
+              font-size: 0.9rem;
+              font-family: &quot;Share Tech Mono&quot;, monospace;
+              margin-top: 6px;
+            "
+          />
+        </div>
+        <div class="cyber-modal-actions">
+          <button class="btn-modal-cancel" onclick="closeShareModal()">
+            取消
+          </button>
+          <button class="btn-modal-confirm" onclick="copyShareUrl()">
+            複製連結
+          </button>
+        </div>
+      </div>
+    </div>
 
     <script>
       const GAS_WEB_APP_URL =
@@ -783,7 +870,6 @@
       let currentCopyLang = "zht";
       let pendingHistoryIndex = null;
 
-      // [新增] 檢查網址 Hashtag 是否指定軍團 2
       function checkHashtagLegion() {
         const hash = window.location.hash.toLowerCase();
         if (
@@ -837,9 +923,12 @@
                   updateTime: item.updateTime,
                   hasPasscode: item.hasPasscode,
                   rowIndices: [item.rowIndex],
+                  authors: [item.author], // 收集不同項目的作者
                 };
               } else {
                 mergedHistoryMap[titleKey].rowIndices.push(item.rowIndex);
+                if (item.author)
+                  mergedHistoryMap[titleKey].authors.push(item.author); //[cite: 3]
                 if (item.hasPasscode)
                   mergedHistoryMap[titleKey].hasPasscode = true;
               }
@@ -856,7 +945,9 @@
               const lockIcon = item.hasPasscode ? "🔒 " : "";
               const legionCountText =
                 item.rowIndices.length > 1 ? " [雙軍團]" : "";
-              option.innerText = `${lockIcon} ${item.title}${legionCountText} (By ${item.author})`;
+              // 如果有不同作者，作者處顯示多位作者列表[cite: 3]
+              const displayAuthors = [...new Set(item.authors)].join(" & "); //[cite: 3]
+              option.innerText = `${lockIcon} ${item.title}${legionCountText} (By ${displayAuthors})`;
               select.appendChild(option);
             }
 
@@ -907,6 +998,10 @@
               rowIndex: targetGroup.rowIndices[0],
               payload: {
                 reactions: { heart: 0, angry: 0 },
+                legionAuthors: {
+                  LegionA: targetGroup.author,
+                  LegionB: targetGroup.author,
+                }, // 紀錄各軍團作者[cite: 3]
                 legions: {
                   LegionA: {},
                   LegionB: {},
@@ -931,15 +1026,21 @@
                     Object.keys(p.legions.LegionA).length > 0
                   ) {
                     combinedRecord.payload.legions.LegionA = p.legions.LegionA;
+                    if (res.author)
+                      combinedRecord.payload.legionAuthors.LegionA = res.author; // 綁定 LegionA 的發布者[cite: 3]
                   }
                   if (
                     p.legions.LegionB &&
                     Object.keys(p.legions.LegionB).length > 0
                   ) {
                     combinedRecord.payload.legions.LegionB = p.legions.LegionB;
+                    if (res.author)
+                      combinedRecord.payload.legionAuthors.LegionB = res.author; // 綁定 LegionB 的發布者[cite: 3]
                   }
                 } else {
                   combinedRecord.payload.legions.LegionA = p;
+                  if (res.author)
+                    combinedRecord.payload.legionAuthors.LegionA = res.author; //[cite: 3]
                 }
               }
             });
@@ -949,7 +1050,6 @@
             document.getElementById("loadingScreen").style.display = "none";
             document.getElementById("contentSection").style.display = "block";
 
-            // 確保介面上的軍團切換按鈕狀態與 currentLegion 一致
             switchLegion(currentLegion);
           })
           .catch((err) => {
@@ -1072,8 +1172,13 @@
 
         document.getElementById("viewTitle").innerText =
           record.title || "兵工廠人員分配";
-        document.getElementById("viewAuthor").innerText =
-          record.author || "指揮官";
+
+        // 動態根據切換的軍團顯示正確的分配人員[cite: 3]
+        let currentAuthor = record.author || "指揮官";
+        if (payload.legionAuthors && payload.legionAuthors[currentLegion]) {
+          currentAuthor = payload.legionAuthors[currentLegion];
+        }
+        document.getElementById("viewAuthor").innerText = currentAuthor;
         document.getElementById("viewTime").innerText = record.updateTime || "";
 
         let p = payload;
@@ -1208,6 +1313,49 @@
         textarea.select();
         navigator.clipboard.writeText(textarea.value);
         alert(langPack[currentUIClassLang].alertSuccess);
+      }
+      // 分享基本網址
+      const BASE_SHARE_URL =
+        "https://jeremytseng12.github.io/2647WOSFOUNDRY/view1";
+
+      // 打開分享彈窗
+      function openShareModal() {
+        document.getElementById("shareModal").style.display = "flex";
+
+        // 預設將選單設為當前檢視中的軍團
+        const shareSelect = document.getElementById("shareLegionSelect");
+        if (shareSelect) {
+          shareSelect.value = currentLegion || "LegionA";
+        }
+
+        updateShareUrlInput();
+      }
+
+      // 關閉分享彈窗
+      function closeShareModal() {
+        document.getElementById("shareModal").style.display = "none";
+      }
+
+      // 根據選取的軍團更新分享網址（選軍團二自動帶入 #legion2）
+      function updateShareUrlInput() {
+        const selectedLegion =
+          document.getElementById("shareLegionSelect").value;
+        const urlInput = document.getElementById("shareUrlInput");
+
+        if (selectedLegion === "LegionB") {
+          urlInput.value = `${BASE_SHARE_URL}#legion2`;
+        } else {
+          urlInput.value = BASE_SHARE_URL;
+        }
+      }
+
+      // 複製分享網址至剪貼簿
+      function copyShareUrl() {
+        const urlInput = document.getElementById("shareUrlInput");
+        urlInput.select();
+        navigator.clipboard.writeText(urlInput.value);
+        alert("🔗 分享連結已成功複製到剪貼簿！\n" + urlInput.value);
+        closeShareModal();
       }
     </script>
   </body>
