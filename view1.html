@@ -247,40 +247,45 @@
         margin-top: 6px;
       }
 
+      /* 極簡直觀的表情按鈕樣式 */
       .btn-reaction {
-        background: #121929;
-        border: 1px solid #223052;
-        padding: 8px 16px;
-        border-radius: 24px;
-        display: flex;
+        background: #0d1322;
+        border: 1px solid #1e293b;
+        padding: 6px 14px;
+        border-radius: 8px;
+        display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        color: #94a3b8;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        outline: none;
       }
-      .btn-reaction img {
-        width: 32px;
-        height: 32px;
-        object-fit: contain;
+      .btn-reaction .emoji {
+        font-size: 1.2rem;
+        line-height: 1;
       }
       .reaction-count {
         font-family: "Share Tech Mono", monospace;
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: bold;
-        color: #fff;
+        color: #e2e8f0;
       }
       .btn-reaction:hover {
-        background: #141c30;
-        border-color: var(--text-neon);
-        transform: scale(1.08);
+        background: #141d33;
+        border-color: #334155;
+        color: #fff;
+        transform: translateY(-2px);
       }
       .btn-reaction:active {
-        transform: scale(0.95);
+        transform: translateY(0);
       }
       .btn-reaction.reacted {
         border-color: var(--text-neon);
         background: rgba(0, 255, 204, 0.08);
-        box-shadow: 0 0 12px rgba(0, 255, 204, 0.2);
+        color: var(--text-neon);
+        box-shadow: 0 0 10px rgba(0, 255, 204, 0.15);
       }
 
       .action-bar-copy {
@@ -509,7 +514,7 @@
       .mqimg {
         max-width: 1.6rem;
       }
-      /* [新增] 分享按鈕樣式 */
+
       .btn-share {
         background: linear-gradient(135deg, #141c30, #1f2d4d);
         color: var(--text-neon);
@@ -566,7 +571,6 @@
             />
           </marquee>
         </div>
-        <!-- [新增] 分享按鈕 -->
         <button class="btn-share" onclick="openShareModal()">
           🔗 分享連結
         </button>
@@ -708,7 +712,8 @@
         </div>
       </div>
     </div>
-    <!-- [新增] 分享網址彈窗 -->
+
+    <!-- 分享網址彈窗 -->
     <div id="shareModal" class="cyber-modal-overlay">
       <div class="cyber-modal">
         <h3>🔗 分享戰場分配連結</h3>
@@ -886,7 +891,9 @@
 
       window.addEventListener("hashchange", () => {
         checkHashtagLegion();
-        switchLegion(currentLegion);
+        if (currentRecord) {
+          switchLegion(currentLegion);
+        }
       });
 
       window.addEventListener("load", () => {
@@ -908,6 +915,7 @@
               !res.history ||
               res.history.length === 0
             ) {
+              document.getElementById("loadingScreen").style.display = "none";
               alert("目前試算表中尚無發布的戰況紀錄！");
               return;
             }
@@ -923,12 +931,12 @@
                   updateTime: item.updateTime,
                   hasPasscode: item.hasPasscode,
                   rowIndices: [item.rowIndex],
-                  authors: [item.author], // 收集不同項目的作者
+                  authors: [item.author],
                 };
               } else {
                 mergedHistoryMap[titleKey].rowIndices.push(item.rowIndex);
                 if (item.author)
-                  mergedHistoryMap[titleKey].authors.push(item.author); //[cite: 3]
+                  mergedHistoryMap[titleKey].authors.push(item.author);
                 if (item.hasPasscode)
                   mergedHistoryMap[titleKey].hasPasscode = true;
               }
@@ -945,8 +953,7 @@
               const lockIcon = item.hasPasscode ? "🔒 " : "";
               const legionCountText =
                 item.rowIndices.length > 1 ? " [雙軍團]" : "";
-              // 如果有不同作者，作者處顯示多位作者列表[cite: 3]
-              const displayAuthors = [...new Set(item.authors)].join(" & "); //[cite: 3]
+              const displayAuthors = [...new Set(item.authors)].join(" & ");
               option.innerText = `${lockIcon} ${item.title}${legionCountText} (By ${displayAuthors})`;
               select.appendChild(option);
             }
@@ -957,6 +964,7 @@
           })
           .catch((err) => {
             console.error("讀取選單失敗：", err);
+            document.getElementById("loadingScreen").style.display = "none";
             alert("讀取失敗，請確認 GAS URL 是否設定正確。");
           });
       }
@@ -983,6 +991,7 @@
           .then((results) => {
             const isLocked = results.some((res) => res.status === "locked");
             if (isLocked) {
+              document.getElementById("loadingScreen").style.display = "none";
               document.getElementById("passcodeModal").style.display = "flex";
               document.getElementById("inputPasscode").value = "";
               document.getElementById("inputPasscode").focus();
@@ -1001,7 +1010,7 @@
                 legionAuthors: {
                   LegionA: targetGroup.author,
                   LegionB: targetGroup.author,
-                }, // 紀錄各軍團作者[cite: 3]
+                },
                 legions: {
                   LegionA: {},
                   LegionB: {},
@@ -1027,7 +1036,7 @@
                   ) {
                     combinedRecord.payload.legions.LegionA = p.legions.LegionA;
                     if (res.author)
-                      combinedRecord.payload.legionAuthors.LegionA = res.author; // 綁定 LegionA 的發布者[cite: 3]
+                      combinedRecord.payload.legionAuthors.LegionA = res.author;
                   }
                   if (
                     p.legions.LegionB &&
@@ -1035,12 +1044,12 @@
                   ) {
                     combinedRecord.payload.legions.LegionB = p.legions.LegionB;
                     if (res.author)
-                      combinedRecord.payload.legionAuthors.LegionB = res.author; // 綁定 LegionB 的發布者[cite: 3]
+                      combinedRecord.payload.legionAuthors.LegionB = res.author;
                   }
                 } else {
                   combinedRecord.payload.legions.LegionA = p;
                   if (res.author)
-                    combinedRecord.payload.legionAuthors.LegionA = res.author; //[cite: 3]
+                    combinedRecord.payload.legionAuthors.LegionA = res.author;
                 }
               }
             });
@@ -1054,6 +1063,8 @@
           })
           .catch((err) => {
             console.error("載入詳細資料失敗：", err);
+            document.getElementById("loadingScreen").style.display = "none";
+            alert("讀取資料失敗，請重新整理頁面！");
           });
       }
 
@@ -1096,6 +1107,7 @@
         renderViewer();
       }
 
+      /* 樂觀更新 (Optimistic UI) 零延遲表情點擊邏輯 */
       function sendReaction(type) {
         if (!currentRecord || !currentRecord.rowIndex) return;
 
@@ -1105,6 +1117,23 @@
           return;
         }
 
+        if (!currentRecord.payload) currentRecord.payload = {};
+        if (!currentRecord.payload.reactions) {
+          currentRecord.payload.reactions = { heart: 0, angry: 0 };
+        }
+
+        // 1. 樂觀更新：立即寫入本地記憶體與紀錄
+        localStorage.setItem(storageKey, type);
+        if (type === "heart") {
+          currentRecord.payload.reactions.heart = (currentRecord.payload.reactions.heart || 0) + 1;
+        } else if (type === "angry") {
+          currentRecord.payload.reactions.angry = (currentRecord.payload.reactions.angry || 0) + 1;
+        }
+
+        // 2. 立即更新 UI (零等待)
+        updateReactionsUI(currentRecord.payload.reactions);
+
+        // 3. 背景靜默傳送資料至後端
         const payload = {
           action: "reaction",
           rowIndex: currentRecord.rowIndex,
@@ -1118,14 +1147,12 @@
           .then((res) => res.json())
           .then((data) => {
             if (data.status === "success" && data.reactions) {
-              localStorage.setItem(storageKey, type);
-              if (!currentRecord.payload) currentRecord.payload = {};
               currentRecord.payload.reactions = data.reactions;
               updateReactionsUI(data.reactions);
             }
           })
           .catch((err) => {
-            console.error("發送表情失敗：", err);
+            console.error("背景發送表情失敗：", err);
           });
       }
 
@@ -1173,7 +1200,6 @@
         document.getElementById("viewTitle").innerText =
           record.title || "兵工廠人員分配";
 
-        // 動態根據切換的軍團顯示正確的分配人員[cite: 3]
         let currentAuthor = record.author || "指揮官";
         if (payload.legionAuthors && payload.legionAuthors[currentLegion]) {
           currentAuthor = payload.legionAuthors[currentLegion];
@@ -1186,6 +1212,7 @@
           p = payload.legions[currentLegion];
         }
 
+        /* 渲染極簡直觀的表情按鈕 HTML */
         document.getElementById("summaryBox").innerHTML = `
           <p>${lang.summaryText[0]} <strong>${p.summary ? p.summary.totalPeople : 0}</strong></p>
           <p>${lang.summaryText[1]} <strong>${p.summary ? p.summary.totalPower.toLocaleString() : 0}</strong></p>
@@ -1194,11 +1221,11 @@
             <p style="margin:0 0 6px 0; font-size:0.85rem; color:#94a3b8; font-weight:700;">戰局表情回覆</p>
             <div class="reaction-group">
               <button id="btnHeart" class="btn-reaction" onclick="sendReaction('heart')">
-                <img src="https://jeremytseng12.github.io/2647WOSFOUNDRY/heart.png" alt="Heart" />
+                <span class="emoji">❤️</span>
                 <span id="countHeart" class="reaction-count">0</span>
               </button>
               <button id="btnAngry" class="btn-reaction" onclick="sendReaction('angry')">
-                <img src="https://jeremytseng12.github.io/2647WOSFOUNDRY/angry.png" alt="Angry" />
+                <span class="emoji">😡</span>
                 <span id="countAngry" class="reaction-count">0</span>
               </button>
             </div>
@@ -1314,15 +1341,13 @@
         navigator.clipboard.writeText(textarea.value);
         alert(langPack[currentUIClassLang].alertSuccess);
       }
-      // 分享基本網址
+
       const BASE_SHARE_URL =
         "https://jeremytseng12.github.io/2647WOSFOUNDRY/view1";
 
-      // 打開分享彈窗
       function openShareModal() {
         document.getElementById("shareModal").style.display = "flex";
 
-        // 預設將選單設為當前檢視中的軍團
         const shareSelect = document.getElementById("shareLegionSelect");
         if (shareSelect) {
           shareSelect.value = currentLegion || "LegionA";
@@ -1331,12 +1356,10 @@
         updateShareUrlInput();
       }
 
-      // 關閉分享彈窗
       function closeShareModal() {
         document.getElementById("shareModal").style.display = "none";
       }
 
-      // 根據選取的軍團更新分享網址（選軍團二自動帶入 #legion2）
       function updateShareUrlInput() {
         const selectedLegion =
           document.getElementById("shareLegionSelect").value;
@@ -1349,7 +1372,6 @@
         }
       }
 
-      // 複製分享網址至剪貼簿
       function copyShareUrl() {
         const urlInput = document.getElementById("shareUrlInput");
         urlInput.select();
