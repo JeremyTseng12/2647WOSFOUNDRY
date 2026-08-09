@@ -574,15 +574,64 @@
         margin-top: 20px;
       }
 
-      @media (max-width: 1400px) {
-        .building-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
+      .accordion-header {
+        display: none;
       }
 
-      @media (max-width: 768px) {
+      /* 響應式優化：螢幕寬度 <= 1200px 自動改為手風琴折疊佈局 */
+      @media (max-width: 1200px) {
         .building-grid {
-          grid-template-columns: repeat(1, 1fr);
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .accordion-group {
+          background: #090e1a;
+          border: 1px solid #1a233a;
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .accordion-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 14px 18px;
+          background: #0f1524;
+          color: var(--text-neon);
+          font-weight: bold;
+          font-size: 1.05rem;
+          cursor: pointer;
+          border-bottom: 1px solid #1a233a;
+          transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+          background: #141c30;
+        }
+
+        .accordion-icon {
+          transition: transform 0.3s ease;
+        }
+
+        .accordion-group.closed .accordion-body {
+          display: none;
+        }
+
+        .accordion-group.closed .accordion-icon {
+          transform: rotate(-90deg);
+        }
+
+        .accordion-body {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 15px;
+          padding: 15px;
+        }
+
+        .b-group-spec {
+          grid-row: span 1 !important;
         }
       }
 
@@ -614,12 +663,6 @@
         border-top: 4px solid #00ffcc;
         background: rgba(0, 255, 204, 0.02);
         grid-row: span 2;
-      }
-
-      @media (max-width: 1400px) {
-        .b-group-spec {
-          grid-row: span 1;
-        }
       }
 
       .building-card.drag-over {
@@ -1603,6 +1646,13 @@
           lblLoadPasscode: "解鎖密碼 (若該紀錄受密碼保護需填寫)：",
           btnLoadCancel: "取消",
           btnConfirmLoad: "繼續",
+          groupTitles: [
+            "第一組 (試驗場 I & 維修廠 I)",
+            "第二組 (試驗場 II & 維修廠 II)",
+            "第三組 (維修廠 III & 中轉站)",
+            "第四組 (維修廠 IV & 蒸氣鍋爐)",
+            "特殊支援小隊 (採集 & 子彈)",
+          ],
         },
         en: {
           introText: "Foundry Allocation System Initializing...",
@@ -1705,6 +1755,13 @@
           lblLoadPasscode: "Unlock Passcode (If protected):",
           btnLoadCancel: "Cancel",
           btnConfirmLoad: "Continue",
+          groupTitles: [
+            "Group 1 (Site I & Repair I)",
+            "Group 2 (Site II & Repair II)",
+            "Group 3 (Repair III & Transit)",
+            "Group 4 (Repair IV & Boiler)",
+            "Special Squads (Gathering & Ammo)",
+          ],
         },
       };
 
@@ -1829,7 +1886,7 @@
 
       function changeLanguage(lang) {
         currentData.currentLang = lang;
-        currentData.copyLang = lang; // 核心修復：語言同步切換，解決分配後語言不一致的問題
+        currentData.copyLang = lang;
         const p = langPack[lang];
 
         if (lang === "zht") {
@@ -1879,7 +1936,6 @@
         document.getElementById("btnCloseChangelog").innerText =
           p.btnCloseChangelog;
 
-        // Modal 視窗語言更新
         document.getElementById("publishModalHeaderTitle").innerText =
           p.publishHeader;
         document.getElementById("lblPublishLegion").innerText =
@@ -2140,7 +2196,6 @@
       }
 
       function distributeMembers() {
-        // 核心修復：分配前自動讓複製語言與目前介面語言一致
         currentData.copyLang = currentData.currentLang;
 
         currentData.buildings = {
@@ -2344,6 +2399,54 @@
         currentData.avgPower = Math.round(totalPower / 4);
       }
 
+      function toggleAccordionGroup(groupId) {
+        const group = document.getElementById(groupId);
+        if (group) {
+          group.classList.toggle("closed");
+        }
+      }
+
+      function createBuildingCardElement(b, p) {
+        const card = document.createElement("div");
+        card.className = `building-card b-group-${b.gIdx}`;
+        card.id = b.id;
+
+        card.addEventListener("dragover", dragOver);
+        card.addEventListener("dragenter", dragEnter);
+        card.addEventListener("dragleave", dragLeave);
+        card.addEventListener("drop", dragDrop);
+
+        let bPower = 0;
+        (currentData.buildings[b.id] || []).forEach((pObj) => (bPower += pObj.power));
+
+        let pTagsHtml = "";
+        (currentData.buildings[b.id] || []).forEach((player, pIdx) => {
+          let roleClass = "";
+          let roleLabel = "";
+          if (player.isLeader) {
+            roleClass = "is-leader";
+            roleLabel = `<span class="tag-leader-label">${p.leaderTag}</span>`;
+          } else if (player.isVice) {
+            roleClass = "is-vice";
+            roleLabel = `<span class="tag-vice-label">${p.viceTag}</span>`;
+          }
+
+          pTagsHtml += `
+            <div class="player-tag ${roleClass}" draggable="true" ondragstart="dragStart(event, '${b.id}', ${pIdx})">
+                <span>${roleLabel}${player.name}</span>
+                <inherit-strong>${player.power || 0}</inherit-strong>
+            </div>
+          `;
+        });
+
+        card.innerHTML = `
+          <div class="building-title">${currentData.currentLang === "en" ? b.nameEn : b.nameZht}</div>
+          <div class="building-power">${p.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
+          <div class="drop-zone">${pTagsHtml}</div>
+        `;
+        return card;
+      }
+
       function renderAll() {
         reorderCommanders();
         calculateCurrentGridTotals();
@@ -2358,6 +2461,8 @@
 
         const grid = document.getElementById("buildingGrid");
         grid.innerHTML = "";
+
+        const isMobileView = window.innerWidth <= 1200;
 
         const gatherCard = document.createElement("div");
         gatherCard.className = "building-card b-group-spec";
@@ -2401,56 +2506,77 @@
           <div class="drop-zone">${ammoTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
         `;
 
-        buildingsConfig.forEach((b, idx) => {
-          const card = document.createElement("div");
-          card.className = `building-card b-group-${b.gIdx}`;
-          card.id = b.id;
+        if (isMobileView) {
+          // 螢幕 <= 1200px：自動轉換為 4 大組 + 特殊小隊的折疊手風琴
+          for (let g = 0; g < 4; g++) {
+            const groupWrap = document.createElement("div");
+            groupWrap.className = "accordion-group";
+            groupWrap.id = `accGroup_${g}`;
 
-          card.addEventListener("dragover", dragOver);
-          card.addEventListener("dragenter", dragEnter);
-          card.addEventListener("dragleave", dragLeave);
-          card.addEventListener("drop", dragDrop);
-
-          let bPower = 0;
-          (currentData.buildings[b.id] || []).forEach(
-            (p) => (bPower += p.power),
-          );
-
-          let pTagsHtml = "";
-          (currentData.buildings[b.id] || []).forEach((player, pIdx) => {
-            let roleClass = "";
-            let roleLabel = "";
-            if (player.isLeader) {
-              roleClass = "is-leader";
-              roleLabel = `<span class="tag-leader-label">${p.leaderTag}</span>`;
-            } else if (player.isVice) {
-              roleClass = "is-vice";
-              roleLabel = `<span class="tag-vice-label">${p.viceTag}</span>`;
-            }
-
-            pTagsHtml += `
-                    <div class="player-tag ${roleClass}" draggable="true" ondragstart="dragStart(event, '${b.id}', ${pIdx})">
-                        <span>${roleLabel}${player.name}</span>
-                        <inherit-strong>${player.power || 0}</inherit-strong>
-                    </div>
-                `;
-          });
-
-          card.innerHTML = `
-                <div class="building-title">${currentData.currentLang === "en" ? b.nameEn : b.nameZht}</div>
-                <div class="building-power">${p.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
-                <div class="drop-zone">${pTagsHtml}</div>
+            const header = document.createElement("div");
+            header.className = "accordion-header";
+            header.onclick = () => toggleAccordionGroup(`accGroup_${g}`);
+            header.innerHTML = `
+              <span>▼ ${p.groupTitles[g]}</span>
+              <span class="accordion-icon">▲</span>
             `;
-          grid.appendChild(card);
 
-          if (idx === 3) {
-            grid.appendChild(gatherCard);
-            grid.appendChild(ammoCard);
+            const body = document.createElement("div");
+            body.className = "accordion-body";
+
+            const b1 = buildingsConfig[g * 2];
+            const b2 = buildingsConfig[g * 2 + 1];
+
+            body.appendChild(createBuildingCardElement(b1, p));
+            body.appendChild(createBuildingCardElement(b2, p));
+
+            groupWrap.appendChild(header);
+            groupWrap.appendChild(body);
+            grid.appendChild(groupWrap);
           }
-        });
+
+          // 特殊支援小隊手風琴組
+          const specWrap = document.createElement("div");
+          specWrap.className = "accordion-group";
+          specWrap.id = "accGroup_spec";
+
+          const specHeader = document.createElement("div");
+          specHeader.className = "accordion-header";
+          specHeader.onclick = () => toggleAccordionGroup("accGroup_spec");
+          specHeader.innerHTML = `
+            <span>▼ ${p.groupTitles[4]}</span>
+            <span class="accordion-icon">▲</span>
+          `;
+
+          const specBody = document.createElement("div");
+          specBody.className = "accordion-body";
+          specBody.appendChild(gatherCard);
+          specBody.appendChild(ammoCard);
+
+          specWrap.appendChild(specHeader);
+          specWrap.appendChild(specBody);
+          grid.appendChild(specWrap);
+        } else {
+          // 螢幕 > 1200px：保持標準 6x2 看板網格佈局
+          buildingsConfig.forEach((b, idx) => {
+            const card = createBuildingCardElement(b, p);
+            grid.appendChild(card);
+
+            if (idx === 3) {
+              grid.appendChild(gatherCard);
+              grid.appendChild(ammoCard);
+            }
+          });
+        }
 
         updateTextOutputOnly();
       }
+
+      window.addEventListener("resize", () => {
+        if (document.getElementById("resultSection").style.display !== "none") {
+          renderAll();
+        }
+      });
 
       let draggedFromBuildingId = null;
       let draggedPlayerIdx = null;
