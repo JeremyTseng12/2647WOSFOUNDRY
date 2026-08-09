@@ -17,10 +17,19 @@
     />
     <!-- 🎯 自訂網址分享時顯示的標題與簡介 -->
     <meta property="og:title" content="兵工廠人員分配系統 Pro" />
-    <meta property="og:description" content="點擊查看最新兵工廠與雪域兵器聯賽戰術分配結果、人員清單及詳細配置看板。" />
-    <meta name="description" content="點擊查看最新兵工廠與雪域兵器聯賽戰術分配結果、人員清單及詳細配置看板。" />
+    <meta
+      property="og:description"
+      content="點擊查看最新兵工廠與雪域兵器聯賽戰術分配結果、人員清單及詳細配置看板。"
+    />
+    <meta
+      name="description"
+      content="點擊查看最新兵工廠與雪域兵器聯賽戰術分配結果、人員清單及詳細配置看板。"
+    />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://jeremytseng12.github.io/2647WOSFOUNDRY/foundry.webp" />
+    <meta
+      property="og:image"
+      content="https://jeremytseng12.github.io/2647WOSFOUNDRY/foundry.webp"
+    />
     <style>
       :root {
         --bg-cyber: #080b11;
@@ -1035,6 +1044,7 @@
       let pendingHistoryIndex = null;
 
       /* 開場動畫 2.2 秒後切換至主畫面 */
+      /* 開場動畫 2.2 秒後切換至主畫面並重啟跑馬燈 */
       window.addEventListener("load", function () {
         setTimeout(() => {
           const intro = document.getElementById("intro");
@@ -1044,6 +1054,12 @@
           setTimeout(() => {
             mainContent.style.opacity = "1";
           }, 50);
+
+          // 🎯 核心修復：當主介面顯示時，重新啟動跑馬燈滾動
+          const marquee = document.getElementById("announcementMarquee");
+          if (marquee) {
+            marquee.start();
+          }
         }, 2200);
 
         checkHashtagLegion();
@@ -1310,9 +1326,11 @@
 
         localStorage.setItem(storageKey, type);
         if (type === "heart") {
-          currentRecord.payload.reactions.heart = (currentRecord.payload.reactions.heart || 0) + 1;
+          currentRecord.payload.reactions.heart =
+            (currentRecord.payload.reactions.heart || 0) + 1;
         } else if (type === "angry") {
-          currentRecord.payload.reactions.angry = (currentRecord.payload.reactions.angry || 0) + 1;
+          currentRecord.payload.reactions.angry =
+            (currentRecord.payload.reactions.angry || 0) + 1;
         }
 
         updateReactionsUI(currentRecord.payload.reactions);
@@ -1444,7 +1462,6 @@
               </button>
               <button id="btnAngry" class="btn-reaction" onclick="sendReaction('angry')">
                 <span class="emoji">😡</span>
-                <span id="countAngry" class="reaction-count">0</span>
               </button>
             </div>
           </div>
