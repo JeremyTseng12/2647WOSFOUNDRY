@@ -247,7 +247,6 @@
         margin-top: 6px;
       }
 
-      /* 極簡直觀的表情按鈕樣式 */
       .btn-reaction {
         background: #0d1322;
         border: 1px solid #1e293b;
@@ -347,15 +346,64 @@
         margin-top: 20px;
       }
 
-      @media (max-width: 1400px) {
-        .building-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
+      .accordion-header {
+        display: none;
       }
 
-      @media (max-width: 768px) {
+      /* 手機/小螢幕響應式手風琴折疊選單 */
+      @media (max-width: 1200px) {
         .building-grid {
-          grid-template-columns: repeat(1, 1fr);
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .accordion-group {
+          background: #090e1a;
+          border: 1px solid #1a233a;
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .accordion-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 14px 18px;
+          background: #0f1524;
+          color: var(--text-neon);
+          font-weight: bold;
+          font-size: 1.05rem;
+          cursor: pointer;
+          border-bottom: 1px solid #1a233a;
+          transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+          background: #141c30;
+        }
+
+        .accordion-icon {
+          transition: transform 0.3s ease;
+        }
+
+        .accordion-group.closed .accordion-body {
+          display: none;
+        }
+
+        .accordion-group.closed .accordion-icon {
+          transform: rotate(-90deg);
+        }
+
+        .accordion-body {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 15px;
+          padding: 15px;
+        }
+
+        .b-group-spec {
+          grid-row: span 1 !important;
         }
       }
 
@@ -385,12 +433,6 @@
         border-top: 4px solid #00ffcc;
         background: rgba(0, 255, 204, 0.02);
         grid-row: span 2;
-      }
-
-      @media (max-width: 1400px) {
-        .b-group-spec {
-          grid-row: span 1;
-        }
       }
 
       .building-title {
@@ -799,6 +841,13 @@
           specPowerLabel: "手動指派支援",
           specPowerLabelAmmo: "手動負責人員",
           alertSuccess: "分配名單已成功複製到剪貼簿！",
+          groupTitles: [
+            "第一組 (試驗場 I & 維修廠 I)",
+            "第二組 (試驗場 II & 維修廠 II)",
+            "第三組 (維修廠 III & 中轉站)",
+            "第四組 (維修廠 IV & 蒸氣鍋爐)",
+            "特殊支援小隊 (採集 & 子彈)",
+          ],
         },
         en: {
           selectLabel: "📜 Select Battle Record: ",
@@ -824,6 +873,13 @@
           specPowerLabel: "Manual Assigned",
           specPowerLabelAmmo: "Manual Assigned",
           alertSuccess: "Roster copied to clipboard successfully!",
+          groupTitles: [
+            "Group 1 (Site I & Repair I)",
+            "Group 2 (Site II & Repair II)",
+            "Group 3 (Repair III & Transit)",
+            "Group 4 (Repair IV & Boiler)",
+            "Special Squads (Gathering & Ammo)",
+          ],
         },
       };
 
@@ -889,6 +945,13 @@
         }
       }
 
+      function toggleAccordionGroup(groupId) {
+        const group = document.getElementById(groupId);
+        if (group) {
+          group.classList.toggle("closed");
+        }
+      }
+
       window.addEventListener("hashchange", () => {
         checkHashtagLegion();
         if (currentRecord) {
@@ -899,6 +962,12 @@
       window.addEventListener("load", () => {
         checkHashtagLegion();
         fetchHistoryList();
+      });
+
+      window.addEventListener("resize", () => {
+        if (currentRecord) {
+          renderViewer();
+        }
       });
 
       function fetchHistoryList() {
@@ -1107,7 +1176,6 @@
         renderViewer();
       }
 
-      /* 樂觀更新 (Optimistic UI) 零延遲表情點擊邏輯 */
       function sendReaction(type) {
         if (!currentRecord || !currentRecord.rowIndex) return;
 
@@ -1122,7 +1190,6 @@
           currentRecord.payload.reactions = { heart: 0, angry: 0 };
         }
 
-        // 1. 樂觀更新：立即寫入本地記憶體與紀錄
         localStorage.setItem(storageKey, type);
         if (type === "heart") {
           currentRecord.payload.reactions.heart = (currentRecord.payload.reactions.heart || 0) + 1;
@@ -1130,10 +1197,8 @@
           currentRecord.payload.reactions.angry = (currentRecord.payload.reactions.angry || 0) + 1;
         }
 
-        // 2. 立即更新 UI (零等待)
         updateReactionsUI(currentRecord.payload.reactions);
 
-        // 3. 背景靜默傳送資料至後端
         const payload = {
           action: "reaction",
           rowIndex: currentRecord.rowIndex,
@@ -1182,6 +1247,42 @@
         }
       }
 
+      function createViewerBuildingCard(b, lang, p) {
+        const card = document.createElement("div");
+        card.className = `building-card b-group-${b.gIdx}`;
+
+        let bPower = 0;
+        let pTagsHtml = "";
+        const list = p.buildings ? p.buildings[b.id] || [] : [];
+
+        list.forEach((player) => {
+          bPower += player.power || 0;
+          let roleClass = "";
+          let roleLabel = "";
+          if (player.isLeader) {
+            roleClass = "is-leader";
+            roleLabel = `<span class="tag-leader-label">${lang.leaderTag}</span>`;
+          } else if (player.isVice) {
+            roleClass = "is-vice";
+            roleLabel = `<span class="tag-vice-label">${lang.viceTag}</span>`;
+          }
+
+          pTagsHtml += `
+            <div class="player-tag ${roleClass}">
+              <span>${roleLabel}${player.name}</span>
+              <strong style="color:var(--text-neon); font-family: 'Share Tech Mono';">${player.power || ""}</strong>
+            </div>
+          `;
+        });
+
+        card.innerHTML = `
+          <div class="building-title">${currentUIClassLang === "en" ? b.nameEn : b.nameZht}</div>
+          <div class="building-power">${lang.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
+          <div class="drop-zone">${pTagsHtml}</div>
+        `;
+        return card;
+      }
+
       function renderViewer() {
         if (!currentRecord) return;
 
@@ -1212,7 +1313,6 @@
           p = payload.legions[currentLegion];
         }
 
-        /* 渲染極簡直觀的表情按鈕 HTML */
         document.getElementById("summaryBox").innerHTML = `
           <p>${lang.summaryText[0]} <strong>${p.summary ? p.summary.totalPeople : 0}</strong></p>
           <p>${lang.summaryText[1]} <strong>${p.summary ? p.summary.totalPower.toLocaleString() : 0}</strong></p>
@@ -1236,6 +1336,8 @@
 
         const grid = document.getElementById("buildingGrid");
         grid.innerHTML = "";
+
+        const isMobileView = window.innerWidth <= 1200;
 
         const gatherCard = document.createElement("div");
         gatherCard.className = "building-card b-group-spec";
@@ -1271,46 +1373,65 @@
           <div class="drop-zone">${ammoTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentUIClassLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
         `;
 
-        buildingsConfig.forEach((b, idx) => {
-          const card = document.createElement("div");
-          card.className = `building-card b-group-${b.gIdx}`;
+        if (isMobileView) {
+          for (let g = 0; g < 4; g++) {
+            const groupWrap = document.createElement("div");
+            groupWrap.className = "accordion-group";
+            groupWrap.id = `viewAccGroup_${g}`;
 
-          let bPower = 0;
-          let pTagsHtml = "";
-          const list = p.buildings ? p.buildings[b.id] || [] : [];
-
-          list.forEach((player) => {
-            bPower += player.power || 0;
-            let roleClass = "";
-            let roleLabel = "";
-            if (player.isLeader) {
-              roleClass = "is-leader";
-              roleLabel = `<span class="tag-leader-label">${lang.leaderTag}</span>`;
-            } else if (player.isVice) {
-              roleClass = "is-vice";
-              roleLabel = `<span class="tag-vice-label">${lang.viceTag}</span>`;
-            }
-
-            pTagsHtml += `
-              <div class="player-tag ${roleClass}">
-                <span>${roleLabel}${player.name}</span>
-                <strong style="color:var(--text-neon); font-family: 'Share Tech Mono';">${player.power || ""}</strong>
-              </div>
+            const header = document.createElement("div");
+            header.className = "accordion-header";
+            header.onclick = () => toggleAccordionGroup(`viewAccGroup_${g}`);
+            header.innerHTML = `
+              <span>▼ ${lang.groupTitles[g]}</span>
+              <span class="accordion-icon">▲</span>
             `;
-          });
 
-          card.innerHTML = `
-            <div class="building-title">${currentUIClassLang === "en" ? b.nameEn : b.nameZht}</div>
-            <div class="building-power">${lang.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
-            <div class="drop-zone">${pTagsHtml}</div>
-          `;
-          grid.appendChild(card);
+            const body = document.createElement("div");
+            body.className = "accordion-body";
 
-          if (idx === 3) {
-            grid.appendChild(gatherCard);
-            grid.appendChild(ammoCard);
+            const b1 = buildingsConfig[g * 2];
+            const b2 = buildingsConfig[g * 2 + 1];
+
+            body.appendChild(createViewerBuildingCard(b1, lang, p));
+            body.appendChild(createViewerBuildingCard(b2, lang, p));
+
+            groupWrap.appendChild(header);
+            groupWrap.appendChild(body);
+            grid.appendChild(groupWrap);
           }
-        });
+
+          const specWrap = document.createElement("div");
+          specWrap.className = "accordion-group";
+          specWrap.id = "viewAccGroup_spec";
+
+          const specHeader = document.createElement("div");
+          specHeader.className = "accordion-header";
+          specHeader.onclick = () => toggleAccordionGroup("viewAccGroup_spec");
+          specHeader.innerHTML = `
+            <span>▼ ${lang.groupTitles[4]}</span>
+            <span class="accordion-icon">▲</span>
+          `;
+
+          const specBody = document.createElement("div");
+          specBody.className = "accordion-body";
+          specBody.appendChild(gatherCard);
+          specBody.appendChild(ammoCard);
+
+          specWrap.appendChild(specHeader);
+          specWrap.appendChild(specBody);
+          grid.appendChild(specWrap);
+        } else {
+          buildingsConfig.forEach((b, idx) => {
+            const card = createViewerBuildingCard(b, lang, p);
+            grid.appendChild(card);
+
+            if (idx === 3) {
+              grid.appendChild(gatherCard);
+              grid.appendChild(ammoCard);
+            }
+          });
+        }
 
         switchCopyLang(currentCopyLang);
       }
