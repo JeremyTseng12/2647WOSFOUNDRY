@@ -333,6 +333,7 @@
       input[type="text"],
       input[type="number"],
       input[type="password"],
+      input[type="date"],
       select,
       textarea {
         width: 100%;
@@ -353,6 +354,7 @@
       input[type="text"]:focus,
       input[type="number"]:focus,
       input[type="password"]:focus,
+      input[type="date"]:focus,
       select:focus,
       textarea:focus {
         outline: none;
@@ -448,6 +450,51 @@
         border-color: var(--text-neon);
         color: #fff;
         background: #182238;
+      }
+
+      /* 手動指定副隊長手風琴樣式 */
+      .vice-accordion {
+        background: #090e1a;
+        border: 1px dashed #00aaff;
+        border-radius: 4px;
+        margin-top: 15px;
+        overflow: hidden;
+      }
+      .vice-accordion-header {
+        padding: 12px 16px;
+        background: rgba(0, 170, 255, 0.08);
+        color: #99d6ff;
+        font-size: 0.95rem;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.2s;
+      }
+      .vice-accordion-header:hover {
+        background: rgba(0, 170, 255, 0.15);
+      }
+      .vice-accordion-body {
+        padding: 18px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        border-top: 1px dashed #1a233a;
+      }
+      .vice-accordion.closed .vice-accordion-body {
+        display: none;
+      }
+      .vice-accordion.closed .vice-accordion-icon {
+        transform: rotate(-90deg);
+      }
+      .vice-accordion-icon {
+        transition: transform 0.3s ease;
+      }
+      @media (max-width: 600px) {
+        .vice-accordion-body {
+          grid-template-columns: 1fr;
+        }
       }
 
       .action-bar-copy {
@@ -931,7 +978,7 @@
         grid-row: span 2 !important;
       }
 
-      /* 截圖背景 TSENG PRO 浮水印 (與載入畫面 logo 字體一致) */
+      /* 截圖背景 TSENG PRO 浮水印 */
       .capture-watermark {
         position: absolute !important;
         top: 50% !important;
@@ -944,7 +991,8 @@
         white-space: nowrap !important;
         pointer-events: none !important;
         user-select: none !important;
-        font-family: "Bebas Neue", "Montenegrin Gothic One", sans-serif !important;
+        font-family:
+          "Bebas Neue", "Montenegrin Gothic One", sans-serif !important;
         letter-spacing: 12px !important;
       }
     </style>
@@ -1141,6 +1189,82 @@
                   style="margin-top: 8px"
                   onkeydown="handlePowerEnter(event, 3)"
                 />
+              </div>
+            </div>
+
+            <!-- 手動指定副隊長進階手風琴區塊 -->
+            <div class="vice-accordion closed" id="viceAccordion">
+              <div
+                class="vice-accordion-header"
+                onclick="toggleViceAccordion()"
+              >
+                <span id="uiViceAccordionTitle"
+                  >⚙️ 進階設定：手動指定各組副隊長 (預設自動分配)</span
+                >
+                <span class="vice-accordion-icon">▲</span>
+              </div>
+              <div class="vice-accordion-body">
+                <div style="grid-column: span 2">
+                  <p
+                    id="uiViceNoticeText"
+                    style="
+                      margin: 0 0 10px 0;
+                      font-size: 0.8rem;
+                      color: #94a3b8;
+                    "
+                  >
+                    💡
+                    提示：手動指定之副隊長會自動併入平衡分配，無需在主名單重複輸入。
+                  </p>
+                </div>
+                <div class="form-group">
+                  <label id="uiLabelVice0" style="color: #99d6ff"
+                    >第 1 組副隊長 (維修廠 I)</label
+                  >
+                  <input type="text" id="viceName0" placeholder="副隊長名字" />
+                  <input
+                    type="number"
+                    id="vicePower0"
+                    placeholder="副隊長戰力"
+                    style="margin-top: 6px"
+                  />
+                </div>
+                <div class="form-group">
+                  <label id="uiLabelVice1" style="color: #99d6ff"
+                    >第 2 組副隊長 (維修廠 II)</label
+                  >
+                  <input type="text" id="viceName1" placeholder="副隊長名字" />
+                  <input
+                    type="number"
+                    id="vicePower1"
+                    placeholder="副隊長戰力"
+                    style="margin-top: 6px"
+                  />
+                </div>
+                <div class="form-group">
+                  <label id="uiLabelVice2" style="color: #99d6ff"
+                    >第 3 組副隊長 (中轉站)</label
+                  >
+                  <input type="text" id="viceName2" placeholder="副隊長名字" />
+                  <input
+                    type="number"
+                    id="vicePower2"
+                    placeholder="副隊長戰力"
+                    style="margin-top: 6px"
+                  />
+                </div>
+                <div class="form-group">
+                  <label id="uiLabelVice3" style="color: #99d6ff"
+                    >第 4 組副隊長 (蒸氣鍋爐)</label
+                  >
+                  <input type="text" id="viceName3" placeholder="副隊長名字" />
+                  <input
+                    type="number"
+                    id="vicePower3"
+                    placeholder="副隊長戰力"
+                    style="margin-top: 6px"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1384,7 +1508,7 @@
       </div>
     </div>
 
-    <!-- 發布確認 Modal -->
+    <!-- 全新改版：發布確認 Modal -->
     <div id="publishModal" class="cyber-modal-overlay">
       <div class="cyber-modal">
         <h3 id="publishModalHeaderTitle">☁️ 發布戰況分配結果</h3>
@@ -1398,32 +1522,62 @@
               <option value="LegionB">[軍團2] Legion 2</option>
             </select>
           </div>
+
+          <!-- 全新需求：活動名稱 3 選 1 下拉選單 -->
+          <div class="form-group" style="margin-top: 15px">
+            <label id="lblPublishEventType" style="color: #7ee8cc"
+              >2. 請選擇活動名稱：</label
+            >
+            <select
+              id="publishEventTypeSelect"
+              onchange="onPublishEventTypeChange()"
+            >
+              <option value="foundry">Foundry battle (兵工廠)</option>
+              <option value="tundra">Tundra Arms League (雪域)</option>
+              <option value="test">TEST (測試)</option>
+            </select>
+          </div>
+
+          <!-- 雪域活動專用日期選擇器 (預設隱藏) -->
+          <div
+            class="form-group"
+            id="tundraDatePickerGroup"
+            style="margin-top: 15px; display: none"
+          >
+            <label style="color: #99d6ff">2-1. DATE：</label>
+            <input
+              type="date"
+              id="tundraDatePicker"
+              onchange="onTundraDateChange()"
+            />
+          </div>
+
+          <!-- 帶入最終標題之唯讀 (disabled) 輸入盒 -->
           <div class="form-group" style="margin-top: 15px">
             <label id="lblPublishTitle" style="color: #7ee8cc"
-              >2. 請輸入本次分配結果的標題：</label
+              >3. 生成之分配結果紀錄標題：</label
             >
             <input
               type="text"
               id="publishTitleInput"
-              placeholder="例：2026/07/22 兵工廠"
+              disabled
+              style="background-color: #060a12; color: #a7f3d0"
             />
           </div>
+
           <div class="form-group" style="margin-top: 15px">
             <label id="lblPublishAuthor" style="color: #00ffcc"
-              >3. 分配員暱稱：</label
+              >4. 分配員暱稱：</label
             >
             <input type="text" id="publishAuthorInput" placeholder="例：塔卡" />
           </div>
+
+          <!-- 密碼功能持續停用 -->
           <div class="form-group" style="margin-top: 15px">
             <label id="lblPublishPasscode" style="color: #ff3838"
-              >4. 設定存取密碼 (選填/留空表示無密碼)：</label
+              >5. 設定存取密碼 (停用中)：</label
             >
-            <input
-              type="password"
-              id="publishPasscodeInput"
-              placeholder="若原紀錄有密碼，覆寫時請填寫相同密碼"
-              disabled
-            />
+            <input type="password" id="publishPasscodeInput" disabled />
           </div>
         </div>
         <div class="cyber-modal-actions">
@@ -1504,7 +1658,35 @@
           <p id="uiChangelogDesc">本系統之歷史重構與優化明細項目：</p>
           <div class="changelog-box">
             <div class="changelog-item">
-              <div class="changelog-version">v2.8.5 (Current)</div>
+              <div class="changelog-version">v2.9.0 (Current)</div>
+              <div>
+                •
+                新增「手動指派副隊長」進階手風琴選單，可獨立設定姓名與戰力，直接參與平衡分配。
+              </div>
+              <div>
+                •
+                強化「防呆機制」：嚴格檢查正/副隊長重複設定，並防止隊長名單出現在主名單與特殊小隊中。
+              </div>
+              <div>
+                • 發布視窗全面改版：新增「兵工廠 / 雪域 /
+                測試」活動選單，自動計算當週週日日期與智慧帶入標題。
+              </div>
+              <div>
+                • 響應式佈局優化：小螢幕 (≤1200px)
+                自動切換為「4大組折疊手風琴」，解決特殊小隊卡位與佈局混亂問題。
+              </div>
+              <div>
+                • 升級 6x2
+                獨立截圖機制：無視使用者裝置螢幕大小，強制背景生成包含「TSENG
+                PRO」斜向微光浮水印的高清完整看板。
+              </div>
+              <div>
+                •
+                修正翻譯系統同步機制：解決英文模式下分配結果需手動切換兩次翻譯的漏洞。
+              </div>
+            </div>
+            <div class="changelog-item">
+              <div class="changelog-version">v2.8.5</div>
               <div>
                 • 新增「📂
                 載入雲端舊戰局微調」功能：直接讀取雲端分配表格至微調區，拖曳調整後可直接覆寫更新！
@@ -1624,6 +1806,18 @@
             power: "輸入隊長戰力",
             list: "請在此輸入整隊隊員名單...",
           },
+          viceAccordionTitle:
+            "⚙️ 進階戰術設定：手動指定各組副隊長 (預設自動揀選)",
+          viceNoticeText:
+            "💡 提示：手動指定之副隊長會自動併入平衡分配，無需在主名單重複輸入。",
+          viceLabels: [
+            "第 1 組副隊長 (維修廠 I)",
+            "第 2 組副隊長 (維修廠 II)",
+            "第 3 組副隊長 (中轉站)",
+            "第 4 組副隊長 (蒸氣鍋爐)",
+          ],
+          vicePlaceholderName: "副隊長名字",
+          vicePlaceholderPower: "副隊長戰力",
           memberTitle: "戰術參戰隊員分配區",
           labelMainList: "⚔️ 1. 主平衡分配名單 (一行為一筆：名字 戰力)",
           memberDesc:
@@ -1674,9 +1868,10 @@
           btnCloseChangelog: "關閉視窗 / Close",
           publishHeader: "☁️ 發布戰況分配結果",
           lblPublishLegion: "1. 請選擇發布軍團 (Legion)：",
-          lblPublishTitle: "2. 請輸入本次分配結果的標題：",
-          lblPublishAuthor: "3. 分配員暱稱：",
-          lblPublishPasscode: "4. 設定存取密碼 (選填/留空表示無密碼)：",
+          lblPublishEventType: "2. 請選擇活動名稱：",
+          lblPublishTitle: "3. 生成之戰術紀錄標題：",
+          lblPublishAuthor: "4. 分配員暱稱：",
+          lblPublishPasscode: "5. 設定存取密碼 (停用中)：",
           btnPublishCancel: "取消",
           btnConfirmPublish: "確認並發布",
           uiLoadHistoryTitle: "📂 編輯歷史分配紀錄",
@@ -1723,6 +1918,17 @@
             power: "Enter leader power",
             list: "Enter player roster here...",
           },
+          viceAccordionTitle: "⚙️ Advanced: Manual Assign Vice-CDR (Optional)",
+          viceNoticeText:
+            "💡 Note: Manually assigned V-CDRs will be auto-balanced. No need to re-enter in the main list.",
+          viceLabels: [
+            "Group 1 V-CDR (Repair Facility I)",
+            "Group 2 V-CDR (Repair Facility II)",
+            "Group 3 V-CDR (Transit Station)",
+            "Group 4 V-CDR (Boiler Room)",
+          ],
+          vicePlaceholderName: "V-CDR Name",
+          vicePlaceholderPower: "V-CDR Power",
           memberTitle: "Tactical Personnel Dashboard",
           labelMainList:
             "⚔️ 1. Main Balancing Roster (One per line: Name Power)",
@@ -1783,9 +1989,10 @@
           btnCloseChangelog: "Close Window",
           publishHeader: "☁️ Publish Allocation Results",
           lblPublishLegion: "1. Select Legion:",
-          lblPublishTitle: "2. Enter Title for this Allocation:",
-          lblPublishAuthor: "3. PIC / Author Name:",
-          lblPublishPasscode: "4. Passcode (Optional / Leave empty for none):",
+          lblPublishEventType: "2. Select Event Type:",
+          lblPublishTitle: "3. Generated Allocation Title:",
+          lblPublishAuthor: "4. PIC / Author Name:",
+          lblPublishPasscode: "5. Passcode (Disabled):",
           btnPublishCancel: "Cancel",
           btnConfirmPublish: "Confirm & Publish",
           uiLoadHistoryTitle: "📂 Edit History Record",
@@ -1899,6 +2106,13 @@
         }, 2200);
       });
 
+      function toggleViceAccordion() {
+        const acc = document.getElementById("viceAccordion");
+        if (acc) {
+          acc.classList.toggle("closed");
+        }
+      }
+
       function handlePowerEnter(event, currentIdx) {
         if (event.key === "Enter") {
           event.preventDefault();
@@ -1965,6 +2179,19 @@
           p.btnLoadTestData;
         document.getElementById("uiQuickTitle").innerText = p.quickTitle;
 
+        document.getElementById("uiViceAccordionTitle").innerText =
+          p.viceAccordionTitle;
+        document.getElementById("uiViceNoticeText").innerText =
+          p.viceNoticeText;
+        for (let i = 0; i < 4; i++) {
+          document.getElementById(`uiLabelVice${i}`).innerText =
+            p.viceLabels[i];
+          document.getElementById(`viceName${i}`).placeholder =
+            p.vicePlaceholderName;
+          document.getElementById(`vicePower${i}`).placeholder =
+            p.vicePlaceholderPower;
+        }
+
         document.getElementById("modalTitle").innerText = p.modalTitle;
         document.getElementById("modalDesc").innerText = p.modalDesc;
         document.getElementById("btnModalCancel").innerText = p.modalCancel;
@@ -1979,6 +2206,8 @@
           p.publishHeader;
         document.getElementById("lblPublishLegion").innerText =
           p.lblPublishLegion;
+        document.getElementById("lblPublishEventType").innerText =
+          p.lblPublishEventType;
         document.getElementById("lblPublishTitle").innerText =
           p.lblPublishTitle;
         document.getElementById("lblPublishAuthor").innerText =
@@ -2085,6 +2314,7 @@
       function parseCurrentInputs() {
         let parsed = {
           leaders: [],
+          viceLeaders: [],
           mainMembers: [],
           gatherMembers: [],
           ammoMembers: [],
@@ -2098,6 +2328,12 @@
           );
           parsed.leaders.push({ name, power });
           if (name) parsed.uniqueNames.add(name);
+
+          const vName = document.getElementById(`viceName${i}`).value.trim();
+          const vPower =
+            parseInt(document.getElementById(`vicePower${i}`).value) || 0;
+          parsed.viceLeaders.push({ name: vName, power: vPower });
+          if (vName) parsed.uniqueNames.add(vName);
         }
 
         parseLines(document.getElementById("memberInput").value).forEach(
@@ -2141,7 +2377,11 @@
         let html = `<strong>${p.overviewTitle}</strong><br>${p.overviewCountText}${totalCount}${p.overviewCountUnit}<br><br>`;
         html += `<strong>${p.leaderPreviewTitle}</strong><br>`;
         data.leaders.forEach((l, idx) => {
-          html += `${p.leaderGText}${idx + 1}${p.leaderGUnit}${l.name || p.emptyText} (${l.power || 0})<br>`;
+          const vObj = data.viceLeaders[idx];
+          const viceText = vObj.name
+            ? ` [副: ${vObj.name} (${vObj.power})]`
+            : "";
+          html += `${p.leaderGText}${idx + 1}${p.leaderGUnit}${l.name || p.emptyText} (${l.power || 0})${viceText}<br>`;
         });
         html += `<br><strong>${p.mainPoolTitle}${data.mainMembers.length}${p.poolUnit}</strong><br>`;
         html += data.mainMembers.map((m) => m.name).join("、") || p.emptyText;
@@ -2200,6 +2440,10 @@
       }
 
       function validateInputs() {
+        const isEn = currentData.currentLang === "en";
+        const leaderNamesSet = new Set();
+
+        // 1. 檢查四大正隊長
         for (let i = 0; i < 4; i++) {
           const name = document.getElementById(`leaderName${i}`).value.trim();
           const power = parseInt(
@@ -2208,29 +2452,102 @@
 
           if (!name) {
             showError(
-              currentData.currentLang === "zht"
-                ? `請填寫第 ${i + 1} 組的隊長名字！`
-                : `Please enter the leader name for Group ${i + 1}!`,
+              isEn
+                ? `Please enter the leader name for Group ${i + 1}!`
+                : `請填寫第 ${i + 1} 組的隊長名字！`,
             );
             return false;
           }
           if (isNaN(power)) {
             showError(
-              currentData.currentLang === "zht"
-                ? `請填寫隊長「${name}」的戰力數值！`
-                : `Please enter the power for leader "${name}"!`,
+              isEn
+                ? `Please enter the power for leader "${name}"!`
+                : `請填寫隊長「${name}」的戰力數值！`,
             );
             return false;
           }
           if (power < 4000) {
             showError(
-              currentData.currentLang === "zht"
-                ? `錯誤：隊長「${name}」戰力低於 4000！`
-                : `Error: Leader "${name}" power is below 4000!`,
+              isEn
+                ? `Error: Leader "${name}" power is below 4000!`
+                : `錯誤：隊長「${name}」戰力低於 4000！`,
+            );
+            return false;
+          }
+          leaderNamesSet.add(name);
+        }
+
+        // 2. 檢查手動填寫之副隊長 (檢查是否與正隊長重覆或副隊長彼此重覆)
+        for (let i = 0; i < 4; i++) {
+          const vName = document.getElementById(`viceName${i}`).value.trim();
+          const vPower = parseInt(
+            document.getElementById(`vicePower${i}`).value,
+          );
+
+          if (vName) {
+            if (leaderNamesSet.has(vName)) {
+              showError(
+                isEn
+                  ? `Error: Vice-CDR "${vName}" is already assigned as a CDR!`
+                  : `防呆警告：「${vName}」已被指派為正隊長，無法重複設為副隊長！`,
+              );
+              return false;
+            }
+            if (isNaN(vPower) || vPower <= 0) {
+              showError(
+                isEn
+                  ? `Please enter power for Vice-CDR "${vName}"!`
+                  : `請填寫副隊長「${vName}」的戰力數值！`,
+              );
+              return false;
+            }
+            leaderNamesSet.add(vName);
+          }
+        }
+
+        // 3. 防呆檢查：正副隊長是否重複出現在主參戰名單、採集小隊或子彈小隊中
+        const mainLines = parseLines(
+          document.getElementById("memberInput").value,
+        );
+        for (let m of mainLines) {
+          if (leaderNamesSet.has(m.name)) {
+            showError(
+              isEn
+                ? `Error: CDR/V-CDR "${m.name}" appears in the main balancing list! Do not re-enter CDRs in the main list.`
+                : `防呆警告：隊長/副隊長「${m.name}」重複出現在「1. 主平衡分配名單」！系統已自動包含隊長，請自主名單中移除。`,
             );
             return false;
           }
         }
+
+        const gatherLines = parseLines(
+          document.getElementById("gatherInput").value,
+        );
+        for (let g of gatherLines) {
+          if (leaderNamesSet.has(g.name)) {
+            showError(
+              isEn
+                ? `Error: CDR/V-CDR "${g.name}" appears in the Gathering Squad list!`
+                : `防呆警告：隊長/副隊長「${g.name}」重複出現在「2. 採集小隊名單」！`,
+            );
+            return false;
+          }
+        }
+
+        const ammoLines = parseLines(
+          document.getElementById("ammoInput").value,
+        );
+        for (let a of ammoLines) {
+          if (leaderNamesSet.has(a.name)) {
+            showError(
+              isEn
+                ? `Error: CDR/V-CDR "${a.name}" appears in the Ammo Squad list!`
+                : `防呆警告：隊長/副隊長「${a.name}」重複出現在「3. 子彈小隊名單」！`,
+            );
+            return false;
+          }
+        }
+
         return true;
       }
 
@@ -2260,11 +2577,25 @@
             isLeader: true,
             isVice: false,
           };
+
+          let manualViceObj = null;
+          let vData = pool.viceLeaders[i];
+          if (vData.name && vData.power > 0) {
+            manualViceObj = {
+              name: vData.name,
+              power: vData.power,
+              isLeader: false,
+              isVice: true,
+            };
+            totalLeadersPower += vData.power;
+          }
+
           groups.push({
             index: i,
             leader: leaderObj,
+            manualVice: manualViceObj,
             members: [],
-            totalPower: lData.power,
+            totalPower: lData.power + (manualViceObj ? manualViceObj.power : 0),
           });
           totalLeadersPower += lData.power;
         }
@@ -2295,7 +2626,11 @@
 
         groups.forEach((g) => {
           let allPeopleInGroup = [g.leader];
+          if (g.manualVice) {
+            allPeopleInGroup.push(g.manualVice);
+          }
           g.members.forEach((m) => allPeopleInGroup.push(m));
+
           const bId1 = `b${g.index * 2}`;
           const bId2 = `b${g.index * 2 + 1}`;
           allPeopleInGroup.forEach((person, idx) => {
@@ -2377,25 +2712,23 @@
           let list = currentData.buildings[b.id];
           if (!list || list.length === 0) return;
 
-          list.forEach((p) => {
-            if (!p.isLeader) p.isVice = false;
-          });
+          let hasManualVice = list.some((p) => p.isVice);
 
           let leaderIdx = list.findIndex((p) => p.isLeader);
           let leaderObj =
             leaderIdx !== -1 ? list.splice(leaderIdx, 1)[0] : null;
 
           if (leaderObj) {
-            if (b.needVice) {
+            if (b.needVice && !hasManualVice) {
               list.sort((a, b) => b.power - a.power);
               if (list[0]) list[0].isVice = true;
-            } else {
+            } else if (!b.needVice) {
               list.sort((a, b) => b.power - a.power);
             }
             list.unshift(leaderObj);
           } else {
             list.sort((a, b) => b.power - a.power);
-            if (b.needVice) {
+            if (b.needVice && !hasManualVice) {
               let candidateIdx = list.findIndex((p) => p.power >= 4000);
               if (candidateIdx === -1) candidateIdx = 0;
               if (list[candidateIdx]) {
@@ -2456,7 +2789,9 @@
         card.addEventListener("drop", dragDrop);
 
         let bPower = 0;
-        (currentData.buildings[b.id] || []).forEach((pObj) => (bPower += pObj.power));
+        (currentData.buildings[b.id] || []).forEach(
+          (pObj) => (bPower += pObj.power),
+        );
 
         let pTagsHtml = "";
         (currentData.buildings[b.id] || []).forEach((player, pIdx) => {
@@ -2674,17 +3009,14 @@
 
         const p = langPack[currentData.currentLang];
 
-        // 1. 在背景建立一個暫時性、固定寬度的 6x2 看板容器
         const tempContainer = document.createElement("div");
         tempContainer.className = "capture-grid-forced";
 
-        // 2. 建立浮水印元素（採用 TSENG PRO 與 Bebas Neue 字體）
         const watermark = document.createElement("div");
         watermark.className = "capture-watermark";
         watermark.innerText = "TSENG PRO";
         tempContainer.appendChild(watermark);
 
-        // 3. 建立採集與子彈小隊卡片
         const gatherCard = document.createElement("div");
         gatherCard.className = "building-card b-group-spec";
         let gatherArr = currentData.manualGatherText
@@ -2721,7 +3053,6 @@
           <div class="drop-zone">${ammoTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
         `;
 
-        // 4. 按照標準 6x2 看板順序填入卡片
         buildingsConfig.forEach((b, idx) => {
           const card = createBuildingCardElement(b, p);
           tempContainer.appendChild(card);
@@ -2732,10 +3063,8 @@
           }
         });
 
-        // 5. 掛載到 body 背景以供 html2canvas 渲染
         document.body.appendChild(tempContainer);
 
-        // 6. 執行截圖
         html2canvas(tempContainer, {
           backgroundColor: "#0f1524",
           scale: 2,
@@ -2888,13 +3217,61 @@
         alert("已退出微調模式，接下來發布將建立「全新戰局紀錄」。");
       }
 
-      function openPublishModal() {
+      /* 算當週週日日期（Format: YYYY/MM/DD） */
+      function getNextSundayDateString() {
         const now = new Date();
-        const defaultTitle = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} 兵工廠人員分配`;
+        const dayOfWeek = now.getDay(); // 0 是週日
+        const distanceToSunday = (7 - dayOfWeek) % 7;
+        const sundayDate = new Date(now);
+        sundayDate.setDate(now.getDate() + distanceToSunday);
 
-        if (!document.getElementById("publishTitleInput").value) {
-          document.getElementById("publishTitleInput").value = defaultTitle;
+        const year = sundayDate.getFullYear();
+        const month = String(sundayDate.getMonth() + 1).padStart(2, "0");
+        const day = String(sundayDate.getDate()).padStart(2, "0");
+        return `${year}/${month}/${day}`;
+      }
+
+      /* 處理發布彈窗下拉選單切換邏輯 */
+      function onPublishEventTypeChange() {
+        const type = document.getElementById("publishEventTypeSelect").value;
+        const tundraGroup = document.getElementById("tundraDatePickerGroup");
+        const titleInput = document.getElementById("publishTitleInput");
+
+        if (type === "foundry") {
+          tundraGroup.style.display = "none";
+          titleInput.value = `${getNextSundayDateString()} 兵工廠爭奪戰`;
+        } else if (type === "tundra") {
+          tundraGroup.style.display = "block";
+          const picker = document.getElementById("tundraDatePicker");
+          if (picker.value) {
+            onTundraDateChange();
+          } else {
+            titleInput.value = `雪域兵器聯賽`;
+          }
+        } else if (type === "test") {
+          tundraGroup.style.display = "none";
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, "0");
+          const day = String(now.getDate()).padStart(2, "0");
+          titleInput.value = `${year}/${month}/${day} 測試`;
         }
+      }
+
+      /* 雪域日期選擇器選擇後帶入標題 */
+      function onTundraDateChange() {
+        const pickerVal = document.getElementById("tundraDatePicker").value;
+        const titleInput = document.getElementById("publishTitleInput");
+        if (pickerVal) {
+          const formattedDate = pickerVal.replace(/-/g, "/");
+          titleInput.value = `${formattedDate} 雪域兵器聯賽`;
+        }
+      }
+
+      function openPublishModal() {
+        // 重置為預設選單（兵工廠）並觸發自動標題帶入
+        document.getElementById("publishEventTypeSelect").value = "foundry";
+        onPublishEventTypeChange();
 
         const savedAuthor = localStorage.getItem("lastAuthorName") || "";
         if (!document.getElementById("publishAuthorInput").value) {
