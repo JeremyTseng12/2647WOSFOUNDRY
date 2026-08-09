@@ -1292,7 +1292,10 @@
             確認無誤，開始分配
           </button>
         </div>
-        <p id="modalWarnNotice" style="color: red; margin-top: 10px; font-size: 0.8rem;">
+        <p
+          id="modalWarnNotice"
+          style="color: red; margin-top: 10px; font-size: 0.8rem"
+        >
           IF THE TRANSLATION SYSTEM IS NOT FUNCTIONING PROPERLY, PLEASE TRY
           TRANSLATING AGAIN.
         </p>
@@ -1305,14 +1308,18 @@
         <h3 id="publishModalHeaderTitle">☁️ 發布戰況分配結果</h3>
         <div class="cyber-modal-content">
           <div class="form-group">
-            <label id="lblPublishLegion" style="color: #7ee8cc">1. 請選擇發布軍團 (Legion)：</label>
+            <label id="lblPublishLegion" style="color: #7ee8cc"
+              >1. 請選擇發布軍團 (Legion)：</label
+            >
             <select id="publishLegionSelect">
               <option value="LegionA">[軍團1] Legion 1</option>
               <option value="LegionB">[軍團2] Legion 2</option>
             </select>
           </div>
           <div class="form-group" style="margin-top: 15px">
-            <label id="lblPublishTitle" style="color: #7ee8cc">2. 請輸入本次分配結果的標題：</label>
+            <label id="lblPublishTitle" style="color: #7ee8cc"
+              >2. 請輸入本次分配結果的標題：</label
+            >
             <input
               type="text"
               id="publishTitleInput"
@@ -1320,7 +1327,9 @@
             />
           </div>
           <div class="form-group" style="margin-top: 15px">
-            <label id="lblPublishAuthor" style="color: #00ffcc">3. 分配員暱稱：</label>
+            <label id="lblPublishAuthor" style="color: #00ffcc"
+              >3. 分配員暱稱：</label
+            >
             <input type="text" id="publishAuthorInput" placeholder="例：塔卡" />
           </div>
           <div class="form-group" style="margin-top: 15px">
@@ -1336,7 +1345,11 @@
           </div>
         </div>
         <div class="cyber-modal-actions">
-          <button class="btn btn-modal-cancel" id="btnPublishCancel" onclick="closePublishModal()">
+          <button
+            class="btn btn-modal-cancel"
+            id="btnPublishCancel"
+            onclick="closePublishModal()"
+          >
             取消
           </button>
           <button
@@ -1356,11 +1369,15 @@
         <h3 id="uiLoadHistoryTitle">📂 編輯歷史分配紀錄</h3>
         <div class="cyber-modal-content">
           <div class="form-group">
-            <label id="lblLoadHistory" style="color: #7ee8cc">選擇要載入的分配紀錄：</label>
+            <label id="lblLoadHistory" style="color: #7ee8cc"
+              >選擇要載入的分配紀錄：</label
+            >
             <select id="loadHistorySelect"></select>
           </div>
           <div class="form-group" style="margin-top: 15px">
-            <label id="lblLoadLegion" style="color: #00ffcc">選擇要載入的軍團：</label>
+            <label id="lblLoadLegion" style="color: #00ffcc"
+              >選擇要載入的軍團：</label
+            >
             <select id="loadLegionSelect">
               <option value="LegionA">軍團 1 (Legion 1)</option>
               <option value="LegionB">軍團 2 (Legion 2)</option>
@@ -1407,19 +1424,22 @@
             <div class="changelog-item">
               <div class="changelog-version">v2.8.5 (Current)</div>
               <div>
-                • 新增「📂 載入雲端舊戰局微調」功能：直接讀取雲端分配表格至微調區，拖曳調整後可直接覆寫更新！
+                • 新增「📂
+                載入雲端舊戰局微調」功能：直接讀取雲端分配表格至微調區，拖曳調整後可直接覆寫更新！
               </div>
             </div>
             <div class="changelog-item">
               <div class="changelog-version">v2.7.0</div>
               <div>
-                • 發布視窗新增「軍團切換下拉選單」與「存取密碼設定盒」，全面對接後端雙軍團與權限驗證。
+                •
+                發布視窗新增「軍團切換下拉選單」與「存取密碼設定盒」，全面對接後端雙軍團與權限驗證。
               </div>
             </div>
             <div class="changelog-item">
               <div class="changelog-version">v2.6.4</div>
               <div>
-                • 精準修正看板佈局：前 4 建築 + 採集小隊 + 子彈小隊(第一列, 特殊小隊各跨2列)，後 4 建築位於第二列，完美實現 6x2 看板佈局。
+                • 精準修正看板佈局：前 4 建築 + 採集小隊 + 子彈小隊(第一列,
+                特殊小隊各跨2列)，後 4 建築位於第二列，完美實現 6x2 看板佈局。
               </div>
             </div>
             <div class="changelog-item">
@@ -1444,7 +1464,9 @@
             </div>
             <div class="changelog-item">
               <div class="changelog-version">v2.4.1</div>
-              <div>• 移除體積過大的分配中動畫 GIF，全面替換為輕量紙飛機 GIF。</div>
+              <div>
+                • 移除體積過大的分配中動畫 GIF，全面替換為輕量紙飛機 GIF。
+              </div>
             </div>
             <div class="changelog-item">
               <div class="changelog-version">v2.3.0</div>
@@ -1825,7 +1847,8 @@
         }
 
         document.getElementById("introText").innerText = p.introText;
-        document.getElementById("btnHistoryModal").innerText = p.btnHistoryModal;
+        document.getElementById("btnHistoryModal").innerText =
+          p.btnHistoryModal;
         document.getElementById("btnViewSystem").innerText = p.btnViewSystem;
         document.getElementById("btnOldSystem").innerText = p.btnOldSystem;
         document.getElementById("btnCancelEdit").innerText = p.btnCancelEdit;
@@ -1842,7 +1865,8 @@
           p.gatherPlaceholder;
         document.getElementById("ammoInput").placeholder = p.ammoPlaceholder;
         document.getElementById("btnDistribute").innerText = p.btnDistribute;
-        document.getElementById("btnLoadTestData").innerText = p.btnLoadTestData;
+        document.getElementById("btnLoadTestData").innerText =
+          p.btnLoadTestData;
         document.getElementById("uiQuickTitle").innerText = p.quickTitle;
 
         document.getElementById("modalTitle").innerText = p.modalTitle;
@@ -1852,21 +1876,31 @@
         document.getElementById("uiChangelogTitle").innerText =
           p.changelogTitle;
         document.getElementById("uiChangelogDesc").innerText = p.changelogDesc;
-        document.getElementById("btnCloseChangelog").innerText = p.btnCloseChangelog;
+        document.getElementById("btnCloseChangelog").innerText =
+          p.btnCloseChangelog;
 
         // Modal 視窗語言更新
-        document.getElementById("publishModalHeaderTitle").innerText = p.publishHeader;
-        document.getElementById("lblPublishLegion").innerText = p.lblPublishLegion;
-        document.getElementById("lblPublishTitle").innerText = p.lblPublishTitle;
-        document.getElementById("lblPublishAuthor").innerText = p.lblPublishAuthor;
-        document.getElementById("lblPublishPasscode").innerText = p.lblPublishPasscode;
-        document.getElementById("btnPublishCancel").innerText = p.btnPublishCancel;
-        document.getElementById("btnConfirmPublish").innerText = p.btnConfirmPublish;
+        document.getElementById("publishModalHeaderTitle").innerText =
+          p.publishHeader;
+        document.getElementById("lblPublishLegion").innerText =
+          p.lblPublishLegion;
+        document.getElementById("lblPublishTitle").innerText =
+          p.lblPublishTitle;
+        document.getElementById("lblPublishAuthor").innerText =
+          p.lblPublishAuthor;
+        document.getElementById("lblPublishPasscode").innerText =
+          p.lblPublishPasscode;
+        document.getElementById("btnPublishCancel").innerText =
+          p.btnPublishCancel;
+        document.getElementById("btnConfirmPublish").innerText =
+          p.btnConfirmPublish;
 
-        document.getElementById("uiLoadHistoryTitle").innerText = p.uiLoadHistoryTitle;
+        document.getElementById("uiLoadHistoryTitle").innerText =
+          p.uiLoadHistoryTitle;
         document.getElementById("lblLoadHistory").innerText = p.lblLoadHistory;
         document.getElementById("lblLoadLegion").innerText = p.lblLoadLegion;
-        document.getElementById("lblLoadPasscode").innerText = p.lblLoadPasscode;
+        document.getElementById("lblLoadPasscode").innerText =
+          p.lblLoadPasscode;
         document.getElementById("btnLoadCancel").innerText = p.btnLoadCancel;
         document.getElementById("btnConfirmLoad").innerText = p.btnConfirmLoad;
 
@@ -1892,7 +1926,8 @@
           document.getElementById("uiCopyTitle").innerText = p.copyTitle;
           document.getElementById("btnCopyText").innerText = p.btnCopyText;
           document.getElementById("uiTweakTitle").innerText = p.tweakTitle;
-          document.getElementById("btnScreenshotText").innerText = p.btnScreenshotText;
+          document.getElementById("btnScreenshotText").innerText =
+            p.btnScreenshotText;
           renderAll();
         }
       }
@@ -2187,6 +2222,9 @@
         resSec.style.display = "block";
         resSec.classList.add("fade-in-view");
         resSec.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (currentData.currentLang === "en") {
+          changeLanguage("en");
+        }
       }
 
       function getFormattedText(isEn) {
@@ -2639,8 +2677,10 @@
           headerTitle.innerText = `💾 覆寫更新雲端戰局 (列號: ${currentEditingRowIndex})`;
           confirmBtn.innerText = "確認並覆寫更新";
         } else {
-          headerTitle.innerText = langPack[currentData.currentLang].publishHeader;
-          confirmBtn.innerText = langPack[currentData.currentLang].btnConfirmPublish;
+          headerTitle.innerText =
+            langPack[currentData.currentLang].publishHeader;
+          confirmBtn.innerText =
+            langPack[currentData.currentLang].btnConfirmPublish;
         }
 
         document.getElementById("publishModal").style.display = "flex";
