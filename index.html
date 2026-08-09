@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Montenegrin+Gothic+One&family=Noto+Sans+HK:wght@500;700;900&family=Share+Tech+Mono&family=ZCOOL+Xiaowei&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montenegrin+Gothic+One&family=Noto+Sans+HK:wght@500;700;900&family=Share+Tech+Mono&family=ZCOOL+Xiaowei&display=swap"
       rel="stylesheet"
     />
     <!-- 引入網頁畫面截圖庫 -->
@@ -578,7 +578,6 @@
         display: none;
       }
 
-      /* 響應式優化：螢幕寬度 <= 1200px 自動改為手風琴折疊佈局 */
       @media (max-width: 1200px) {
         .building-grid {
           display: flex;
@@ -907,6 +906,46 @@
         border-color: #1a233a !important;
         cursor: not-allowed !important;
         opacity: 0.6;
+      }
+
+      /* 截圖專用全尺寸強制的 6x2 看板樣式 */
+      .capture-grid-forced {
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 15px !important;
+        width: 1400px !important;
+        background: #0f1524 !important;
+        padding: 25px !important;
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+        z-index: -9999 !important;
+        overflow: hidden !important;
+      }
+
+      .capture-grid-forced .building-card {
+        min-height: 180px !important;
+      }
+
+      .capture-grid-forced .b-group-spec {
+        grid-row: span 2 !important;
+      }
+
+      /* 截圖背景 TSENG PRO 浮水印 (與載入畫面 logo 字體一致) */
+      .capture-watermark {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) rotate(-20deg) !important;
+        font-size: 11rem !important;
+        font-weight: 900 !important;
+        color: rgba(0, 255, 204, 0.05) !important;
+        text-shadow: 0 0 20px rgba(0, 255, 204, 0.15) !important;
+        white-space: nowrap !important;
+        pointer-events: none !important;
+        user-select: none !important;
+        font-family: "Bebas Neue", "Montenegrin Gothic One", sans-serif !important;
+        letter-spacing: 12px !important;
       }
     </style>
   </head>
@@ -2507,7 +2546,6 @@
         `;
 
         if (isMobileView) {
-          // 螢幕 <= 1200px：自動轉換為 4 大組 + 特殊小隊的折疊手風琴
           for (let g = 0; g < 4; g++) {
             const groupWrap = document.createElement("div");
             groupWrap.className = "accordion-group";
@@ -2535,7 +2573,6 @@
             grid.appendChild(groupWrap);
           }
 
-          // 特殊支援小隊手風琴組
           const specWrap = document.createElement("div");
           specWrap.className = "accordion-group";
           specWrap.id = "accGroup_spec";
@@ -2557,7 +2594,6 @@
           specWrap.appendChild(specBody);
           grid.appendChild(specWrap);
         } else {
-          // 螢幕 > 1200px：保持標準 6x2 看板網格佈局
           buildingsConfig.forEach((b, idx) => {
             const card = createBuildingCardElement(b, p);
             grid.appendChild(card);
@@ -2628,18 +2664,83 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
+      /* 強制 6x2 完整版截圖功能（含 TSENG PRO 浮水印） */
       function captureBuildingGrid() {
-        const target = document.getElementById("buildingGrid");
         const btn = document.getElementById("btnScreenshot");
         const originalText = btn.innerText;
 
         btn.innerText = "⏳ Processing...";
         btn.disabled = true;
 
-        html2canvas(target, {
+        const p = langPack[currentData.currentLang];
+
+        // 1. 在背景建立一個暫時性、固定寬度的 6x2 看板容器
+        const tempContainer = document.createElement("div");
+        tempContainer.className = "capture-grid-forced";
+
+        // 2. 建立浮水印元素（採用 TSENG PRO 與 Bebas Neue 字體）
+        const watermark = document.createElement("div");
+        watermark.className = "capture-watermark";
+        watermark.innerText = "TSENG PRO";
+        tempContainer.appendChild(watermark);
+
+        // 3. 建立採集與子彈小隊卡片
+        const gatherCard = document.createElement("div");
+        gatherCard.className = "building-card b-group-spec";
+        let gatherArr = currentData.manualGatherText
+          ? currentData.manualGatherText.split("\n")
+          : [];
+        let gatherTags = gatherArr
+          .map((name) =>
+            name.trim()
+              ? `<div class="player-tag" style="cursor:default;"><span>⚡ ${name.trim()}</span></div>`
+              : "",
+          )
+          .join("");
+        gatherCard.innerHTML = `
+          <div class="building-title">${p.specTitleGather}</div>
+          <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabel : p.specLabelGather}</div>
+          <div class="drop-zone">${gatherTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
+        `;
+
+        const ammoCard = document.createElement("div");
+        ammoCard.className = "building-card b-group-spec";
+        let ammoArr = currentData.manualAmmoText
+          ? currentData.manualAmmoText.split("\n")
+          : [];
+        let ammoTags = ammoArr
+          .map((name) =>
+            name.trim()
+              ? `<div class="player-tag" style="cursor:default; border-color:#ff3838;"><span>🎒 ${name.trim()}</span></div>`
+              : "",
+          )
+          .join("");
+        ammoCard.innerHTML = `
+          <div class="building-title">${p.specTitleAmmo}</div>
+          <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabelAmmo : p.specLabelAmmo}</div>
+          <div class="drop-zone">${ammoTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
+        `;
+
+        // 4. 按照標準 6x2 看板順序填入卡片
+        buildingsConfig.forEach((b, idx) => {
+          const card = createBuildingCardElement(b, p);
+          tempContainer.appendChild(card);
+
+          if (idx === 3) {
+            tempContainer.appendChild(gatherCard);
+            tempContainer.appendChild(ammoCard);
+          }
+        });
+
+        // 5. 掛載到 body 背景以供 html2canvas 渲染
+        document.body.appendChild(tempContainer);
+
+        // 6. 執行截圖
+        html2canvas(tempContainer, {
           backgroundColor: "#0f1524",
           scale: 2,
           useCORS: true,
+          width: 1400,
         })
           .then((canvas) => {
             const link = document.createElement("a");
@@ -2649,12 +2750,16 @@
             link.href = canvas.toDataURL("image/png");
             link.click();
 
+            document.body.removeChild(tempContainer);
             btn.innerText = originalText;
             btn.disabled = false;
           })
           .catch((err) => {
             console.error("截圖失敗：", err);
             alert("截圖失敗，請稍後再試！");
+            if (document.body.contains(tempContainer)) {
+              document.body.removeChild(tempContainer);
+            }
             btn.innerText = originalText;
             btn.disabled = false;
           });
