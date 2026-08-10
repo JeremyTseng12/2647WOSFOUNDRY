@@ -1016,7 +1016,7 @@
 
     <script>
       const GAS_WEB_APP_URL =
-        "https://script.google.com/macros/s/AKfycbzXG4X8rH31jZjH97pc8qa4Xdmk3TMj0st37GGGLDEC3OiJPSEgiuhKY3KvFOhjIUax/exec";
+        "https://script.google.com/macros/s/AKfycbwcO_cum0wC8lYbQZHVdexJ-qghfddEAdZTID-5CHOYUMGhrz9-rMZEzXBODp5KQtG7/exec";
 
       const langPack = {
         zht: {
@@ -1439,22 +1439,46 @@
         document.getElementById("introText").innerText = p.introText;
         renderViewer();
       }
+      // 安全讀取 LocalStorage（防止無痕模式卡死）
+      function getSafeLocalReaction(title) {
+        try {
+          return localStorage.getItem(`reacted_${title}`);
+        } catch (e) {
+          return null;
+        }
+      }
 
+      // 安全寫入 LocalStorage
+      function setSafeLocalReaction(title, type) {
+        try {
+          localStorage.setItem(`reacted_${title}`, type);
+        } catch (e) {
+          console.warn("localStorage 存取受限（無痕模式）：", e);
+        }
+      }
       function sendReaction(type) {
-        if (!currentRecord || !currentRecord.rowIndex) return;
+        if (!currentRecord || !currentRecord.rowIndex || !currentRecord.title)
+          return;
 
-        const storageKey = `reacted_${currentRecord.rowIndex}`;
-        if (localStorage.getItem(storageKey)) {
-          alert("您已經對此分配結果表達過想法囉！");
+        const title = currentRecord.title;
+        const previousReaction = getSafeLocalReaction(title);
+
+        // 1. 🛑 防重複發送：若已點過，立刻攔截（絕對不會發送 fetch 請求）
+        if (previousReaction) {
+          const typeEmoji = previousReaction === "heart" ? "❤️" : "😡";
+          alert(`您已經對「${title}」給過 ${typeEmoji} 的回覆囉！`);
           return;
         }
+
+        // ⚡ 2. 樂觀更新（0 毫秒極速反應）：點擊瞬間立刻寫入 LocalStorage 並讓按鈕發光！
+        setSafeLocalReaction(title, type);
 
         if (!currentRecord.payload) currentRecord.payload = {};
         if (!currentRecord.payload.reactions) {
           currentRecord.payload.reactions = { heart: 0, angry: 0 };
         }
 
-        localStorage.setItem(storageKey, type);
+        // 先在本地記憶體增加數字
         if (type === "heart") {
           currentRecord.payload.reactions.heart =
             (currentRecord.payload.reactions.heart || 0) + 1;
@@ -1463,8 +1487,10 @@
             (currentRecord.payload.reactions.angry || 0) + 1;
         }
 
+        // 立即刷新 UI (按鈕瞬間發光 + 數字立刻 +1)
         updateReactionsUI(currentRecord.payload.reactions);
 
+        // 3. ☁️ 背景靜默發送請求至 GAS 後端（完全不擋 UI 順暢度）
         const payload = {
           action: "reaction",
           rowIndex: currentRecord.rowIndex,
@@ -1477,16 +1503,24 @@
         })
           .then((res) => res.json())
           .then((data) => {
+            // 成功後用後端精準的數字再次同步（若有其他人同時按讚）
             if (data.status === "success" && data.reactions) {
               currentRecord.payload.reactions = data.reactions;
               updateReactionsUI(data.reactions);
             }
           })
           .catch((err) => {
-            console.error("背景發送表情失敗：", err);
+            console.error("背景同步表情失敗：", err);
+            // 萬一網路連線失敗，自動回滾復原 LocalStorage 與 UI 狀態
+            try {
+              localStorage.removeItem(`reacted_${title}`);
+            } catch (e) {}
+            if (type === "heart") currentRecord.payload.reactions.heart--;
+            if (type === "angry") currentRecord.payload.reactions.angry--;
+            updateReactionsUI(currentRecord.payload.reactions);
+            alert("網路連線失敗，點讚未能同步至雲端。");
           });
       }
-
       function updateReactionsUI(reactions) {
         const heartCount = reactions ? reactions.heart || 0 : 0;
         const angryCount = reactions ? reactions.angry || 0 : 0;
@@ -1499,20 +1533,20 @@
         const btnHeart = document.getElementById("btnHeart");
         const btnAngry = document.getElementById("btnAngry");
 
+        // 先清空所有發光效果
         if (btnHeart) btnHeart.classList.remove("reacted");
         if (btnAngry) btnAngry.classList.remove("reacted");
 
-        if (currentRecord && currentRecord.rowIndex) {
-          const userReaction = localStorage.getItem(
-            `reacted_${currentRecord.rowIndex}`,
-          );
-          if (userReaction === "heart" && btnHeart)
+        // 精準比對「當前紀錄標題」是否點過，有才亮燈
+        if (currentRecord && currentRecord.title) {
+          const userReaction = getSafeLocalReaction(currentRecord.title);
+          if (userReaction === "heart" && btnHeart) {
             btnHeart.classList.add("reacted");
-          if (userReaction === "angry" && btnAngry)
+          } else if (userReaction === "angry" && btnAngry) {
             btnAngry.classList.add("reacted");
+          }
         }
       }
-
       function createViewerBuildingCard(b, lang, p) {
         const card = document.createElement("div");
         card.className = `building-card b-group-${b.gIdx}`;
