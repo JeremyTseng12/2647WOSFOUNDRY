@@ -1105,7 +1105,7 @@
       />
     </div>
 
-    <!-- 2. 主要系統畫面內容 -->
+    <!-- 2. 主要系統畫面內容 openLoadHistoryModal() -->
     <div id="main-content">
       <div class="container">
         <div class="top-control-bar">
@@ -1113,7 +1113,11 @@
             <button
               class="btn-load-history"
               id="btnHistoryModal"
-              onclick="openLoadHistoryModal()"
+              onclick="
+                alert(
+                  '編輯系統故障暫停使用中，The editing system is currently under maintenance.',
+                )
+              "
             >
               📂 編輯歷史分配紀錄
             </button>
@@ -1612,7 +1616,8 @@
             </select>
           </div>
 
-          <div class="form-group" style="margin-top: 15px">
+          <!-- 活動選單容器，編輯舊紀錄時隱藏 -->
+          <div class="form-group" id="eventTypeGroup" style="margin-top: 15px">
             <label id="lblPublishEventType" style="color: #7ee8cc"
               >2. 請選擇活動名稱：</label
             >
@@ -1858,7 +1863,7 @@
 
     <script>
       const GAS_WEB_APP_URL =
-        "https://script.google.com/macros/s/AKfycbzXG4X8rH31jZjH97pc8qa4Xdmk3TMj0st37GGGLDEC3OiJPSEgiuhKY3KvFOhjIUax/exec";
+        "https://script.google.com/macros/s/AKfycbwcO_cum0wC8lYbQZHVdexJ-qghfddEAdZTID-5CHOYUMGhrz9-rMZEzXBODp5KQtG7/exec";
       const ANN_JSON_URL = "https://jeremytseng12.github.io/2647WOSFOUNDRY/ann";
 
       const langPack = {
@@ -2177,10 +2182,11 @@
 
       let currentEditingRowIndex = null;
       let currentEditingLegion = "LegionA";
+      let currentEditingTitle = ""; // 🎯 紀錄舊紀錄標題
       let historyRecordsList = [];
       let isCurrentlyMaintenance = false;
 
-      // 🎯 1. 讀取 ann.json 當有資料時自動彈出 alert
+      // 1. 讀取 ann.json 當有資料時自動彈出 alert
       async function fetchAnnouncementJson() {
         try {
           const res = await fetch(`${ANN_JSON_URL}?t=${new Date().getTime()}`);
@@ -2207,7 +2213,7 @@
         }
       }
 
-      // 🎯 2. 全螢幕維修狀態檢查 (含 60 秒輪詢與重整按鈕)
+      // 2. 全螢幕維修狀態檢查 (含 60 秒輪詢與重整按鈕)
       async function checkSystemStatus() {
         try {
           const res = await fetch(
@@ -2249,11 +2255,8 @@
       }
 
       window.addEventListener("load", function () {
-        // 進入畫面時先連線讀取公告 json，若有資料則 alert 跳出
         fetchAnnouncementJson();
-
         checkSystemStatus();
-        // 每 60 秒 (60000 ms) 自動連線檢查一次狀態
         setInterval(checkSystemStatus, 60000);
 
         setTimeout(() => {
@@ -3252,10 +3255,7 @@
       }
 
       function openLoadHistoryModal() {
-        if (
-          !GAS_WEB_APP_URL ||
-          GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL_HERE"
-        ) {
+        if (!GAS_WEB_APP_URL) {
           alert("請先設定 GAS_WEB_APP_URL！");
           return;
         }
@@ -3336,11 +3336,12 @@
 
               currentEditingRowIndex = rowIndex;
               currentEditingLegion = selectedLegion;
+              currentEditingTitle = res.title || ""; // 🎯 紀錄舊紀錄標題
 
               document.getElementById("publishLegionSelect").value =
                 selectedLegion;
               document.getElementById("publishTitleInput").value =
-                res.title || "";
+                currentEditingTitle;
               document.getElementById("publishAuthorInput").value =
                 res.author || "";
 
@@ -3356,8 +3357,6 @@
               resSec.style.display = "block";
               resSec.classList.add("fade-in-view");
               resSec.scrollIntoView({ behavior: "smooth", block: "start" });
-
-              alert(`⚠️⚠️目前編輯系統故障，維修中`);
             } else {
               alert("讀取失敗，資料格式有誤。");
             }
@@ -3370,6 +3369,7 @@
 
       function exitEditMode() {
         currentEditingRowIndex = null;
+        currentEditingTitle = "";
         document.getElementById("editingNoticeBar").style.display = "none";
         alert("已退出微調模式，接下來發布將建立「全新紀錄」。");
       }
@@ -3422,9 +3422,30 @@
         }
       }
 
+      // 🎯 開啟發布彈窗邏輯修復：區分「全新發布」與「覆寫編輯」
       function openPublishModal() {
-        document.getElementById("publishEventTypeSelect").value = "foundry";
-        onPublishEventTypeChange();
+        const eventGroup = document.getElementById("eventTypeGroup");
+        const tundraGroup = document.getElementById("tundraDatePickerGroup");
+        const titleInput = document.getElementById("publishTitleInput");
+        const titleLabel = document.getElementById("lblPublishTitle");
+
+        if (currentEditingRowIndex) {
+          // 編輯微調模式：隱藏活動選單，帶入舊紀錄原本的標題，並允許修改
+          eventGroup.style.display = "none";
+          tundraGroup.style.display = "none";
+          titleLabel.innerText = "3. 修改之分配紀錄標題：";
+          titleInput.disabled = false;
+          titleInput.style.backgroundColor = "#121929";
+          titleInput.value = currentEditingTitle;
+        } else {
+          // 全新發布模式：顯示活動選單，帶入自動計算的日期標題並設為 disabled
+          eventGroup.style.display = "block";
+          titleLabel.innerText = "3. 生成之分配紀錄標題：";
+          titleInput.disabled = true;
+          titleInput.style.backgroundColor = "#060a12";
+          document.getElementById("publishEventTypeSelect").value = "foundry";
+          onPublishEventTypeChange();
+        }
 
         const savedAuthor = localStorage.getItem("lastAuthorName") || "";
         if (!document.getElementById("publishAuthorInput").value) {
@@ -3468,17 +3489,15 @@
           return;
         }
 
-        if (
-          GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL_HERE" ||
-          !GAS_WEB_APP_URL
-        ) {
-          alert("錯誤：尚未在 HTML 原始碼中設定 GAS_WEB_APP_URL！");
+        if (!GAS_WEB_APP_URL) {
+          alert("錯誤：尚未設定 GAS_WEB_APP_URL！");
           return;
         }
 
         localStorage.setItem("lastAuthorName", author);
 
         const btn = document.getElementById("btnConfirmPublish");
+        const originalBtnText = btn.innerText;
         btn.innerText = "Processing...";
         btn.disabled = true;
 
@@ -3516,25 +3535,34 @@
         })
           .then((res) => res.json())
           .then((data) => {
-            btn.innerText = langPack[currentData.currentLang].btnConfirmPublish;
+            btn.innerText = originalBtnText;
             btn.disabled = false;
             closePublishModal();
 
             if (data.status === "error") {
               alert("作業失敗：" + data.message);
             } else {
-              const actionText = data.action === "update" ? "覆寫更新" : "發布";
+              const actionText = currentEditingRowIndex ? "覆寫更新" : "發布";
               alert(
                 `🎉 成功${actionText}紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}`,
               );
+              if (currentEditingRowIndex) {
+                exitEditMode();
+              }
             }
           })
           .catch((err) => {
-            btn.innerText = langPack[currentData.currentLang].btnConfirmPublish;
+            btn.innerText = originalBtnText;
             btn.disabled = false;
             console.error("發布完成：", err);
-            alert(`🎉 成功處理紀錄！\n標題：${title}\n分配員：${author}`);
+            const actionText = currentEditingRowIndex ? "覆寫更新" : "發布";
+            alert(
+              `🎉 成功${actionText}紀錄！\n標題：${title}\n分配員：${author}`,
+            );
             closePublishModal();
+            if (currentEditingRowIndex) {
+              exitEditMode();
+            }
           });
       }
 
