@@ -1859,6 +1859,7 @@
     <script>
       const GAS_WEB_APP_URL =
         "https://script.google.com/macros/s/AKfycbzXG4X8rH31jZjH97pc8qa4Xdmk3TMj0st37GGGLDEC3OiJPSEgiuhKY3KvFOhjIUax/exec";
+      const ANN_JSON_URL = "https://jeremytseng12.github.io/2647WOSFOUNDRY/ann";
 
       const langPack = {
         zht: {
@@ -2179,7 +2180,34 @@
       let historyRecordsList = [];
       let isCurrentlyMaintenance = false;
 
-      // 🎯 全螢幕維修狀態檢查 (含 60 秒輪詢與重整按鈕)
+      // 🎯 1. 讀取 ann.json 當有資料時自動彈出 alert
+      async function fetchAnnouncementJson() {
+        try {
+          const res = await fetch(`${ANN_JSON_URL}?t=${new Date().getTime()}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          let annText = "";
+
+          if (typeof data === "string") {
+            annText = data.trim();
+          } else if (data) {
+            annText = (
+              data.announcement ||
+              data.message ||
+              data.text ||
+              ""
+            ).trim();
+          }
+
+          if (annText) {
+            alert(`📢 系統公告：\n\n${annText}`);
+          }
+        } catch (err) {
+          console.error("讀取公告檔 ann.json 失敗或目前無公告：", err);
+        }
+      }
+
+      // 🎯 2. 全螢幕維修狀態檢查 (含 60 秒輪詢與重整按鈕)
       async function checkSystemStatus() {
         try {
           const res = await fetch(
@@ -2221,8 +2249,11 @@
       }
 
       window.addEventListener("load", function () {
+        // 進入畫面時先連線讀取公告 json，若有資料則 alert 跳出
+        fetchAnnouncementJson();
+
         checkSystemStatus();
-        // 🎯 設為每 60 秒 (60000 ms) 自動連線檢查一次狀態
+        // 每 60 秒 (60000 ms) 自動連線檢查一次狀態
         setInterval(checkSystemStatus, 60000);
 
         setTimeout(() => {
