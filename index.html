@@ -1069,12 +1069,90 @@
         right: 20px !important;
         font-size: 1.2rem !important;
         font-weight: 500 !important;
-        color: rgba(255, 255, 255, 0.7) !important; /* 半透明白色，正常字體 */
+        color: rgb(255, 255, 255) !important; /* 半透明白色，正常字體 */
         font-family: "Noto Sans HK", sans-serif !important;
         pointer-events: none !important;
         user-select: none !important;
         z-index: 10 !important;
         letter-spacing: 1px !important;
+      }
+      /* 地圖預覽與截圖容器 */
+      #mapContainer {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+        width: 1200px;
+        height: 1200px;
+        background-image: url("https://jeremytseng12.github.io/2647WOSFOUNDRY/map.jpg");
+        background-size: cover;
+        background-position: center;
+        font-family: "Noto Sans HK", sans-serif;
+        z-index: -9999;
+      }
+
+      /* 地圖上的建築分配卡片標籤 */
+      .map-node-card {
+        position: absolute;
+        background: rgba(15, 21, 36, 0.88);
+        border: 1px solid var(--text-neon);
+        border-radius: 4px;
+        padding: 8px 12px;
+        width: 210px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+      }
+      .map-node-title {
+        font-size: 0.85rem;
+        font-weight: 900;
+        color: var(--text-neon);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 4px;
+        padding-bottom: 2px;
+      }
+      .map-node-players {
+        font-size: 0.75rem;
+        color: #e2e8f0;
+        line-height: 1.3;
+        max-height: 90px;
+        overflow: hidden;
+      }
+
+      /* 🗺️ 地圖截圖右下角白色正常字體小浮水印 "TSENG" */
+      .map-bottom-right-watermark {
+        position: absolute !important;
+        bottom: 20px !important;
+        right: 30px !important;
+        font-size: 1.3rem !important;
+        font-weight: 500 !important;
+        color: rgb(255, 255, 255) !important;
+        font-family: "Noto Sans HK", sans-serif !important;
+        pointer-events: none !important;
+        user-select: none !important;
+        z-index: 10 !important;
+        letter-spacing: 1px !important;
+        text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+      }
+      /* 🗺️ 結合地圖正中央的水平一直線大浮水印 */
+      /* 🗺️ 絕對置中且不偏移的一直線大浮水印 */
+      .map-center-watermark {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 1200px !important;
+        height: 1200px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 3.8rem !important;
+        font-weight: 900 !important;
+        color: rgba(0, 255, 204, 0.15) !important;
+        text-shadow: 0 0 30px rgba(0, 255, 204, 0.4) !important;
+        pointer-events: none !important;
+        user-select: none !important;
+        font-family:
+          "Montenegrin Gothic One", "Noto Sans HK", sans-serif !important;
+        letter-spacing: 4px !important;
+        z-index: 1 !important;
+        text-align: center !important;
       }
     </style>
   </head>
@@ -1575,7 +1653,18 @@
             </svg>
             <span id="btnScreenshotText">點擊截圖表格區並儲存</span>
           </button>
-
+          <button
+            id="btnMapScreenshot"
+            class="btn btn-screenshot"
+            style="
+              background: linear-gradient(135deg, #00ffcc, #00aaff);
+              color: #080b11;
+              margin-top: 10px;
+            "
+            onclick="captureMapWithAllocation()"
+          >
+            🗺️ 下載「兵工廠地圖版」人員分配圖
+          </button>
           <div class="building-grid" id="buildingGrid"></div>
         </div>
       </div>
@@ -1991,11 +2080,13 @@
             "第四組 (維修廠 IV & 蒸氣鍋爐)",
             "特殊支援小隊 (採集 & 子彈)",
           ],
+          btnMapScreenshot: "🗺️ 下載「兵工廠地圖版」人員分配圖",
+          mapProcessing: "⏳ 正在合成地圖與分配名單...",
         },
         en: {
           introText: "Foundry Allocation System Initializing...",
           btnHistoryModal: "📂 Edit History Record",
-          btnViewSystem: "📲 View System",
+          btnViewSystem: "📲 Viewer System",
           btnOldSystem: "📲 Old Version",
           btnCancelEdit: "Cancel Edit (Reset)",
           mainTitle: "Foundry Personnel Allocation System PRO",
@@ -2112,6 +2203,8 @@
             "Group 4 (Repair IV & Boiler)",
             "Special Squads (Gathering & Ammo)",
           ],
+          btnMapScreenshot: "🗺️ Download Map Allocation Roster",
+          mapProcessing: "⏳ Generating Map & Allocation Roster...",
         },
       };
 
@@ -2220,7 +2313,7 @@
           }
 
           if (annText) {
-            alert(`📢 系統公告：\n\n${annText}`);
+            alert(`📢 系統公告：\n${annText}`);
           }
         } catch (err) {
           console.error("讀取公告檔 ann.json 失敗或目前無公告：", err);
@@ -2269,7 +2362,6 @@
       }
 
       window.addEventListener("load", function () {
-        fetchAnnouncementJson();
         checkSystemStatus();
         setInterval(checkSystemStatus, 60000);
 
@@ -2281,6 +2373,7 @@
           setTimeout(() => {
             mainContent.style.opacity = "1";
           }, 50);
+          fetchAnnouncementJson();
         }, 2200);
       });
 
@@ -2333,7 +2426,8 @@
           document.getElementById("btnCopyLangZht").classList.remove("active");
           document.body.classList.add("lang-en");
         }
-
+        document.getElementById("btnMapScreenshot").innerText =
+          p.btnMapScreenshot;
         document.getElementById("introText").innerText = p.introText;
         document.getElementById("btnHistoryModal").innerText =
           p.btnHistoryModal;
@@ -3601,6 +3695,103 @@
         document.getElementById("leaderPower3").value = "38000";
         document.getElementById("memberInput").value =
           "TSENG 8888 \nSophia 3089 \nLiam 4732 \nEmma 3540 \nOliver 4891 \nAva 3167\nLucas 4423 \nMia 3805 \nNoah 4158 \nIsabella 3290 \nJames 4612 \nCharlotte 3945 \nAlexander 4380 \nAmelia 3418 \nBenjamin 4073 \nHarper 3629";
+      }
+
+      function captureMapWithAllocation() {
+        const btn = document.getElementById("btnMapScreenshot");
+        const p = langPack[currentData.currentLang]; // 取得當前語言包
+        const originalText = btn ? btn.innerText : "";
+
+        if (btn) {
+          btn.innerText = p.mapProcessing; // 使用對應語言的 Processing 提示
+          btn.disabled = true;
+        }
+
+        // 建立隱藏的地圖容器
+        const mapContainer = document.createElement("div");
+        mapContainer.id = "mapContainer";
+
+        // 🎯 新增：正中央大浮水印 "2647 RGN 兵工廠人員分配"
+        const centerWatermark = document.createElement("div");
+        centerWatermark.className = "map-center-watermark";
+        centerWatermark.innerText = "2647 RGN 兵工廠人員分配";
+        mapContainer.appendChild(centerWatermark);
+
+        // 8 大建築在地圖上的精準百分比座標 (對應 map.jpg 的位置)
+        const mapCoords = {
+          b0: { top: "42%", left: "12%" }, // Prototype I (1號試驗場)
+          b1: { top: "52%", left: "10%" }, // Repair I (1號維修)
+          b2: { top: "60%", left: "75%" }, // Prototype II (2號試驗場)
+          b3: { top: "45%", left: "82%" }, // Repair II (2號維修)
+          b4: { top: "82%", left: "32%" }, // Repair III (3號維修)
+          b5: { top: "82%", left: "65%" }, // Transit (中轉站)
+          b6: { top: "15%", left: "62%" }, // Repair IV (4號維修)
+          b7: { top: "15%", left: "28%" }, // Boiler (鍋爐)
+        };
+
+        // 填入 8 大建築資料
+        buildingsConfig.forEach((b) => {
+          const coord = mapCoords[b.id];
+          if (!coord) return;
+
+          let playersHtml = (currentData.buildings[b.id] || [])
+            .map((pl) => `<div>• ${pl.name} (${pl.power})</div>`)
+            .join("");
+
+          const nodeDiv = document.createElement("div");
+          nodeDiv.className = "map-node-card";
+          nodeDiv.style.top = coord.top;
+          nodeDiv.style.left = coord.left;
+          nodeDiv.style.zIndex = "2"; // 確保卡片在浮水印上方
+          nodeDiv.innerHTML = `
+      <div class="map-node-title">${b.nameZht}</div>
+      <div class="map-node-players">${playersHtml || "(無)"}</div>
+    `;
+          mapContainer.appendChild(nodeDiv);
+        });
+
+        // 右下角白色正常字體小浮水印 "TSENG"
+        const smallWatermark = document.createElement("div");
+        smallWatermark.className = "map-bottom-right-watermark";
+        smallWatermark.innerText = "TSENG";
+        smallWatermark.style.zIndex = "2";
+        mapContainer.appendChild(smallWatermark);
+
+        document.body.appendChild(mapContainer);
+
+        // 使用 html2canvas 將地圖與卡片合成圖片
+        html2canvas(mapContainer, {
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
+          width: 1200,
+          height: 1200,
+        })
+          .then((canvas) => {
+            const link = document.createElement("a");
+            const now = new Date();
+            const timestamp = `${now.getFullYear()}${now.getMonth() + 1}${now.getDate()}_${now.getHours()}${now.getMinutes()}`;
+            link.download = `兵工廠地圖分配圖_${timestamp}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+
+            document.body.removeChild(mapContainer);
+            if (btn) {
+              btn.innerText = originalText;
+              btn.disabled = false;
+            }
+          })
+          .catch((err) => {
+            console.error("地圖截圖合成失敗：", err);
+            alert("地圖合成失敗，請稍後再試！");
+            if (document.body.contains(mapContainer)) {
+              document.body.removeChild(mapContainer);
+            }
+            if (btn) {
+              btn.innerText = originalText;
+              btn.disabled = false;
+            }
+          });
       }
     </script>
   </body>
