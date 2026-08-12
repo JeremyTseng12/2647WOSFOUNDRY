@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>系統跳轉中 / Redirecting...</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montenegrin+Gothic+One&family=Noto+Sans+HK:wght@500;700;900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      type="image/webp"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/foundry.webp"
+    />
+
+    <style>
+      :root {
+        --bg-cyber: #080b11;
+        --text-neon: #00ffcc;
+        --text-main: #e2e8f0;
+        --text-muted: #7ee8cc;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+      }
+
+      body {
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        background-color: #000000;
+        color: var(--text-main);
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* 階段一：經典開場 Intro (0 ~ 2秒) */
+      #introSection {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #000000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        animation: fadeOutIntro 0.5s ease 2s forwards;
+      }
+
+      .logo_img {
+        width: 220px;
+        height: auto;
+        margin-bottom: 20px;
+        animation: scaleIn 1.8s ease forwards;
+      }
+
+      .logo {
+        font-family: "Bebas Neue", "Montenegrin Gothic One", sans-serif;
+        font-size: 3.5rem;
+        color: #ffffff;
+        margin-bottom: 8px;
+        letter-spacing: 4px;
+        text-shadow: 0 0 15px rgba(0, 255, 204, 0.6);
+      }
+
+      .logo_text {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        letter-spacing: 2px;
+        text-align: center;
+      }
+
+      @keyframes scaleIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.02);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes fadeOutIntro {
+        to {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
+
+      /* 階段二：跳轉載入頁 Loader (2 ~ 4秒) */
+      #redirectSection {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: var(--bg-cyber);
+        background-image:
+          linear-gradient(rgba(26, 35, 58, 0.4) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(26, 35, 58, 0.4) 1px, transparent 1px);
+        background-size: 25px 25px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 25px;
+        opacity: 0;
+        animation: fadeInRedirect 0.5s ease 2s forwards;
+      }
+
+      @keyframes fadeInRedirect {
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* 您提供的 SVG & Keyframes 動畫 */
+      svg.cyber-loader {
+        width: 3.25em;
+        transform-origin: center;
+        animation: rotate4 2s linear infinite;
+      }
+
+      circle.cyber-circle {
+        fill: none;
+        stroke: var(--text-neon); /* 配合兵工廠主題調為螢光青色 */
+        stroke-width: 2.5;
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+        stroke-linecap: round;
+        animation: dash4 1.5s ease-in-out infinite;
+        filter: drop-shadow(0 0 8px rgba(0, 255, 204, 0.6));
+      }
+
+      @keyframes rotate4 {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes dash4 {
+        0% {
+          stroke-dasharray: 1, 200;
+          stroke-dashoffset: 0;
+        }
+        50% {
+          stroke-dasharray: 90, 200;
+          stroke-dashoffset: -35px;
+        }
+        100% {
+          stroke-dashoffset: -125px;
+        }
+      }
+
+      /* 中英文雙語提示文字 */
+      .status-box {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .status-zh {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #ffffff;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+      }
+
+      .status-en {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        letter-spacing: 1px;
+      }
+
+      /* 手動點擊備用連結 */
+      .manual-link {
+        margin-top: 15px;
+        font-size: 0.8rem;
+        color: #4e6178;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .manual-link:hover {
+        color: var(--text-neon);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 1. 開場區塊 (0~2秒) -->
+    <div id="introSection">
+      <div class="logo-container">
+        <img
+          class="logo_img"
+          src="https://jeremytseng12.github.io/2647WOSFOUNDRY/3.gif"
+          alt="Loading..."
+        />
+        <h1 class="logo">兵工廠人員分配系統</h1>
+        <h3 class="logo_text">MADE BY TSENG</h3>
+      </div>
+    </div>
+
+    <!-- 2. 跳轉 Loader 區塊 (2~4秒) -->
+    <div id="redirectSection">
+      <svg class="cyber-loader" viewBox="25 25 50 50">
+        <circle class="cyber-circle" r="20" cy="50" cx="50"></circle>
+      </svg>
+
+      <div class="status-box">
+        <div class="status-zh">⚡ 正在跳轉至檢視系統...</div>
+        <div class="status-en">Redirecting to View System...</div>
+      </div>
+
+      <a
+        class="manual-link"
+        href="https://jeremytseng12.github.io/2647WOSFOUNDRY/viewsystem"
+        >若未自動跳轉，請點擊此處 / Click here if not redirected</a
+      >
+    </div>
+
+    <script>
+      const TARGET_URL =
+        "https://jeremytseng12.github.io/2647WOSFOUNDRY/viewsystem";
+
+      // 4 秒後（2秒 Intro + 2秒 Loader）自動進行網址跳轉
+      setTimeout(() => {
+        // 如果網址帶有 Hashtag (例如 #legion2)，跳轉時會保留傳遞
+        const currentHash = window.location.hash;
+        window.location.href = TARGET_URL + currentHash;
+      }, 4000);
+    </script>
+  </body>
+</html>
