@@ -1062,6 +1062,20 @@
           "Bebas Neue", "Montenegrin Gothic One", sans-serif !important;
         letter-spacing: 12px !important;
       }
+      /* 截圖專用右下角白色小署名 */
+      .capture-bottom-right-watermark {
+        position: absolute !important;
+        bottom: 15px !important;
+        right: 20px !important;
+        font-size: 1.2rem !important;
+        font-weight: 500 !important;
+        color: rgba(255, 255, 255, 0.7) !important; /* 半透明白色，正常字體 */
+        font-family: "Noto Sans HK", sans-serif !important;
+        pointer-events: none !important;
+        user-select: none !important;
+        z-index: 10 !important;
+        letter-spacing: 1px !important;
+      }
     </style>
   </head>
   <body>
@@ -3172,10 +3186,17 @@
         const tempContainer = document.createElement("div");
         tempContainer.className = "capture-grid-forced";
 
+        // 原本斜向大浮水印
         const watermark = document.createElement("div");
         watermark.className = "capture-watermark";
-        watermark.innerText = "TSENG PRO";
+        watermark.innerText = "2647 RGN";
         tempContainer.appendChild(watermark);
+
+        // 🎯 新增：右下角白色正常字體小浮水印 "TSENG"
+        const smallWatermark = document.createElement("div");
+        smallWatermark.className = "capture-bottom-right-watermark";
+        smallWatermark.innerText = "TSENG";
+        tempContainer.appendChild(smallWatermark);
 
         const gatherCard = document.createElement("div");
         gatherCard.className = "building-card b-group-spec";
