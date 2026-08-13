@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 - 頁面不存在 / Page Not Found</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montenegrin+Gothic+One&family=Noto+Sans+HK:wght@500;700;900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-cyber: #080b11;
+        --panel-bg: #0f1524;
+        --text-neon: #00ffcc;
+        --text-main: #e2e8f0;
+        --text-muted: #7ee8cc;
+        --color-error: #ff3838;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+      }
+
+      body {
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        background-color: var(--bg-cyber);
+        background-image:
+          linear-gradient(rgba(26, 35, 58, 0.4) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(26, 35, 58, 0.4) 1px, transparent 1px);
+        background-size: 25px 25px;
+        color: var(--text-main);
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .error-container {
+        background: var(--panel-bg);
+        border: 2px solid var(--text-neon);
+        box-shadow: 0 0 40px rgba(0, 255, 204, 0.2);
+        padding: 50px 40px;
+        border-radius: 6px;
+        max-width: 550px;
+        width: 90%;
+        text-align: center;
+        position: relative;
+      }
+
+      .error-code {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 5rem;
+        font-weight: 900;
+        color: var(--color-error);
+        text-shadow: 0 0 20px rgba(255, 56, 56, 0.4);
+        margin-bottom: 10px;
+        line-height: 1;
+      }
+
+      .error-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 15px;
+        letter-spacing: 2px;
+      }
+
+      .error-desc {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-bottom: 30px;
+        line-height: 1.6;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .btn-nav {
+        background: #121929;
+        color: var(--text-neon);
+        border: 1px solid var(--text-neon);
+        padding: 14px 20px;
+        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
+        font-size: 1.05rem;
+        font-weight: bold;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 0 10px rgba(0, 255, 204, 0.1);
+      }
+
+      .btn-nav:hover {
+        background: var(--text-neon);
+        color: var(--bg-cyber);
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="error-container">
+      <div class="error-code">404</div>
+      <h1 class="error-title">您似乎迷路了</h1>
+      <p class="error-desc">
+        找不到您所請求的頁面，請透過下方按鈕返回系統的正確航道：<br />
+        <span style="font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #4e6178;">Page not found. Please choose a destination below.</span>
+      </p>
+
+      <div class="nav-links">
+        <a href="https://jeremytseng12.github.io/2647WOSFOUNDRY/distributionsystem" class="btn-nav">
+          ⚔️ 返回主分配系統 / Distribution System
+        </a>
+        <a href="https://jeremytseng12.github.io/2647WOSFOUNDRY/viewsystem" class="btn-nav">
+          📲 進入人員檢視系統 / View System
+        </a>
+        <a href="https://jeremytseng12.github.io/2647WOSFOUNDRY/manage" class="btn-nav">
+          ⚙️ 進入管理系統 / Management
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
