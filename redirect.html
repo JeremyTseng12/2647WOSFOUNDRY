@@ -216,13 +216,13 @@
     <!-- 1. 全螢幕開場動畫 Intro -->
     <div id="intro">
       <div class="logo-container">
+        <h1 class="logo">兵工廠人員分配系統</h1>
+        <h3 class="logo_text" id="introText">MADE BY TSENG</h3>
         <img
           class="logo_img"
           src="https://jeremytseng12.github.io/2647WOSFOUNDRY/3.gif"
           alt="Loading..."
         />
-        <h1 class="logo">兵工廠人員檢視系統準備中</h1>
-        <h3 class="logo_text" id="introText">MADE BY TSENG</h3>
       </div>
     </div>
 
@@ -247,23 +247,16 @@
     <script>
       const TARGET_URL =
         "https://jeremytseng12.github.io/2647WOSFOUNDRY/viewsystem";
+      const intro = document.getElementById("intro");
+      const redirectSection = document.getElementById("redirectSection");
 
-      window.addEventListener("load", function () {
-        // 2.2 秒後關閉開場動畫，並顯示跳轉 Loader 畫面
-        setTimeout(() => {
-          const intro = document.getElementById("intro");
-          const redirectSection = document.getElementById("redirectSection");
-
-          intro.style.display = "none";
-          redirectSection.style.display = "flex";
-        }, 2200);
-
+      intro.style.display = "none";
+      redirectSection.style.display = "flex";
         // 總共 4.5 秒後執行網址跳轉（保留 2.3 秒給使用者看 Loader 與保留 Hash）
-        setTimeout(() => {
-          const currentHash = window.location.hash;
-          window.location.href = TARGET_URL + currentHash;
-        }, 4500);
-      });
+      setTimeout(() => {
+        const currentHash = window.location.hash;
+        window.location.href = TARGET_URL + currentHash;
+      }, 3000);
     </script>
   </body>
 </html>
