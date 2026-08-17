@@ -1749,7 +1749,7 @@
 
           <div class="form-group" style="margin-top: 15px">
             <label id="lblPublishTitle" style="color: #7ee8cc"
-              >3. 生成之分配紀錄標題：</label
+              >3. 標題 / Title：(自動填入 / Auto fill in)</label
             >
             <input
               type="text"
@@ -2062,7 +2062,7 @@
           publishHeader: "☁️ 發布分配結果",
           lblPublishLegion: "1. 請選擇發布軍團 (Legion)：",
           lblPublishEventType: "2. 請選擇活動名稱：",
-          lblPublishTitle: "3. 生成之分配紀錄標題：",
+          lblPublishTitle: "3. 標題 / Title：(自動填入 / Auto fill in)：",
           lblPublishAuthor: "4. 分配員暱稱：",
           lblPublishPasscode: "5. 設定存取密碼 (停用中)：",
           btnPublishCancel: "取消",
@@ -3555,7 +3555,7 @@
         } else {
           // 全新發布模式：顯示活動選單，帶入自動計算的日期標題並設為 disabled
           eventGroup.style.display = "block";
-          titleLabel.innerText = "3. 生成之分配紀錄標題：";
+          titleLabel.innerText = "3. 標題 / Title：(自動填入 / Auto fill in)：";
           titleInput.disabled = true;
           titleInput.style.backgroundColor = "#060a12";
           document.getElementById("publishEventTypeSelect").value = "foundry";
