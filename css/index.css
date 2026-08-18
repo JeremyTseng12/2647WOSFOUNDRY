@@ -1,10 +1,31 @@
 /* ============================================================
    兵工廠人員分配系統 - 主頁專屬樣式 (index.css)
    ============================================================ */
+/* ============================================================
+   彈窗按鈕樣式修復 (避免被 .btn 覆蓋)
+   ============================================================ */
+.cyber-modal-actions .btn-modal-confirm {
+  background: linear-gradient(135deg, #00ffcc, #00aaff) !important;
+  color: #080b11 !important;
+  font-weight: 900 !important;
+}
 
+.cyber-modal-actions .btn-modal-cancel {
+  background: #141c30 !important;
+  color: #94a3b8 !important;
+  border: 1px solid #223052 !important;
+  font-weight: normal !important;
+  box-shadow: none !important;
+}
+
+.cyber-modal-actions .btn-modal-cancel:hover {
+  background: #1c2742 !important;
+  color: #fff !important;
+}
 /* ============================================================
    1. 頂部操作列與編輯模式提示條
    ============================================================ */
+
 .top-control-bar {
   display: flex;
   justify-content: space-between;
@@ -362,7 +383,14 @@ select:disabled {
   color: #fff;
   background: #182238;
 }
-
+/* 在 css/index.css 中加入這段 */
+.btn-copy {
+  width: auto;
+  background: linear-gradient(135deg, #00ff66, #00b344);
+  color: #080b11;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+}
 /* ============================================================
    6. 載入動畫與淡入效果
    ============================================================ */
