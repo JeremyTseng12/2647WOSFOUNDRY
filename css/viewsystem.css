@@ -3,7 +3,7 @@
    ============================================================ */
 
 /* ============================================================
-   0. 開場載入畫面 (Intro) - 字體與圖片等比例自適應縮放
+   0. 開場載入畫面 (Intro) - 修正圖片在手機上等比例縮小
    ============================================================ */
 #intro {
   display: flex;
@@ -15,39 +15,33 @@
   background-color: var(--bg-cyber);
   z-index: 99999;
   text-align: center;
-  padding: 20px;
+  padding: 15px;
   box-sizing: border-box;
 }
 
+/* 🎯 關鍵：讓載入圖片隨裝置螢幕縮放（手機約 65vw，電腦最大 320px） */
+#intro img,
 .intro-img {
-  width: clamp(140px, 35vw, 240px);
-  height: auto;
-  border-radius: 6px;
-  box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
-  margin-bottom: 20px;
-}
-
-.intro-title {
-  color: var(--text-neon);
-  font-family: "ZCOOL Xiaowei", sans-serif;
-  font-size: clamp(1.5rem, 5vw, 3rem);
-  font-weight: 900;
-  letter-spacing: clamp(1px, 0.4vw, 3px);
-  text-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
-  margin: 0 0 10px 0;
+  width: clamp(160px, 65vw, 320px) !important;
+  max-width: 90vw !important;
+  height: auto !important;
+  border-radius: 8px;
+  box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+  margin-bottom: 12px;
+  display: block;
 }
 
 #introText,
 .intro-sub {
   color: #7ee8cc;
   font-family: "Share Tech Mono", monospace;
-  font-size: clamp(0.85rem, 2.5vw, 1.2rem);
+  font-size: clamp(0.8rem, 2.5vw, 1.1rem);
   letter-spacing: 1px;
   margin: 0;
 }
 
 /* ============================================================
-   1. 容器寬度擴展 (支援大螢幕 1600px) 與標題
+   1. 容器寬度與標題
    ============================================================ */
 .container {
   max-width: 1600px;
@@ -57,11 +51,11 @@ h1 {
   text-align: center;
   color: #fff;
   font-family: "ZCOOL Xiaowei", sans-serif;
-  font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
   font-weight: 900;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   margin-top: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   text-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
 }
 
@@ -69,7 +63,7 @@ h1 {
   text-align: center;
   color: #7ee8cc;
   font-size: clamp(0.75rem, 1.8vw, 0.95rem);
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   font-family: "Share Tech Mono", monospace;
   line-height: 1.5;
 }
@@ -80,40 +74,39 @@ h1 {
 }
 
 /* ============================================================
-   2. 頂部控制列、歷史紀錄選單與自適應跑馬燈公告
+   2. 頂部控制列、歷史紀錄選單與跑馬燈公告（修復多餘留白與排版）
    ============================================================ */
 .top-control-bar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 25px;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+  width: 100%;
 }
 
 .history-selector-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 1 1 280px;
-  max-width: 100%;
+  gap: 8px;
+  width: 100%;
 }
 
 .history-selector-box label {
   color: var(--text-neon);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: bold;
   white-space: nowrap;
 }
 
 select.history-select {
+  flex: 1;
   width: 100%;
   background: #060a12;
   border: 1px solid var(--text-neon);
   color: #fff;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 4px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-family: "Noto Sans HK", sans-serif;
   outline: none;
   box-shadow: 0 0 10px rgba(0, 255, 204, 0.1);
@@ -121,29 +114,47 @@ select.history-select {
   box-sizing: border-box;
 }
 
-/* 自適應跑馬燈外框 (解決小手機破版溢出) */
+/* 🎯 跑馬燈外框：完全貼合、緊湊排版無上方多餘留白 */
 .marquee-box {
-  flex: 1 1 100%;
   width: 100%;
   box-sizing: border-box;
   background: rgba(0, 255, 204, 0.05);
   border: 1px solid rgba(0, 255, 204, 0.2);
   border-radius: 4px;
-  padding: 4px 8px;
+  padding: 4px 6px;
   overflow: hidden;
+  margin: 0;
 }
 
 .marquee-box marquee {
-  display: flex;
-  align-items: center;
+  display: block;
   width: 100%;
   color: var(--text-neon);
-  font-size: clamp(0.95rem, 3vw, 1.3rem);
+  font-size: clamp(0.9rem, 3vw, 1.2rem);
   font-weight: bold;
 }
+
 .mqimg {
-  max-width: 1.4rem;
+  max-width: 1.3rem;
   vertical-align: middle;
+}
+
+/* 電腦端控制列恢復橫向排列 */
+@media (min-width: 900px) {
+  .top-control-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .history-selector-box {
+    max-width: 400px;
+  }
+  .marquee-box {
+    flex: 1;
+    min-width: 300px;
+  }
 }
 
 .lang-switch-top {
@@ -157,20 +168,23 @@ select.history-select {
 .legion-switch-bar {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  margin: 20px 0;
+  gap: 12px;
+  margin: 15px 0;
 }
 
 .btn-legion {
+  flex: 1;
+  max-width: 200px;
   background: #090e1a;
   color: var(--text-muted);
   border: 1px solid #1a233a;
-  padding: 10px 25px;
+  padding: 8px 12px;
   font-size: clamp(0.85rem, 2vw, 1rem);
   font-weight: bold;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
 
 .btn-legion.active {
@@ -184,40 +198,45 @@ select.history-select {
    4. 數據摘要盒與表情回覆互動區
    ============================================================ */
 .summary-box {
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   align-items: center;
+  gap: 10px;
+}
+
+.summary-box strong {
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
 }
 
 .reaction-group {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 6px;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .btn-reaction {
   background: #0d1322;
   border: 1px solid #1e293b;
-  padding: 6px 14px;
-  border-radius: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
   color: #94a3b8;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   transition: all 0.2s ease;
   outline: none;
 }
 
 .btn-reaction .emoji {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   line-height: 1;
 }
 
 .reaction-count {
   font-family: "Share Tech Mono", monospace;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: bold;
   color: #e2e8f0;
 }
@@ -241,7 +260,7 @@ select.history-select {
 }
 
 .copy-textarea {
-  height: 220px;
+  height: 200px;
 }
 
 /* ============================================================
@@ -249,11 +268,11 @@ select.history-select {
    ============================================================ */
 #loadingScreen {
   text-align: center;
-  padding: 60px 0;
+  padding: 40px 0;
 }
 
 .loader-img {
-  width: clamp(100px, 20vw, 150px);
+  width: clamp(90px, 20vw, 140px);
   height: auto;
 }
 
@@ -261,7 +280,7 @@ select.history-select {
   background: linear-gradient(135deg, #141c30, #1f2d4d);
   color: var(--text-neon);
   border: 1px solid var(--text-neon);
-  padding: 6px 16px;
+  padding: 6px 14px;
   font-family: "Montenegrin Gothic One", sans-serif;
   font-size: 0.85rem;
   font-weight: bold;
@@ -278,9 +297,8 @@ select.history-select {
   box-shadow: 0 0 18px rgba(0, 255, 204, 0.4);
 }
 
-/* 分享與密碼彈窗按鈕佈局調整 */
 .cyber-modal {
-  max-width: 450px;
+  max-width: 420px;
   width: 90%;
   box-sizing: border-box;
 }
@@ -290,28 +308,17 @@ select.history-select {
   flex: 1;
 }
 
-/* 窄螢幕手機（<= 768px）自適應排版 */
+/* 窄螢幕手機分享與語言按鈕自適應 */
 @media (max-width: 768px) {
-  .top-control-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .history-selector-box {
-    width: 100%;
-  }
-
   .btn-share {
     width: 100%;
     text-align: center;
     padding: 8px 0;
   }
-
   .lang-switch-top {
     justify-content: center;
     width: 100%;
   }
-
   .btn-lang {
     flex: 1;
     text-align: center;
