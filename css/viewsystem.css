@@ -1,27 +1,56 @@
 /* ============================================================
-   頂部控制列、歷史紀錄選單、跑馬燈與按鈕群 (自適應排版)
+   兵工廠人員檢視系統 - 電腦版專屬樣式 (viewsystem.css)
    ============================================================ */
+
+.container {
+  max-width: 1600px;
+}
+
+h1 {
+  text-align: center;
+  color: #fff;
+  font-family: "ZCOOL Xiaowei", sans-serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+}
+
+.meta-info {
+  text-align: center;
+  color: #7ee8cc;
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+  font-family: "Share Tech Mono", monospace;
+}
+
+.meta-info span {
+  color: #fff;
+  font-weight: bold;
+}
+
 .top-control-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 15px;
+  margin-bottom: 25px;
 }
 
-/* 歷史選單：桌機彈性縮放，手機 100% */
 .history-selector-box {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1 1 320px;
-  max-width: 100%;
+  flex-grow: 1;
+  max-width: 600px;
 }
 
 .history-selector-box label {
   color: var(--text-neon);
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  font-size: 0.9rem;
   font-weight: bold;
   white-space: nowrap;
 }
@@ -33,54 +62,144 @@ select.history-select {
   color: #fff;
   padding: 8px 12px;
   border-radius: 4px;
-  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+  font-size: 0.95rem;
   font-family: "Noto Sans HK", sans-serif;
   outline: none;
   box-shadow: 0 0 10px rgba(0, 255, 204, 0.1);
   cursor: pointer;
-  box-sizing: border-box;
 }
 
-/* 跑馬燈外框：移除 600px 死限制，改為 100% 容器寬度自適應 */
 .marquee-box {
-  width: 100%;
-  flex: 1 1 100%;
+  flex-grow: 1;
+  min-width: 600px;
+  max-width: 600px;
   background: rgba(0, 255, 204, 0.05);
   border: 1px solid rgba(0, 255, 204, 0.2);
   border-radius: 4px;
-  padding: 5px 8px;
-  box-sizing: border-box;
+  padding: 3px 8px;
   overflow: hidden;
 }
 
 .marquee-box marquee {
-  display: block;
-  width: 100%;
   color: var(--text-neon);
-  font-size: clamp(0.95rem, 3.5vw, 1.25rem);
+  font-size: 1.3rem;
   font-weight: bold;
   vertical-align: middle;
 }
 
 .mqimg {
-  max-width: 1.4rem;
-  vertical-align: middle;
+  max-width: 1.6rem;
 }
 
-/* 右側操作按鈕區塊 (分享連結 + 語系切換) */
-.action-buttons-group {
+.lang-switch-top {
+  display: flex;
+  gap: 8px;
+}
+
+.legion-switch-bar {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.btn-legion {
+  background: #090e1a;
+  color: var(--text-muted);
+  border: 1px solid #1a233a;
+  padding: 10px 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-legion.active {
+  background: rgba(0, 255, 204, 0.1);
+  color: var(--text-neon);
+  border-color: var(--text-neon);
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+}
+
+.summary-box {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: center;
+}
+
+.reaction-group {
   display: flex;
   align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn-reaction {
+  background: #0d1322;
+  border: 1px solid #1e293b;
+  padding: 6px 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.btn-reaction .emoji {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.reaction-count {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #e2e8f0;
+}
+
+.btn-reaction:hover {
+  background: #141d33;
+  border-color: #334155;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.btn-reaction:active {
+  transform: translateY(0);
+}
+
+.btn-reaction.reacted {
+  border-color: var(--text-neon);
+  background: rgba(0, 255, 204, 0.08);
+  color: var(--text-neon);
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.15);
+}
+
+.copy-textarea {
+  height: 220px;
+}
+
+#loadingScreen {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.loader-img {
+  width: 150px;
+  height: auto;
 }
 
 .btn-share {
   background: linear-gradient(135deg, #141c30, #1f2d4d);
   color: var(--text-neon);
   border: 1px solid var(--text-neon);
-  padding: 6px 14px;
-  font-size: clamp(0.8rem, 2.5vw, 0.85rem);
+  padding: 6px 16px;
+  font-family: "Montenegrin Gothic One", sans-serif;
+  font-size: 0.85rem;
   font-weight: bold;
   border-radius: 4px;
   cursor: pointer;
@@ -89,34 +208,28 @@ select.history-select {
   white-space: nowrap;
 }
 
-.lang-switch-top {
-  display: flex;
-  gap: 6px;
+.btn-share:hover {
+  background: var(--text-neon);
+  color: #080b11;
+  box-shadow: 0 0 18px rgba(0, 255, 204, 0.4);
 }
 
-.btn-lang {
-  padding: 6px 10px;
-  font-size: clamp(0.75rem, 2.2vw, 0.85rem);
+.cyber-modal {
+  max-width: 450px;
 }
 
-/* 行動端極窄螢幕 (< 768px) 緊湊優化 */
-@media (max-width: 768px) {
-  .top-control-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.cyber-modal-actions .btn-modal-confirm,
+.cyber-modal-actions .btn-modal-cancel {
+  flex: 1;
+}
 
-  .history-selector-box {
-    width: 100%;
-  }
+.building-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+}
 
-  .action-buttons-group {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .btn-share {
-    flex: 1;
-    text-align: center;
-  }
+.accordion-header {
+  display: none;
 }
