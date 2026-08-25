@@ -636,3 +636,93 @@ select:disabled {
   z-index: 1 !important;
   text-align: center !important;
 }
+
+/* ============================================================
+   10. 卡片底部新增人員按鈕與暫存池樣式
+   ============================================================ */
+.btn-card-add {
+  width: 100%;
+  background: rgba(0, 255, 204, 0.05);
+  border: 1px dashed rgba(0, 255, 204, 0.3);
+  color: var(--text-neon);
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 6px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.btn-card-add:hover {
+  background: rgba(0, 255, 204, 0.15);
+  border-color: var(--text-neon);
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+}
+
+/* 待分配新成員暫存池卡片 (高亮紫橘呼吸光) */
+.b-group-unassigned {
+  border: 2px dashed #ff00ff !important;
+  background: rgba(255, 0, 255, 0.05) !important;
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.2) !important;
+}
+
+.b-group-unassigned .building-title {
+  color: #ff66ff !important;
+}
+
+.player-tag.is-locked {
+  border-color: #ffb300 !important;
+}
+
+/* ============================================================
+   11. 人員標籤懸停快速刪除 (戰力切換為垃圾桶)
+   ============================================================ */
+.player-tag {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+}
+
+.player-tag .player-power-val {
+  display: inline-block;
+  color: var(--text-neon);
+  font-family: "Share Tech Mono", monospace;
+  font-weight: bold;
+}
+
+.player-tag .btn-player-delete {
+  display: none;
+  background: rgba(255, 56, 56, 0.2);
+  border: 1px solid #ff3838;
+  color: #ff4d4d;
+  font-size: 0.85rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.player-tag .btn-player-delete:hover {
+  background: #ff3838;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(255, 56, 56, 0.6);
+}
+
+/* 滑鼠懸停於非鎖定人員時：隱藏戰力、顯示垃圾桶按鈕 */
+.player-tag:not(.is-locked):hover .player-power-val {
+  display: none;
+}
+
+.player-tag:not(.is-locked):hover .btn-player-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
