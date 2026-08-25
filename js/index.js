@@ -44,12 +44,7 @@ async function fetchAnnouncementJson() {
     if (typeof data === "string") {
       annText = data.trim();
     } else if (data) {
-      annText = (
-        data.announcement ||
-        data.message ||
-        data.text ||
-        ""
-      ).trim();
+      annText = (data.announcement || data.message || data.text || "").trim();
     }
 
     if (annText) {
@@ -89,8 +84,7 @@ async function checkSystemStatus() {
     } else if (status === "active") {
       if (isCurrentlyMaintenance) {
         title.innerText = "🟢 系統維護完成";
-        msg.innerHTML =
-          "系統已成功恢復運行，請點擊下方按鈕重新載入畫面！";
+        msg.innerHTML = "系統已成功恢復運行，請點擊下方按鈕重新載入畫面！";
         btnReload.style.display = "inline-block";
       } else {
         overlay.style.display = "none";
@@ -130,13 +124,9 @@ function handlePowerEnter(event, currentIdx) {
     let nextFocusField = null;
     for (let i = 1; i <= 4; i++) {
       let checkIdx = (currentIdx + i) % 4;
-      let val = document
-        .getElementById(`leaderPower${checkIdx}`)
-        .value.trim();
+      let val = document.getElementById(`leaderPower${checkIdx}`).value.trim();
       if (val === "") {
-        nextFocusField = document.getElementById(
-          `leaderPower${checkIdx}`,
-        );
+        nextFocusField = document.getElementById(`leaderPower${checkIdx}`);
         break;
       }
     }
@@ -166,11 +156,9 @@ function changeLanguage(lang) {
     document.getElementById("btnCopyLangZht").classList.remove("active");
     document.body.classList.add("lang-en");
   }
-  document.getElementById("btnMapScreenshot").innerText =
-    p.btnMapScreenshot;
+  document.getElementById("btnMapScreenshot").innerText = p.btnMapScreenshot;
   document.getElementById("introText").innerText = p.introText;
-  document.getElementById("btnHistoryModal").innerText =
-    p.btnHistoryModal;
+  document.getElementById("btnHistoryModal").innerText = p.btnHistoryModal;
   document.getElementById("btnViewSystem").innerText = p.btnViewSystem;
   document.getElementById("btnOldSystem").innerText = p.btnOldSystem;
   document.getElementById("btnCancelEdit").innerText = p.btnCancelEdit;
@@ -180,26 +168,20 @@ function changeLanguage(lang) {
   document.getElementById("uiMemberTitle").innerText = p.memberTitle;
   document.getElementById("uiLabelMainList").innerText = p.labelMainList;
   document.getElementById("uiMemberDesc").innerHTML = p.memberDesc;
-  document.getElementById("uiLabelGatherList").innerText =
-    p.labelGatherList;
+  document.getElementById("uiLabelGatherList").innerText = p.labelGatherList;
   document.getElementById("uiLabelAmmoList").innerText = p.labelAmmoList;
-  document.getElementById("gatherInput").placeholder =
-    p.gatherPlaceholder;
+  document.getElementById("gatherInput").placeholder = p.gatherPlaceholder;
   document.getElementById("ammoInput").placeholder = p.ammoPlaceholder;
   document.getElementById("btnDistribute").innerText = p.btnDistribute;
-  document.getElementById("btnLoadTestData").innerText =
-    p.btnLoadTestData;
+  document.getElementById("btnLoadTestData").innerText = p.btnLoadTestData;
   document.getElementById("uiQuickTitle").innerText = p.quickTitle;
 
   document.getElementById("uiViceAccordionTitle").innerText =
     p.viceAccordionTitle;
-  document.getElementById("uiViceNoticeText").innerText =
-    p.viceNoticeText;
+  document.getElementById("uiViceNoticeText").innerText = p.viceNoticeText;
   for (let i = 0; i < 4; i++) {
-    document.getElementById(`uiLabelVice${i}`).innerText =
-      p.viceLabels[i];
-    document.getElementById(`viceName${i}`).placeholder =
-      p.vicePlaceholderName;
+    document.getElementById(`uiLabelVice${i}`).innerText = p.viceLabels[i];
+    document.getElementById(`viceName${i}`).placeholder = p.vicePlaceholderName;
     document.getElementById(`vicePower${i}`).placeholder =
       p.vicePlaceholderPower;
   }
@@ -208,35 +190,27 @@ function changeLanguage(lang) {
   document.getElementById("modalDesc").innerText = p.modalDesc;
   document.getElementById("btnModalCancel").innerText = p.modalCancel;
   document.getElementById("btnModalConfirm").innerText = p.modalConfirm;
-  document.getElementById("uiChangelogTitle").innerText =
-    p.changelogTitle;
+  document.getElementById("uiChangelogTitle").innerText = p.changelogTitle;
   document.getElementById("uiChangelogDesc").innerText = p.changelogDesc;
-  document.getElementById("btnCloseChangelog").innerText =
-    p.btnCloseChangelog;
+  document.getElementById("btnCloseChangelog").innerText = p.btnCloseChangelog;
 
   document.getElementById("publishModalHeaderTitle").innerText =
     p.publishHeader;
-  document.getElementById("lblPublishLegion").innerText =
-    p.lblPublishLegion;
+  document.getElementById("lblPublishLegion").innerText = p.lblPublishLegion;
   document.getElementById("lblPublishEventType").innerText =
     p.lblPublishEventType;
-  document.getElementById("lblPublishTitle").innerText =
-    p.lblPublishTitle;
-  document.getElementById("lblPublishAuthor").innerText =
-    p.lblPublishAuthor;
+  document.getElementById("lblPublishTitle").innerText = p.lblPublishTitle;
+  document.getElementById("lblPublishAuthor").innerText = p.lblPublishAuthor;
   document.getElementById("lblPublishPasscode").innerText =
     p.lblPublishPasscode;
-  document.getElementById("btnPublishCancel").innerText =
-    p.btnPublishCancel;
-  document.getElementById("btnConfirmPublish").innerText =
-    p.btnConfirmPublish;
+  document.getElementById("btnPublishCancel").innerText = p.btnPublishCancel;
+  document.getElementById("btnConfirmPublish").innerText = p.btnConfirmPublish;
 
   document.getElementById("uiLoadHistoryTitle").innerText =
     p.uiLoadHistoryTitle;
   document.getElementById("lblLoadHistory").innerText = p.lblLoadHistory;
   document.getElementById("lblLoadLegion").innerText = p.lblLoadLegion;
-  document.getElementById("lblLoadPasscode").innerText =
-    p.lblLoadPasscode;
+  document.getElementById("lblLoadPasscode").innerText = p.lblLoadPasscode;
   document.getElementById("btnLoadCancel").innerText = p.btnLoadCancel;
   document.getElementById("btnConfirmLoad").innerText = p.btnConfirmLoad;
 
@@ -250,8 +224,7 @@ function changeLanguage(lang) {
 
   for (let i = 0; i < 4; i++) {
     document.getElementById(`uiLabelG${i}`).innerText = p.labels[i];
-    document.getElementById(`leaderName${i}`).placeholder =
-      p.placeholders.name;
+    document.getElementById(`leaderName${i}`).placeholder = p.placeholders.name;
     document.getElementById(`leaderPower${i}`).placeholder =
       p.placeholders.power;
   }
@@ -335,9 +308,7 @@ function parseCurrentInputs() {
 
   for (let i = 0; i < 4; i++) {
     const name = document.getElementById(`leaderName${i}`).value.trim();
-    const power = parseInt(
-      document.getElementById(`leaderPower${i}`).value,
-    );
+    const power = parseInt(document.getElementById(`leaderPower${i}`).value);
     parsed.leaders.push({ name, power });
     if (name) parsed.uniqueNames.add(name);
 
@@ -348,18 +319,14 @@ function parseCurrentInputs() {
     if (vName) parsed.uniqueNames.add(vName);
   }
 
-  parseLines(document.getElementById("memberInput").value).forEach(
-    (p) => {
-      parsed.mainMembers.push(p);
-      parsed.uniqueNames.add(p.name);
-    },
-  );
-  parseLines(document.getElementById("gatherInput").value).forEach(
-    (p) => {
-      parsed.gatherMembers.push(p);
-      parsed.uniqueNames.add(p.name);
-    },
-  );
+  parseLines(document.getElementById("memberInput").value).forEach((p) => {
+    parsed.mainMembers.push(p);
+    parsed.uniqueNames.add(p.name);
+  });
+  parseLines(document.getElementById("gatherInput").value).forEach((p) => {
+    parsed.gatherMembers.push(p);
+    parsed.uniqueNames.add(p.name);
+  });
   parseLines(document.getElementById("ammoInput").value).forEach((p) => {
     parsed.ammoMembers.push(p);
     parsed.uniqueNames.add(p.name);
@@ -390,9 +357,7 @@ function openConfirmationModal() {
   html += `<strong>${p.leaderPreviewTitle}</strong><br>`;
   data.leaders.forEach((l, idx) => {
     const vObj = data.viceLeaders[idx];
-    const viceText = vObj.name
-      ? ` [副: ${vObj.name} (${vObj.power})]`
-      : "";
+    const viceText = vObj.name ? ` [副: ${vObj.name} (${vObj.power})]` : "";
     html += `${p.leaderGText}${idx + 1}${p.leaderGUnit}${l.name || p.emptyText} (${l.power || 0})${viceText}<br>`;
   });
   html += `<br><strong>${p.mainPoolTitle}${data.mainMembers.length}${p.poolUnit}</strong><br>`;
@@ -434,8 +399,7 @@ function triggerAllocation() {
   const preloadImage = document.getElementById("preloadGif");
   if (preloadImage) {
     const activeGif = preloadImage.cloneNode(true);
-    activeGif.style.cssText =
-      "width: 250px; height: auto; border-radius: 4px;";
+    activeGif.style.cssText = "width: 250px; height: auto; border-radius: 4px;";
     container.appendChild(activeGif);
   } else {
     container.innerHTML = `<img src="https://jeremytseng12.github.io/2647WOSFOUNDRY/3.gif" style="width: 250px; height: auto; border-radius: 4px;" />`;
@@ -457,9 +421,7 @@ function validateInputs() {
 
   for (let i = 0; i < 4; i++) {
     const name = document.getElementById(`leaderName${i}`).value.trim();
-    const power = parseInt(
-      document.getElementById(`leaderPower${i}`).value,
-    );
+    const power = parseInt(document.getElementById(`leaderPower${i}`).value);
 
     if (!name) {
       showError(
@@ -490,9 +452,7 @@ function validateInputs() {
 
   for (let i = 0; i < 4; i++) {
     const vName = document.getElementById(`viceName${i}`).value.trim();
-    const vPower = parseInt(
-      document.getElementById(`vicePower${i}`).value,
-    );
+    const vPower = parseInt(document.getElementById(`vicePower${i}`).value);
 
     if (vName) {
       if (leaderNamesSet.has(vName)) {
@@ -515,9 +475,7 @@ function validateInputs() {
     }
   }
 
-  const mainLines = parseLines(
-    document.getElementById("memberInput").value,
-  );
+  const mainLines = parseLines(document.getElementById("memberInput").value);
   for (let m of mainLines) {
     if (leaderNamesSet.has(m.name)) {
       showError(
@@ -529,9 +487,7 @@ function validateInputs() {
     }
   }
 
-  const gatherLines = parseLines(
-    document.getElementById("gatherInput").value,
-  );
+  const gatherLines = parseLines(document.getElementById("gatherInput").value);
   for (let g of gatherLines) {
     if (leaderNamesSet.has(g.name)) {
       showError(
@@ -543,9 +499,7 @@ function validateInputs() {
     }
   }
 
-  const ammoLines = parseLines(
-    document.getElementById("ammoInput").value,
-  );
+  const ammoLines = parseLines(document.getElementById("ammoInput").value);
   for (let a of ammoLines) {
     if (leaderNamesSet.has(a.name)) {
       showError(
@@ -618,9 +572,7 @@ function distributeMembers() {
   currentData.totalPower = totalLeadersPower + totalMembersPower;
   currentData.avgPower = Math.round(currentData.totalPower / 4);
 
-  let sortedMain = [...pool.mainMembers].sort(
-    (a, b) => b.power - a.power,
-  );
+  let sortedMain = [...pool.mainMembers].sort((a, b) => b.power - a.power);
   for (let member of sortedMain) {
     groups.sort((a, b) => a.totalPower - b.totalPower);
     groups[0].members.push({
@@ -797,9 +749,7 @@ function createBuildingCardElement(b, p) {
   card.addEventListener("drop", dragDrop);
 
   let bPower = 0;
-  (currentData.buildings[b.id] || []).forEach(
-    (pObj) => (bPower += pObj.power),
-  );
+  (currentData.buildings[b.id] || []).forEach((pObj) => (bPower += pObj.power));
 
   let pTagsHtml = "";
   (currentData.buildings[b.id] || []).forEach((player, pIdx) => {
@@ -985,9 +935,10 @@ function dragDrop() {
     return;
   if (draggedFromBuildingId === targetBuildingId) return;
 
-  const movingPlayer = currentData.buildings[
-    draggedFromBuildingId
-  ].splice(draggedPlayerIdx, 1)[0];
+  const movingPlayer = currentData.buildings[draggedFromBuildingId].splice(
+    draggedPlayerIdx,
+    1,
+  )[0];
 
   // 移出原建築時，若不是正隊長，解除副隊長標籤（由目標建築與原建築重新評估）
   if (!movingPlayer.isLeader) {
@@ -1122,11 +1073,7 @@ function openLoadHistoryModal() {
   fetch(GAS_WEB_APP_URL)
     .then((res) => res.json())
     .then((res) => {
-      if (
-        res.status === "empty" ||
-        !res.history ||
-        res.history.length === 0
-      ) {
+      if (res.status === "empty" || !res.history || res.history.length === 0) {
         alert("雲端目前尚無歷史紀錄！");
         return;
       }
@@ -1157,14 +1104,9 @@ function closeLoadHistoryModal() {
 }
 
 function fetchAndRestoreGridData() {
-  const rowIndex = parseInt(
-    document.getElementById("loadHistorySelect").value,
-  );
-  const selectedLegion =
-    document.getElementById("loadLegionSelect").value;
-  const passcode = document
-    .getElementById("loadPasscodeInput")
-    .value.trim();
+  const rowIndex = parseInt(document.getElementById("loadHistorySelect").value);
+  const selectedLegion = document.getElementById("loadLegionSelect").value;
+  const passcode = document.getElementById("loadPasscodeInput").value.trim();
 
   let url = `${GAS_WEB_APP_URL}?rowIndex=${rowIndex}`;
   if (passcode) {
@@ -1197,17 +1139,14 @@ function fetchAndRestoreGridData() {
         currentEditingLegion = selectedLegion;
         currentEditingTitle = res.title || "";
 
-        document.getElementById("publishLegionSelect").value =
-          selectedLegion;
+        document.getElementById("publishLegionSelect").value = selectedLegion;
         document.getElementById("publishTitleInput").value =
           currentEditingTitle;
-        document.getElementById("publishAuthorInput").value =
-          res.author || "";
+        document.getElementById("publishAuthorInput").value = res.author || "";
 
         document.getElementById("editingNoticeText").innerText =
           `✏️ 目前正在編輯：第 ${rowIndex} 筆紀錄「${res.title}」(${selectedLegion === "LegionA" ? "軍團1" : "軍團2"})`;
-        document.getElementById("editingNoticeBar").style.display =
-          "flex";
+        document.getElementById("editingNoticeBar").style.display = "flex";
 
         closeLoadHistoryModal();
 
@@ -1315,10 +1254,8 @@ function openPublishModal() {
     headerTitle.innerText = `💾 覆寫更新雲端紀錄 (列號: ${currentEditingRowIndex})`;
     confirmBtn.innerText = "確認並覆寫更新";
   } else {
-    headerTitle.innerText =
-      langPack[currentData.currentLang].publishHeader;
-    confirmBtn.innerText =
-      langPack[currentData.currentLang].btnConfirmPublish;
+    headerTitle.innerText = langPack[currentData.currentLang].publishHeader;
+    confirmBtn.innerText = langPack[currentData.currentLang].btnConfirmPublish;
   }
 
   document.getElementById("publishModal").style.display = "flex";
@@ -1331,14 +1268,9 @@ function closePublishModal() {
 function submitToGoogleSheet() {
   const title = document.getElementById("publishTitleInput").value.trim();
   const author =
-    document.getElementById("publishAuthorInput").value.trim() ||
-    "指揮官";
-  const passcode = document
-    .getElementById("publishPasscodeInput")
-    .value.trim();
-  const activeLegion = document.getElementById(
-    "publishLegionSelect",
-  ).value;
+    document.getElementById("publishAuthorInput").value.trim() || "指揮官";
+  const passcode = document.getElementById("publishPasscodeInput").value.trim();
+  const activeLegion = document.getElementById("publishLegionSelect").value;
 
   if (!title) {
     alert("請輸入標題！");
@@ -1412,9 +1344,7 @@ function submitToGoogleSheet() {
       btn.disabled = false;
       console.error("發布完成：", err);
       const actionText = currentEditingRowIndex ? "覆寫更新" : "發布";
-      alert(
-        `🎉 成功${actionText}紀錄！\n標題：${title}\n分配員：${author}`,
-      );
+      alert(`🎉 成功${actionText}紀錄！\n標題：${title}\n分配員：${author}`);
       closePublishModal();
       if (currentEditingRowIndex) {
         exitEditMode();
