@@ -23,6 +23,7 @@ let currentData = {
     b6: [],
     b7: [],
   },
+  unassignedPool: [], // 待分配新進人員暫存區
   manualGatherText: "",
   manualAmmoText: "",
 };
@@ -30,8 +31,12 @@ let currentData = {
 let currentEditingRowIndex = null;
 let currentEditingLegion = "LegionA";
 let currentEditingTitle = "";
+let currentEditingAuthor = "";
 let historyRecordsList = [];
 let isCurrentlyMaintenance = false;
+
+// 記錄當前彈窗新增的目標位置
+let quickAddTarget = null; // 'b0' ~ 'b7' 或 'gather' 或 'ammo'
 
 // 1. 讀取公告 JSON
 async function fetchAnnouncementJson() {
@@ -335,9 +340,40 @@ function parseCurrentInputs() {
   return parsed;
 }
 
+function getAllCurrentAssignedNames() {
+  const names = new Set();
+  buildingsConfig.forEach((b) => {
+    (currentData.buildings[b.id] || []).forEach((p) => names.add(p.name));
+  });
+  (currentData.unassignedPool || []).forEach((p) => names.add(p.name));
+  return names;
+}
+
 function openConfirmationModal() {
   document.getElementById("errorMessage").style.display = "none";
   if (!validateInputs()) return;
+
+  const resultVisible =
+    document.getElementById("resultSection").style.display !== "none";
+
+  if (resultVisible) {
+    const pool = parseCurrentInputs();
+    const assignedNames = getAllCurrentAssignedNames();
+    const newMembers = pool.mainMembers.filter(
+      (m) => !assignedNames.has(m.name),
+    );
+
+    const previewBox = document.getElementById("newMembersListPreview");
+    if (newMembers.length > 0) {
+      previewBox.innerHTML =
+        `<strong>偵測到新增 ${newMembers.length} 名成員：</strong><br>` +
+        newMembers.map((m) => `${m.name} (${m.power})`).join("、");
+    } else {
+      previewBox.innerHTML = `⚠️ 目前主名單中未偵測到未分配的新成員。`;
+    }
+    document.getElementById("reallocateModal").style.display = "flex";
+    return;
+  }
 
   const data = parseCurrentInputs();
   const totalCount = data.uniqueNames.size;
@@ -375,16 +411,55 @@ function closeConfirmationModal() {
   document.getElementById("confirmModal").style.display = "none";
 }
 
-function openChangelogModal() {
-  document.getElementById("changelogModal").style.display = "flex";
-}
-function closeChangelogModal() {
-  document.getElementById("changelogModal").style.display = "none";
+function closeReallocateModal() {
+  document.getElementById("reallocateModal").style.display = "none";
 }
 
 function confirmAndAllocate() {
   closeConfirmationModal();
   triggerAllocation();
+}
+
+function triggerFullReallocate() {
+  closeReallocateModal();
+  currentData.unassignedPool = [];
+  triggerAllocation();
+}
+
+function appendNewMembersOnly() {
+  closeReallocateModal();
+  const pool = parseCurrentInputs();
+  const assignedNames = getAllCurrentAssignedNames();
+
+  const newMembers = pool.mainMembers.filter((m) => !assignedNames.has(m.name));
+
+  if (newMembers.length === 0) {
+    alert("⚠️ 沒有偵測到新的待分配人員！");
+    return;
+  }
+
+  newMembers.forEach((m) => {
+    currentData.unassignedPool.push({
+      name: m.name,
+      power: m.power,
+      isLeader: false,
+      isVice: false,
+      isManualLeader: false,
+      isManualVice: false,
+    });
+  });
+
+  currentData.manualGatherText = document
+    .getElementById("gatherInput")
+    .value.trim();
+  currentData.manualAmmoText = document
+    .getElementById("ammoInput")
+    .value.trim();
+
+  renderAll();
+  alert(
+    `✅ 已將 ${newMembers.length} 位新成員加入表格下方的「待分配新進人員」暫存區，請直接拖曳進行指派！`,
+  );
 }
 
 function triggerAllocation() {
@@ -487,30 +562,6 @@ function validateInputs() {
     }
   }
 
-  const gatherLines = parseLines(document.getElementById("gatherInput").value);
-  for (let g of gatherLines) {
-    if (leaderNamesSet.has(g.name)) {
-      showError(
-        isEn
-          ? `Error: CDR/V-CDR "${g.name}" appears in the Gathering Squad list!`
-          : `防呆警告：隊長/副隊長「${g.name}」重複出現在「2. 採集小隊名單」！`,
-      );
-      return false;
-    }
-  }
-
-  const ammoLines = parseLines(document.getElementById("ammoInput").value);
-  for (let a of ammoLines) {
-    if (leaderNamesSet.has(a.name)) {
-      showError(
-        isEn
-          ? `Error: CDR/V-CDR "${a.name}" appears in the Ammo Squad list!`
-          : `防呆警告：隊長/副隊長「${a.name}」重複出現在「3. 子彈小隊名單」！`,
-      );
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -527,6 +578,7 @@ function distributeMembers() {
     b6: [],
     b7: [],
   };
+  currentData.unassignedPool = [];
 
   let groups = [];
   let totalLeadersPower = 0;
@@ -539,6 +591,8 @@ function distributeMembers() {
       power: lData.power,
       isLeader: true,
       isVice: false,
+      isManualLeader: true,
+      isManualVice: false,
     };
 
     let manualViceObj = null;
@@ -549,6 +603,8 @@ function distributeMembers() {
         power: vData.power,
         isLeader: false,
         isVice: true,
+        isManualLeader: false,
+        isManualVice: true,
       };
       totalLeadersPower += vData.power;
     }
@@ -580,6 +636,8 @@ function distributeMembers() {
       power: member.power,
       isLeader: false,
       isVice: false,
+      isManualLeader: false,
+      isManualVice: false,
     });
     groups[0].totalPower += member.power;
   }
@@ -621,7 +679,7 @@ function getFormattedText(isEn) {
   let textOutput = "";
   buildingsConfig.forEach((b) => {
     const bName = isEn ? b.nameEn : b.nameZht;
-    let formattedNames = currentData.buildings[b.id].map((player) => {
+    let formattedNames = (currentData.buildings[b.id] || []).map((player) => {
       if (player.isLeader) return `${player.name}`;
       if (player.isVice) return `${player.name}`;
       return player.name;
@@ -647,7 +705,7 @@ function updateTextOutputOnly() {
 
   buildingsConfig.forEach((b) => {
     const bName = isEn ? b.nameEn : b.nameZht;
-    let formattedNames = currentData.buildings[b.id].map((player) => {
+    let formattedNames = (currentData.buildings[b.id] || []).map((player) => {
       if (player.isLeader) return `${player.name}`;
       if (player.isVice) return `${player.name}`;
       return player.name;
@@ -668,35 +726,33 @@ function updateTextOutputOnly() {
   document.getElementById("copyTextarea").value = textOutput.trim();
 }
 
-// 🎯 重排建築內人員 (副隊長動態評估)
 function reorderCommanders() {
   buildingsConfig.forEach((b) => {
     let list = currentData.buildings[b.id];
     if (!list || list.length === 0) return;
 
-    // 1. 抽出正隊長，其餘人員先重設副隊長標籤
-    let leaderIdx = list.findIndex((p) => p.isLeader);
+    let leaderIdx = list.findIndex((p) => p.isManualLeader || p.isLeader);
     let leaderObj = leaderIdx !== -1 ? list.splice(leaderIdx, 1)[0] : null;
+
+    let manualViceIdx = list.findIndex((p) => p.isManualVice);
+    let manualViceObj =
+      manualViceIdx !== -1 ? list.splice(manualViceIdx, 1)[0] : null;
 
     list.forEach((p) => {
       p.isVice = false;
     });
 
-    // 2. 剩餘人員依戰力由高到低排序
     list.sort((a, b) => b.power - a.power);
 
+    if (manualViceObj) {
+      manualViceObj.isVice = true;
+      list.unshift(manualViceObj);
+    } else if (b.needVice && list.length > 0) {
+      list[0].isVice = true;
+    }
+
     if (leaderObj) {
-      // 有正隊長：若該建築需要副隊長，由扣除隊長後的戰力第一名擔任
-      if (b.needVice && list.length > 0) {
-        list[0].isVice = true;
-      }
-      // 正隊長放回首位
       list.unshift(leaderObj);
-    } else {
-      // 無正隊長：若該建築需要副隊長，由全體戰力第一名擔任
-      if (b.needVice && list.length > 0) {
-        list[0].isVice = true;
-      }
     }
   });
 }
@@ -710,6 +766,11 @@ function calculateCurrentGridTotals() {
       totalPower += p.power || 0;
       if (p.name) uniqueNames.add(p.name);
     });
+  });
+
+  (currentData.unassignedPool || []).forEach((p) => {
+    totalPower += p.power || 0;
+    if (p.name) uniqueNames.add(p.name);
   });
 
   let gatherArr = currentData.manualGatherText
@@ -738,6 +799,93 @@ function toggleAccordionGroup(groupId) {
   }
 }
 
+function removePlayer(sourceId, pIdx, event) {
+  if (event) event.stopPropagation();
+
+  if (sourceId === "unassignedPool") {
+    currentData.unassignedPool.splice(pIdx, 1);
+  } else if (sourceId === "gather") {
+    let arr = currentData.manualGatherText
+      ? currentData.manualGatherText.split("\n")
+      : [];
+    arr.splice(pIdx, 1);
+    currentData.manualGatherText = arr.join("\n");
+    document.getElementById("gatherInput").value = currentData.manualGatherText;
+  } else if (sourceId === "ammo") {
+    let arr = currentData.manualAmmoText
+      ? currentData.manualAmmoText.split("\n")
+      : [];
+    arr.splice(pIdx, 1);
+    currentData.manualAmmoText = arr.join("\n");
+    document.getElementById("ammoInput").value = currentData.manualAmmoText;
+  } else if (currentData.buildings[sourceId]) {
+    currentData.buildings[sourceId].splice(pIdx, 1);
+  }
+
+  renderAll();
+}
+
+function openQuickAddModal(targetId) {
+  quickAddTarget = targetId;
+  const isSpec = targetId === "gather" || targetId === "ammo";
+  document.getElementById("quickAddName").value = "";
+  document.getElementById("quickAddPower").value = "";
+  document.getElementById("quickAddPowerGroup").style.display = isSpec
+    ? "none"
+    : "block";
+
+  let title = "➕ 新增人員";
+  if (targetId === "gather") title = "⚡ 新增至採集小隊";
+  else if (targetId === "ammo") title = "🎒 新增至子彈小隊";
+  else {
+    const b = buildingsConfig.find((item) => item.id === targetId);
+    if (b)
+      title = `➕ 新增至 ${currentData.currentLang === "en" ? b.nameEn : b.nameZht}`;
+  }
+
+  document.getElementById("uiAddMemberTitle").innerText = title;
+  document.getElementById("addMemberQuickModal").style.display = "flex";
+  document.getElementById("quickAddName").focus();
+}
+
+function closeQuickAddModal() {
+  document.getElementById("addMemberQuickModal").style.display = "none";
+}
+
+function confirmQuickAdd() {
+  const name = document.getElementById("quickAddName").value.trim();
+  const power = parseInt(document.getElementById("quickAddPower").value) || 0;
+
+  if (!name) {
+    alert("請輸入成員名稱！");
+    return;
+  }
+
+  if (quickAddTarget === "gather") {
+    let cur = document.getElementById("gatherInput").value.trim();
+    document.getElementById("gatherInput").value = cur
+      ? `${cur}\n${name}`
+      : name;
+    currentData.manualGatherText = document.getElementById("gatherInput").value;
+  } else if (quickAddTarget === "ammo") {
+    let cur = document.getElementById("ammoInput").value.trim();
+    document.getElementById("ammoInput").value = cur ? `${cur}\n${name}` : name;
+    currentData.manualAmmoText = document.getElementById("ammoInput").value;
+  } else if (currentData.buildings[quickAddTarget]) {
+    currentData.buildings[quickAddTarget].push({
+      name: name,
+      power: power,
+      isLeader: false,
+      isVice: false,
+      isManualLeader: false,
+      isManualVice: false,
+    });
+  }
+
+  closeQuickAddModal();
+  renderAll();
+}
+
 function createBuildingCardElement(b, p) {
   const card = document.createElement("div");
   card.className = `building-card b-group-${b.gIdx}`;
@@ -763,10 +911,23 @@ function createBuildingCardElement(b, p) {
       roleLabel = `<span class="tag-vice-label">${p.viceTag}</span>`;
     }
 
+    const isLocked = player.isManualLeader || player.isManualVice;
+    const canDrag = !isLocked;
+    const dragAttr = canDrag
+      ? `draggable="true" ondragstart="dragStart(event, '${b.id}', ${pIdx})"`
+      : `draggable="false" style="cursor:not-allowed;" title="隊長/手動副隊長固定無法移動"`;
+
+    const rightHtml = isLocked
+      ? `<span class="player-power-val">${player.power || 0}</span>`
+      : `
+          <span class="player-power-val">${player.power || 0}</span>
+          <button class="btn-player-delete" onclick="removePlayer('${b.id}', ${pIdx}, event)" title="直接移除此人">🗑️</button>
+        `;
+
     pTagsHtml += `
-      <div class="player-tag ${roleClass}" draggable="true" ondragstart="dragStart(event, '${b.id}', ${pIdx})">
+      <div class="player-tag ${roleClass} ${isLocked ? "is-locked" : ""}" ${dragAttr}>
           <span>${roleLabel}${player.name}</span>
-          <inherit-strong>${player.power || 0}</inherit-strong>
+          ${rightHtml}
       </div>
     `;
   });
@@ -775,6 +936,36 @@ function createBuildingCardElement(b, p) {
     <div class="building-title">${currentData.currentLang === "en" ? b.nameEn : b.nameZht}</div>
     <div class="building-power">${p.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
     <div class="drop-zone">${pTagsHtml}</div>
+    <button class="btn-card-add" onclick="openQuickAddModal('${b.id}')">➕ 新增人員</button>
+  `;
+  return card;
+}
+
+function createUnassignedPoolCard(p) {
+  const card = document.createElement("div");
+  card.className = "building-card b-group-unassigned";
+  card.id = "unassignedPool";
+
+  card.addEventListener("dragover", dragOver);
+  card.addEventListener("dragenter", dragEnter);
+  card.addEventListener("dragleave", dragLeave);
+  card.addEventListener("drop", dragDrop);
+
+  let poolTagsHtml = "";
+  currentData.unassignedPool.forEach((player, pIdx) => {
+    poolTagsHtml += `
+      <div class="player-tag" draggable="true" ondragstart="dragStart(event, 'unassignedPool', ${pIdx})">
+          <span>🎒 ${player.name}</span>
+          <span class="player-power-val">${player.power || 0}</span>
+          <button class="btn-player-delete" onclick="removePlayer('unassignedPool', ${pIdx}, event)" title="直接移除此人">🗑️</button>
+      </div>
+    `;
+  });
+
+  card.innerHTML = `
+    <div class="building-title" style="color:#ff66ff;">🎒 待分配新進人員 (${currentData.unassignedPool.length}人)</div>
+    <div class="building-power" style="color:#f0abfc;">請直接拖曳以下人員至各建築分配</div>
+    <div class="drop-zone">${poolTagsHtml}</div>
   `;
   return card;
 }
@@ -802,11 +993,13 @@ function renderAll() {
     ? currentData.manualGatherText.split("\n")
     : [];
   let gatherTags = gatherArr
-    .map((name) =>
+    .map((name, idx) =>
       name.trim()
         ? `
     <div class="player-tag" style="cursor:default;">
-      <span>⚡ ${name.trim()}</span><inherit-strong></inherit-strong>
+      <span>⚡ ${name.trim()}</span>
+      <span class="player-power-val"></span>
+      <button class="btn-player-delete" onclick="removePlayer('gather', ${idx}, event)" title="直接移除此人">🗑️</button>
     </div>`
         : "",
     )
@@ -815,6 +1008,7 @@ function renderAll() {
     <div class="building-title">${p.specTitleGather}</div>
     <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabel : p.specLabelGather}</div>
     <div class="drop-zone">${gatherTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
+    <button class="btn-card-add" onclick="openQuickAddModal('gather')">➕ 新增採集人員</button>
   `;
 
   const ammoCard = document.createElement("div");
@@ -823,11 +1017,13 @@ function renderAll() {
     ? currentData.manualAmmoText.split("\n")
     : [];
   let ammoTags = ammoArr
-    .map((name) =>
+    .map((name, idx) =>
       name.trim()
         ? `
     <div class="player-tag" style="cursor:default; border-color:#ff3838;">
-      <span>🎒 ${name.trim()}</span><inherit-strong></inherit-strong>
+      <span>🎒 ${name.trim()}</span>
+      <span class="player-power-val"></span>
+      <button class="btn-player-delete" onclick="removePlayer('ammo', ${idx}, event)" title="直接移除此人">🗑️</button>
     </div>`
         : "",
     )
@@ -836,6 +1032,7 @@ function renderAll() {
     <div class="building-title">${p.specTitleAmmo}</div>
     <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabelAmmo : p.specLabelAmmo}</div>
     <div class="drop-zone">${ammoTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
+    <button class="btn-card-add" onclick="openQuickAddModal('ammo')">➕ 新增子彈人員</button>
   `;
 
   if (isMobileView) {
@@ -886,6 +1083,10 @@ function renderAll() {
     specWrap.appendChild(specHeader);
     specWrap.appendChild(specBody);
     grid.appendChild(specWrap);
+
+    if (currentData.unassignedPool && currentData.unassignedPool.length > 0) {
+      grid.appendChild(createUnassignedPoolCard(p));
+    }
   } else {
     buildingsConfig.forEach((b, idx) => {
       const card = createBuildingCardElement(b, p);
@@ -896,6 +1097,12 @@ function renderAll() {
         grid.appendChild(ammoCard);
       }
     });
+
+    if (currentData.unassignedPool && currentData.unassignedPool.length > 0) {
+      const poolCard = createUnassignedPoolCard(p);
+      poolCard.style.gridColumn = "span 6";
+      grid.appendChild(poolCard);
+    }
   }
 
   updateTextOutputOnly();
@@ -926,26 +1133,34 @@ function dragLeave() {
   this.classList.remove("drag-over");
 }
 
-// 🎯 拖曳放置 (移出時解除副隊長標籤)
 function dragDrop() {
   this.classList.remove("drag-over");
   const targetBuildingId = this.id;
 
-  if (targetBuildingId === "" || !currentData.buildings[targetBuildingId])
-    return;
+  if (targetBuildingId === "") return;
   if (draggedFromBuildingId === targetBuildingId) return;
 
-  const movingPlayer = currentData.buildings[draggedFromBuildingId].splice(
-    draggedPlayerIdx,
-    1,
-  )[0];
+  let movingPlayer = null;
+  if (draggedFromBuildingId === "unassignedPool") {
+    movingPlayer = currentData.unassignedPool.splice(draggedPlayerIdx, 1)[0];
+  } else if (currentData.buildings[draggedFromBuildingId]) {
+    movingPlayer = currentData.buildings[draggedFromBuildingId].splice(
+      draggedPlayerIdx,
+      1,
+    )[0];
+  }
 
-  // 移出原建築時，若不是正隊長，解除副隊長標籤（由目標建築與原建築重新評估）
-  if (!movingPlayer.isLeader) {
+  if (!movingPlayer) return;
+
+  if (!movingPlayer.isManualLeader) {
     movingPlayer.isVice = false;
   }
 
-  currentData.buildings[targetBuildingId].push(movingPlayer);
+  if (targetBuildingId === "unassignedPool") {
+    currentData.unassignedPool.push(movingPlayer);
+  } else if (currentData.buildings[targetBuildingId]) {
+    currentData.buildings[targetBuildingId].push(movingPlayer);
+  }
 
   renderAll();
 }
@@ -1070,7 +1285,7 @@ function openLoadHistoryModal() {
     return;
   }
 
-  fetch(GAS_WEB_APP_URL)
+  fetch(`${GAS_WEB_APP_URL}?t=${new Date().getTime()}`)
     .then((res) => res.json())
     .then((res) => {
       if (res.status === "empty" || !res.history || res.history.length === 0) {
@@ -1108,7 +1323,7 @@ function fetchAndRestoreGridData() {
   const selectedLegion = document.getElementById("loadLegionSelect").value;
   const passcode = document.getElementById("loadPasscodeInput").value.trim();
 
-  let url = `${GAS_WEB_APP_URL}?rowIndex=${rowIndex}`;
+  let url = `${GAS_WEB_APP_URL}?rowIndex=${rowIndex}&t=${new Date().getTime()}`;
   if (passcode) {
     url += `&passcode=${encodeURIComponent(passcode)}`;
   }
@@ -1132,20 +1347,23 @@ function fetchAndRestoreGridData() {
         if (legionData.buildings) {
           currentData.buildings = legionData.buildings;
         }
+        currentData.unassignedPool = [];
         currentData.manualGatherText = legionData.manualGatherText || "";
         currentData.manualAmmoText = legionData.manualAmmoText || "";
 
         currentEditingRowIndex = rowIndex;
         currentEditingLegion = selectedLegion;
         currentEditingTitle = res.title || "";
+        currentEditingAuthor = res.author || "指揮官";
 
         document.getElementById("publishLegionSelect").value = selectedLegion;
         document.getElementById("publishTitleInput").value =
           currentEditingTitle;
-        document.getElementById("publishAuthorInput").value = res.author || "";
+        document.getElementById("publishAuthorInput").value =
+          currentEditingAuthor;
 
         document.getElementById("editingNoticeText").innerText =
-          `✏️ 目前正在編輯：第 ${rowIndex} 筆紀錄「${res.title}」(${selectedLegion === "LegionA" ? "軍團1" : "軍團2"})`;
+          `✏️ 目前正在編輯歷史紀錄「${res.title}」(${selectedLegion === "LegionA" ? "軍團1" : "軍團2"}) - 發布時將覆蓋原資料`;
         document.getElementById("editingNoticeBar").style.display = "flex";
 
         closeLoadHistoryModal();
@@ -1168,8 +1386,52 @@ function fetchAndRestoreGridData() {
 function exitEditMode() {
   currentEditingRowIndex = null;
   currentEditingTitle = "";
+  currentEditingAuthor = "";
   document.getElementById("editingNoticeBar").style.display = "none";
-  alert("已退出微調模式，接下來發布將建立「全新紀錄」。");
+  alert("已退出編輯模式，接下來發布將建立「全新紀錄」。");
+}
+
+// 🎯 重置全站至初始進入狀態函式
+function resetToInitialState() {
+  currentEditingRowIndex = null;
+  currentEditingTitle = "";
+  currentEditingAuthor = "";
+  document.getElementById("editingNoticeBar").style.display = "none";
+
+  // 清空各隊長輸入框
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`leaderName${i}`).value = "";
+    document.getElementById(`leaderPower${i}`).value = "";
+    document.getElementById(`viceName${i}`).value = "";
+    document.getElementById(`vicePower${i}`).value = "";
+  }
+
+  // 清空文字名單輸入框
+  document.getElementById("memberInput").value = "";
+  document.getElementById("gatherInput").value = "";
+  document.getElementById("ammoInput").value = "";
+
+  // 重置資料物件
+  currentData.buildings = {
+    b0: [],
+    b1: [],
+    b2: [],
+    b3: [],
+    b4: [],
+    b5: [],
+    b6: [],
+    b7: [],
+  };
+  currentData.unassignedPool = [];
+  currentData.manualGatherText = "";
+  currentData.manualAmmoText = "";
+  currentData.totalPeople = 0;
+  currentData.totalPower = 0;
+  currentData.avgPower = 0;
+
+  // 隱藏分配結果區塊並回到頂部
+  document.getElementById("resultSection").style.display = "none";
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function getNextSundayDateString() {
@@ -1225,14 +1487,16 @@ function openPublishModal() {
   const tundraGroup = document.getElementById("tundraDatePickerGroup");
   const titleInput = document.getElementById("publishTitleInput");
   const titleLabel = document.getElementById("lblPublishTitle");
+  const authorInput = document.getElementById("publishAuthorInput");
 
   if (currentEditingRowIndex) {
     eventGroup.style.display = "none";
     tundraGroup.style.display = "none";
-    titleLabel.innerText = "3. 修改之分配紀錄標題：";
-    titleInput.disabled = false;
-    titleInput.style.backgroundColor = "#121929";
+    titleLabel.innerText = "3. 發布紀錄標題 (沿用原紀錄)：";
+    titleInput.disabled = true;
+    titleInput.style.backgroundColor = "#060a12";
     titleInput.value = currentEditingTitle;
+    authorInput.value = currentEditingAuthor;
   } else {
     eventGroup.style.display = "block";
     titleLabel.innerText = "3. 標題 / Title：(自動填入 / Auto fill in)：";
@@ -1240,19 +1504,19 @@ function openPublishModal() {
     titleInput.style.backgroundColor = "#060a12";
     document.getElementById("publishEventTypeSelect").value = "foundry";
     onPublishEventTypeChange();
-  }
 
-  const savedAuthor = localStorage.getItem("lastAuthorName") || "";
-  if (!document.getElementById("publishAuthorInput").value) {
-    document.getElementById("publishAuthorInput").value = savedAuthor;
+    const savedAuthor = localStorage.getItem("lastAuthorName") || "";
+    if (!authorInput.value) {
+      authorInput.value = savedAuthor;
+    }
   }
 
   const headerTitle = document.getElementById("publishModalHeaderTitle");
   const confirmBtn = document.getElementById("btnConfirmPublish");
 
   if (currentEditingRowIndex) {
-    headerTitle.innerText = `💾 覆寫更新雲端紀錄 (列號: ${currentEditingRowIndex})`;
-    confirmBtn.innerText = "確認並覆寫更新";
+    headerTitle.innerText = `💾 發布更新「${currentEditingTitle}」`;
+    confirmBtn.innerText = "確認並發布最新版";
   } else {
     headerTitle.innerText = langPack[currentData.currentLang].publishHeader;
     confirmBtn.innerText = langPack[currentData.currentLang].btnConfirmPublish;
@@ -1265,6 +1529,7 @@ function closePublishModal() {
   document.getElementById("publishModal").style.display = "none";
 }
 
+// 🎯 發布邏輯：區分全新發布 vs 歷史編輯覆寫 Alert，並在發布後重置畫面
 function submitToGoogleSheet() {
   const title = document.getElementById("publishTitleInput").value.trim();
   const author =
@@ -1288,6 +1553,8 @@ function submitToGoogleSheet() {
   const originalBtnText = btn.innerText;
   btn.innerText = "Processing...";
   btn.disabled = true;
+
+  const isEditingOldRecord = currentEditingRowIndex !== null;
 
   const legionData = {
     summary: {
@@ -1313,10 +1580,6 @@ function submitToGoogleSheet() {
     legions: legionsObj,
   };
 
-  if (currentEditingRowIndex) {
-    payload.rowIndex = currentEditingRowIndex;
-  }
-
   fetch(GAS_WEB_APP_URL, {
     method: "POST",
     body: JSON.stringify(payload),
@@ -1330,25 +1593,31 @@ function submitToGoogleSheet() {
       if (data.status === "error") {
         alert("作業失敗：" + data.message);
       } else {
-        const actionText = currentEditingRowIndex ? "覆寫更新" : "發布";
-        alert(
-          `🎉 成功${actionText}紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}`,
-        );
-        if (currentEditingRowIndex) {
-          exitEditMode();
+        if (isEditingOldRecord) {
+          alert(
+            `💾 成功覆寫更新歷史分配紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}\n\n檢視系統已自動同步至最新版本！`,
+          );
+        } else {
+          alert(
+            `🎉 成功發布全新分配紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}`,
+          );
         }
+        resetToInitialState();
       }
     })
     .catch((err) => {
       btn.innerText = originalBtnText;
       btn.disabled = false;
       console.error("發布完成：", err);
-      const actionText = currentEditingRowIndex ? "覆寫更新" : "發布";
-      alert(`🎉 成功${actionText}紀錄！\n標題：${title}\n分配員：${author}`);
-      closePublishModal();
-      if (currentEditingRowIndex) {
-        exitEditMode();
+      if (isEditingOldRecord) {
+        alert(
+          `💾 成功覆寫更新歷史分配紀錄！\n標題：${title}\n分配員：${author}\n\n檢視系統已自動同步至最新版本！`,
+        );
+      } else {
+        alert(`🎉 成功發布全新分配紀錄！\n標題：${title}\n分配員：${author}`);
       }
+      closePublishModal();
+      resetToInitialState();
     });
 }
 
