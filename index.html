@@ -14,10 +14,7 @@
       rel="stylesheet"
       href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/cyber-core.css"
     />
-    <link
-      rel="stylesheet"
-      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/index.css"
-    />
+    <link rel="stylesheet" href="../index.css" />
 
     <!-- 2. 外部函式庫與圖標 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -73,16 +70,13 @@
       <div class="container">
         <div class="top-control-bar">
           <div class="top-control-bar-left">
+            <!-- 將原本的 alert 替換為 openLoadHistoryModal() -->
             <button
               class="btn-load-history"
               id="btnHistoryModal"
-              onclick="
-                alert(
-                  '編輯系統即將重新上線！',
-                )
-              "
+              onclick="openLoadHistoryModal()"
             >
-              📂 編輯歷史分配紀錄(即將回歸)
+              📂 編輯歷史分配結果
             </button>
             <button
               class="btn-load-history"
@@ -831,7 +825,83 @@
         </div>
       </div>
     </div>
+    <!-- 新增模式選擇確認 Modal -->
+    <div id="reallocateModal" class="cyber-modal-overlay">
+      <div class="cyber-modal">
+        <h3 id="uiReallocateTitle">⚙️ 偵測到名單變更 / 選擇分配模式</h3>
+        <div class="cyber-modal-content">
+          <p id="uiReallocateDesc" style="line-height: 1.6; color: #cbd5e1">
+            目前已有分配結果。系統偵測到有變更或新進人員，請選擇處理方式：
+          </p>
+          <div
+            id="newMembersListPreview"
+            class="modal-data-box"
+            style="margin-bottom: 12px; color: #00ffcc"
+          ></div>
+        </div>
+        <div
+          class="cyber-modal-actions"
+          style="flex-direction: column; gap: 10px"
+        >
+          <button
+            class="btn btn-modal-confirm"
+            style="
+              width: 100%;
+              background: linear-gradient(135deg, #00ffcc, #00aaff) !important;
+            "
+            onclick="appendNewMembersOnly()"
+          >
+            ➕ 僅增補新進人員至暫存區 (保留現有分配)
+          </button>
+          <button
+            class="btn btn-modal-confirm"
+            style="
+              width: 100%;
+              background: linear-gradient(135deg, #ff5500, #ff0055) !important;
+            "
+            onclick="triggerFullReallocate()"
+          >
+            🔄 重新完全分配 (覆蓋所有當前名單)
+          </button>
+          <button
+            class="btn btn-modal-cancel"
+            style="width: 100%"
+            onclick="closeReallocateModal()"
+          >
+            取消
+          </button>
+        </div>
+      </div>
+    </div>
 
+    <!-- 快速新增單一成員 Modal -->
+    <div id="addMemberQuickModal" class="cyber-modal-overlay">
+      <div class="cyber-modal" style="max-width: 360px">
+        <h3 id="uiAddMemberTitle">➕ 手動新增成員</h3>
+        <div class="cyber-modal-content">
+          <div class="form-group">
+            <label style="color: #7ee8cc">成員名稱：</label>
+            <input type="text" id="quickAddName" placeholder="例：Tom" />
+          </div>
+          <div
+            class="form-group"
+            style="margin-top: 10px"
+            id="quickAddPowerGroup"
+          >
+            <label style="color: #7ee8cc">戰力數值：</label>
+            <input type="number" id="quickAddPower" placeholder="例：5200" />
+          </div>
+        </div>
+        <div class="cyber-modal-actions">
+          <button class="btn btn-modal-cancel" onclick="closeQuickAddModal()">
+            取消
+          </button>
+          <button class="btn btn-modal-confirm" onclick="confirmQuickAdd()">
+            確認新增
+          </button>
+        </div>
+      </div>
+    </div>
     <!-- 右下角懸浮按鈕 -->
     <div class="changelog-trigger" onclick="openChangelogModal()">
       <img
@@ -842,6 +912,6 @@
 
     <!-- 3. 腳本模組引入 (注意載入順序：先字典，後邏輯) -->
     <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/118n.js"></script>
-    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/index.js"></script>
+    <script src="../index.js"></script>
   </body>
 </html>
