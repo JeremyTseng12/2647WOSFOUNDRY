@@ -24,7 +24,7 @@
     <link
       rel="icon"
       type="image/webp"
-      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/foundry.webp"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/foundry.webp"
     />
   </head>
   <body>
@@ -55,7 +55,7 @@
         <h3 class="logo_text" id="introText">MADE BY TSENG</h3>
         <img
           class="logo_img"
-          src="https://jeremytseng12.github.io/2647WOSFOUNDRY/3.gif"
+          src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/loading.gif"
           alt="Loading..."
         />
       </div>
@@ -63,7 +63,7 @@
     <div style="display: none">
       <img
         id="preloadGif"
-        src="https://jeremytseng12.github.io/2647WOSFOUNDRY/3.gif"
+        src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/loading.gif"
         alt="preload"
       />
     </div>
@@ -78,11 +78,11 @@
               id="btnHistoryModal"
               onclick="
                 alert(
-                  '編輯系統故障暫停使用中，The editing system is currently under maintenance.',
+                  '編輯系統即將重新上線！',
                 )
               "
             >
-              📂 編輯歷史分配紀錄
+              📂 編輯歷史分配紀錄(即將回歸)
             </button>
             <button
               class="btn-load-history"
@@ -107,6 +107,18 @@
               "
             >
               📲 查看舊版本分配系統
+            </button>
+            <button
+              class="btn-load-history"
+              id="btnOldSystem"
+              onclick="
+                window.open(
+                  'https://jeremytseng12.github.io/2647WOSFOUNDRY/manage',
+                  '_blank',
+                )
+              "
+            >
+              📲 管理中心(ADMIN)
             </button>
           </div>
 
@@ -404,12 +416,12 @@
                 </button>
                 <button
                   class="btn-assign"
-                  onclick="quickAssignLeader('城市酒桶')"
+                  onclick="quickAssignLeader('躺平玩家')"
                 >
-                  2. 城市酒桶
+                  2. 躺平玩家
                 </button>
-                <button class="btn-assign" onclick="quickAssignLeader('Larry')">
-                  3. Larry
+                <button class="btn-assign" onclick="quickAssignLeader('TSENG')">
+                  3. TSENG
                 </button>
                 <button class="btn-assign" onclick="quickAssignLeader('Iris')">
                   4. Iris
@@ -565,13 +577,6 @@
             確認無誤，開始分配
           </button>
         </div>
-        <p
-          id="modalWarnNotice"
-          style="color: red; margin-top: 10px; font-size: 0.8rem"
-        >
-          IF THE TRANSLATION SYSTEM IS NOT FUNCTIONING PROPERLY, PLEASE TRY
-          TRANSLATING AGAIN.
-        </p>
       </div>
     </div>
 
@@ -830,7 +835,7 @@
     <!-- 右下角懸浮按鈕 -->
     <div class="changelog-trigger" onclick="openChangelogModal()">
       <img
-        src="https://jeremytseng12.github.io/2647WOSFOUNDRY/log%20icon.png"
+        src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/log.png"
         alt="Changelog"
       />
     </div>
