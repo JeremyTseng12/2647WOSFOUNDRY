@@ -1,11 +1,12 @@
 /* ============================================================
-   兵工廠人員分配系統 - 核心業務邏輯 (index.js)
+   兵工廠人員分配系統 - 核心業務邏輯 v3.0 (index.js)
    依賴：需先載入 js/i18n.js
    ============================================================ */
 
 const GAS_WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbwcO_cum0wC8lYbQZHVdexJ-qghfddEAdZTID-5CHOYUMGhrz9-rMZEzXBODp5KQtG7/exec";
-const ANN_JSON_URL = "https://jeremytseng12.github.io/2647WOSFOUNDRY/ann";
+  "https://script.google.com/macros/s/AKfycbz-nozNOlqqn3EmBwjDNU_vPkpf6lPiM2RYWFpQ82pd8GCHv-p9Tov4UaWgkrCEleL6/exec";
+
+let currentUser = null;
 
 let currentData = {
   totalPeople: 0,
@@ -23,7 +24,7 @@ let currentData = {
     b6: [],
     b7: [],
   },
-  unassignedPool: [], // 待分配新進人員暫存區
+  unassignedPool: [],
   manualGatherText: "",
   manualAmmoText: "",
 };
@@ -34,86 +35,84 @@ let currentEditingTitle = "";
 let currentEditingAuthor = "";
 let historyRecordsList = [];
 let isCurrentlyMaintenance = false;
+let quickAddTarget = null;
 
-// 記錄當前彈窗新增的目標位置
-let quickAddTarget = null; // 'b0' ~ 'b7' 或 'gather' 或 'ammo'
+// 1. 身分驗證邏輯
+async function handleIndexLogin() {
+  const account = document.getElementById("loginAccount").value.trim();
+  const passkey = document.getElementById("loginPasskey").value.trim();
+  const errorEl = document.getElementById("loginErrorMsg");
 
-// 1. 讀取公告 JSON
-async function fetchAnnouncementJson() {
+  if (!account || !passkey) {
+    errorEl.textContent = "請輸入幹部帳號與通行密碼";
+    return;
+  }
+
+  errorEl.textContent = "驗證中...";
+
   try {
-    const res = await fetch(`${ANN_JSON_URL}?t=${new Date().getTime()}`);
-    if (!res.ok) return;
-    const data = await res.json();
-    let annText = "";
+    const res = await fetch(GAS_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "login", account, passkey }),
+    });
+    const result = await res.json();
 
-    if (typeof data === "string") {
-      annText = data.trim();
-    } else if (data) {
-      annText = (data.announcement || data.message || data.text || "").trim();
-    }
-
-    if (annText) {
-      alert(`📢 系統公告：\n${annText}`);
+    if (result.status === "success") {
+      currentUser = result.user;
+      sessionStorage.setItem("wos_admin_user", JSON.stringify(currentUser));
+      unlockSystemUI();
+    } else {
+      errorEl.textContent = result.message || "帳號或密碼錯誤！";
     }
   } catch (err) {
-    console.error("讀取公告檔 ann.json 失敗或目前無公告：", err);
+    errorEl.textContent = "連線驗證失敗，請檢查網路後再試。";
   }
 }
 
-// 2. 全螢幕維修狀態檢查
-async function checkSystemStatus() {
-  try {
-    const res = await fetch(
-      `${GAS_WEB_APP_URL}?action=getSystemStatus&t=${new Date().getTime()}`,
-    );
-    const data = await res.json();
-    const status = data.status;
-
-    const overlay = document.getElementById("fullscreenOverlay");
-    const title = document.getElementById("overlayTitle");
-    const msg = document.getElementById("overlayMessage");
-    const btnReload = document.getElementById("btnOverlayReload");
-
-    if (status === "offline" || status === "maintenance") {
-      isCurrentlyMaintenance = true;
-      overlay.style.display = "flex";
-
-      if (status === "offline") {
-        title.innerText = "⛔ 網站目前已關閉";
-        msg.innerHTML = "系統目前暫停對外開放，請聯繫管理員！";
-      } else {
-        title.innerText = "🔧 系統維修中";
-        msg.innerHTML =
-          "系統目前正在進行維護升級，請稍後再試！<br><span style='font-size:0.85rem; color:#94a3b8;'>（系統每 60 秒會自動嘗試連線檢查）</span>";
-      }
-    } else if (status === "active") {
-      if (isCurrentlyMaintenance) {
-        title.innerText = "🟢 系統維護完成";
-        msg.innerHTML = "系統已成功恢復運行，請點擊下方按鈕重新載入畫面！";
-        btnReload.style.display = "inline-block";
-      } else {
-        overlay.style.display = "none";
-      }
-    }
-  } catch (err) {
-    console.error("狀態檢查失敗：", err);
-  }
+function handleIndexLogout() {
+  sessionStorage.removeItem("wos_admin_user");
+  currentUser = null;
+  location.reload();
 }
 
-window.addEventListener("load", function () {
-  checkSystemStatus();
-  setInterval(checkSystemStatus, 60000);
+function unlockSystemUI() {
+  document.getElementById("indexLoginOverlay").style.display = "none";
+
+  // 顯示開場動畫後進入主畫面
+  const intro = document.getElementById("intro");
+  const mainContent = document.getElementById("main-content");
+  if (intro) intro.style.display = "flex";
 
   setTimeout(() => {
-    const intro = document.getElementById("intro");
-    const mainContent = document.getElementById("main-content");
-    intro.style.display = "none";
-    mainContent.style.display = "block";
-    setTimeout(() => {
-      mainContent.style.opacity = "1";
-    }, 50);
-    fetchAnnouncementJson();
-  }, 2200);
+    if (intro) intro.style.display = "none";
+    if (mainContent) {
+      mainContent.style.display = "block";
+      setTimeout(() => {
+        mainContent.style.opacity = "1";
+      }, 50);
+    }
+  }, 1200);
+
+  // 頂部身分標籤與預填發布者暱稱
+  const badge = document.getElementById("userBadge");
+  if (badge && currentUser) {
+    badge.textContent = `👤 ${currentUser.displayName} [${currentUser.role === "supreme" ? "最高管理員" : "管理員"}]`;
+  }
+  const authorInput = document.getElementById("publishAuthorInput");
+  if (authorInput && currentUser) {
+    authorInput.value = currentUser.displayName;
+  }
+}
+
+// 2. 系統初始化檢查登入狀態
+window.addEventListener("load", function () {
+  const savedUser = sessionStorage.getItem("wos_admin_user");
+  if (savedUser) {
+    currentUser = JSON.parse(savedUser);
+    unlockSystemUI();
+  } else {
+    document.getElementById("indexLoginOverlay").style.display = "flex";
+  }
 });
 
 function toggleViceAccordion() {
@@ -415,6 +414,13 @@ function closeReallocateModal() {
   document.getElementById("reallocateModal").style.display = "none";
 }
 
+function openChangelogModal() {
+  document.getElementById("changelogModal").style.display = "flex";
+}
+function closeChangelogModal() {
+  document.getElementById("changelogModal").style.display = "none";
+}
+
 function confirmAndAllocate() {
   closeConfirmationModal();
   triggerAllocation();
@@ -557,6 +563,30 @@ function validateInputs() {
         isEn
           ? `Error: CDR/V-CDR "${m.name}" appears in the main balancing list! Do not re-enter CDRs in the main list.`
           : `防呆警告：隊長/副隊長「${m.name}」重複出現在「1. 主平衡分配名單」！系統已自動包含隊長，請自主名單中移除。`,
+      );
+      return false;
+    }
+  }
+
+  const gatherLines = parseLines(document.getElementById("gatherInput").value);
+  for (let g of gatherLines) {
+    if (leaderNamesSet.has(g.name)) {
+      showError(
+        isEn
+          ? `Error: CDR/V-CDR "${g.name}" appears in the Gathering Squad list!`
+          : `防呆警告：隊長/副隊長「${g.name}」重複出現在「2. 採集小隊名單」！`,
+      );
+      return false;
+    }
+  }
+
+  const ammoLines = parseLines(document.getElementById("ammoInput").value);
+  for (let a of ammoLines) {
+    if (leaderNamesSet.has(a.name)) {
+      showError(
+        isEn
+          ? `Error: CDR/V-CDR "${a.name}" appears in the Ammo Squad list!`
+          : `防呆警告：隊長/副隊長「${a.name}」重複出現在「3. 子彈小隊名單」！`,
       );
       return false;
     }
@@ -1228,7 +1258,7 @@ function captureBuildingGrid() {
   let ammoTags = ammoArr
     .map((name) =>
       name.trim()
-        ? `<div class="player-tag" style="cursor:default; border-color:#ff3838;"><span>🎒 ${name.trim()}</span></div>`
+        ? `<div class="player-tag" style="border-color:#ff3838;"><span>🎒 ${name.trim()}</span></div>`
         : "",
     )
     .join("");
@@ -1285,7 +1315,7 @@ function openLoadHistoryModal() {
     return;
   }
 
-  fetch(`${GAS_WEB_APP_URL}?t=${new Date().getTime()}`)
+  fetch(`${GAS_WEB_APP_URL}?action=getHistory&t=${new Date().getTime()}`)
     .then((res) => res.json())
     .then((res) => {
       if (res.status === "empty" || !res.history || res.history.length === 0) {
@@ -1323,7 +1353,7 @@ function fetchAndRestoreGridData() {
   const selectedLegion = document.getElementById("loadLegionSelect").value;
   const passcode = document.getElementById("loadPasscodeInput").value.trim();
 
-  let url = `${GAS_WEB_APP_URL}?rowIndex=${rowIndex}&t=${new Date().getTime()}`;
+  let url = `${GAS_WEB_APP_URL}?action=getHistory&rowIndex=${rowIndex}&t=${new Date().getTime()}`;
   if (passcode) {
     url += `&passcode=${encodeURIComponent(passcode)}`;
   }
@@ -1354,7 +1384,8 @@ function fetchAndRestoreGridData() {
         currentEditingRowIndex = rowIndex;
         currentEditingLegion = selectedLegion;
         currentEditingTitle = res.title || "";
-        currentEditingAuthor = res.author || "指揮官";
+        currentEditingAuthor =
+          res.author || (currentUser ? currentUser.displayName : "指揮官");
 
         document.getElementById("publishLegionSelect").value = selectedLegion;
         document.getElementById("publishTitleInput").value =
@@ -1391,14 +1422,12 @@ function exitEditMode() {
   alert("已退出編輯模式，接下來發布將建立「全新紀錄」。");
 }
 
-// 🎯 重置全站至初始進入狀態函式
 function resetToInitialState() {
   currentEditingRowIndex = null;
   currentEditingTitle = "";
   currentEditingAuthor = "";
   document.getElementById("editingNoticeBar").style.display = "none";
 
-  // 清空各隊長輸入框
   for (let i = 0; i < 4; i++) {
     document.getElementById(`leaderName${i}`).value = "";
     document.getElementById(`leaderPower${i}`).value = "";
@@ -1406,12 +1435,10 @@ function resetToInitialState() {
     document.getElementById(`vicePower${i}`).value = "";
   }
 
-  // 清空文字名單輸入框
   document.getElementById("memberInput").value = "";
   document.getElementById("gatherInput").value = "";
   document.getElementById("ammoInput").value = "";
 
-  // 重置資料物件
   currentData.buildings = {
     b0: [],
     b1: [],
@@ -1429,7 +1456,6 @@ function resetToInitialState() {
   currentData.totalPower = 0;
   currentData.avgPower = 0;
 
-  // 隱藏分配結果區塊並回到頂部
   document.getElementById("resultSection").style.display = "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -1505,9 +1531,8 @@ function openPublishModal() {
     document.getElementById("publishEventTypeSelect").value = "foundry";
     onPublishEventTypeChange();
 
-    const savedAuthor = localStorage.getItem("lastAuthorName") || "";
-    if (!authorInput.value) {
-      authorInput.value = savedAuthor;
+    if (currentUser) {
+      authorInput.value = currentUser.displayName;
     }
   }
 
@@ -1529,11 +1554,11 @@ function closePublishModal() {
   document.getElementById("publishModal").style.display = "none";
 }
 
-// 🎯 發布邏輯：區分全新發布 vs 歷史編輯覆寫 Alert，並在發布後重置畫面
 function submitToGoogleSheet() {
   const title = document.getElementById("publishTitleInput").value.trim();
   const author =
-    document.getElementById("publishAuthorInput").value.trim() || "指揮官";
+    document.getElementById("publishAuthorInput").value.trim() ||
+    (currentUser ? currentUser.displayName : "指揮官");
   const passcode = document.getElementById("publishPasscodeInput").value.trim();
   const activeLegion = document.getElementById("publishLegionSelect").value;
 
@@ -1546,8 +1571,6 @@ function submitToGoogleSheet() {
     alert("錯誤：尚未設定 GAS_WEB_APP_URL！");
     return;
   }
-
-  localStorage.setItem("lastAuthorName", author);
 
   const btn = document.getElementById("btnConfirmPublish");
   const originalBtnText = btn.innerText;
@@ -1573,12 +1596,17 @@ function submitToGoogleSheet() {
   legionsObj[activeLegion] = legionData;
 
   const payload = {
+    action: "publish",
     title: title,
     author: author,
     passcode: passcode,
     activeLegion: activeLegion,
     legions: legionsObj,
   };
+
+  if (currentEditingRowIndex) {
+    payload.rowIndex = currentEditingRowIndex;
+  }
 
   fetch(GAS_WEB_APP_URL, {
     method: "POST",
