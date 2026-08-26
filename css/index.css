@@ -726,3 +726,80 @@ select:disabled {
   align-items: center;
   justify-content: center;
 }
+/* ============================================================
+   分配系統專屬幹部認證閘道 (柔和極簡黑白風)
+   ============================================================ */
+.login-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at top, #111827 0%, #060a12 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.login-card {
+  background: #0d1322;
+  border: 1px solid #1e293b;
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(0, 255, 204, 0.1);
+  border-radius: 12px;
+  padding: 40px 32px;
+  max-width: 380px;
+  width: 100%;
+}
+
+.login-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 0;
+  margin-bottom: 8px;
+  border-left: none;
+  padding-left: 0;
+}
+
+.login-subtitle {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.login-card .form-group {
+  margin-bottom: 16px;
+}
+
+.login-card .btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, #00ffcc, #00aaff);
+  color: #080b11;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: all 0.2s;
+}
+
+.login-card .btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.error-text {
+  color: #ff3838;
+  font-size: 13px;
+  margin-top: 12px;
+  text-align: center;
+  font-weight: bold;
+}
