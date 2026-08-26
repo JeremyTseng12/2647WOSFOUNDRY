@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>兵工廠人員分配系統 Pro</title>
+    <title>兵工廠人員分配系統 3.0</title>
 
     <!-- 1. 樣式模組引入 -->
     <link
@@ -14,7 +14,10 @@
       rel="stylesheet"
       href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/cyber-core.css"
     />
-    <link rel="stylesheet" href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/index.css?v=5" />
+    <link
+      rel="stylesheet"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/index.css?v=67"
+    />
 
     <!-- 2. 外部函式庫與圖標 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -25,30 +28,40 @@
     />
   </head>
   <body>
-    <!-- 全螢幕維修遮罩 (填滿全畫面) -->
-    <div id="fullscreenOverlay">
-      <div class="overlay-card">
-        <h2 id="overlayTitle">🔧 系統維修中</h2>
-        <p id="overlayMessage">
-          系統目前正在進行維護升級，請稍後再試！<br /><span
-            style="font-size: 0.85rem; color: #94a3b8"
-            >（系統每 60 秒會自動嘗試連線檢查）</span
-          >
-        </p>
-        <button
-          id="btnOverlayReload"
-          class="btn-reload"
-          onclick="location.reload()"
-        >
-          🟢 系統已恢復正常，點擊立即重新整理
+    <!-- 1. 登入防護視窗 (未驗證前顯示) -->
+    <div id="indexLoginOverlay" class="login-container">
+      <div class="login-card">
+        <h2>身分認證</h2>
+        <p class="login-subtitle">請輸入使用者帳號以及密碼以存取分配系統</p>
+        <div class="form-group">
+          <label>帳號</label>
+          <input
+            type="text"
+            id="loginAccount"
+            placeholder="請輸入帳號"
+            autofocus
+          />
+        </div>
+        <div class="form-group">
+          <label>通行密碼</label>
+          <input
+            type="password"
+            id="loginPasskey"
+            placeholder="請輸入密碼"
+            onkeydown="if (event.key === 'Enter') handleIndexLogin();"
+          />
+        </div>
+        <button class="btn-primary" onclick="handleIndexLogin()">
+          驗證並進入系統
         </button>
+        <div id="loginErrorMsg" class="error-text"></div>
       </div>
     </div>
 
-    <!-- 1. 全螢幕開場動畫 Intro -->
-    <div id="intro">
+    <!-- 全螢幕開場動畫 Intro (登入通過後短暫播放) -->
+    <div id="intro" style="display: none">
       <div class="logo-container">
-        <h1 class="logo">兵工廠人員分配系統</h1>
+        <h1 class="logo">兵工廠人員分配系統 3.0</h1>
         <h3 class="logo_text" id="introText">MADE BY TSENG</h3>
         <img
           class="logo_img"
@@ -65,18 +78,17 @@
       />
     </div>
 
-    <!-- 2. 主要系統畫面內容 -->
-    <div id="main-content">
+    <!-- 2. 主要系統畫面內容 (登入後解鎖) -->
+    <div id="main-content" style="display: none">
       <div class="container">
         <div class="top-control-bar">
           <div class="top-control-bar-left">
-            <!-- 將原本的 alert 替換為 openLoadHistoryModal() -->
             <button
               class="btn-load-history"
               id="btnHistoryModal"
               onclick="openLoadHistoryModal()"
             >
-              📂 編輯歷史分配結果
+              📂 編輯歷史分配紀錄
             </button>
             <button
               class="btn-load-history"
@@ -104,7 +116,7 @@
             </button>
             <button
               class="btn-load-history"
-              id="btnOldSystem"
+              id="btnManageSystem"
               onclick="
                 window.open(
                   'https://jeremytseng12.github.io/2647WOSFOUNDRY/manage',
@@ -112,11 +124,28 @@
                 )
               "
             >
-              📲 管理中心(ADMIN)
+              ⚙️ 管理中心(ADMIN)
             </button>
           </div>
 
           <div class="lang-switch-top">
+            <!-- 幹部身分資訊與登出 -->
+            <span
+              id="userBadge"
+              style="
+                color: #7ee8cc;
+                font-size: 0.85rem;
+                font-weight: bold;
+                margin-right: 8px;
+              "
+            ></span>
+            <button
+              class="btn-lang"
+              onclick="handleIndexLogout()"
+              style="border-color: #ff3838; color: #ff3838"
+            >
+              登出
+            </button>
             <button
               id="btnLangZht"
               class="btn-lang active"
@@ -135,7 +164,7 @@
         </div>
 
         <div id="editingNoticeBar" class="editing-notice-bar">
-          <span id="editingNoticeText">✏️ 目前正在編輯：第 X 筆紀錄</span>
+          <span id="editingNoticeText">✏️ 目前正在編輯歷史紀錄</span>
           <button
             style="
               background: transparent;
@@ -589,7 +618,6 @@
             </select>
           </div>
 
-          <!-- 活動選單容器，編輯舊紀錄時隱藏 -->
           <div class="form-group" id="eventTypeGroup" style="margin-top: 15px">
             <label id="lblPublishEventType" style="color: #7ee8cc"
               >2. 請選擇活動名稱：</label
@@ -619,7 +647,7 @@
 
           <div class="form-group" style="margin-top: 15px">
             <label id="lblPublishTitle" style="color: #7ee8cc"
-              >3. 標題 / Title：(自動填入 / Auto fill in)</label
+              >3. 標題 / Title：(自動填入 / Auto fill in)：</label
             >
             <input
               type="text"
@@ -713,119 +741,7 @@
       </div>
     </div>
 
-    <!-- 更新日誌 Modal -->
-    <div id="changelogModal" class="cyber-modal-overlay">
-      <div class="cyber-modal">
-        <h3 id="uiChangelogTitle">💾 系統更新紀錄 / Changelog</h3>
-        <div class="cyber-modal-content">
-          <p id="uiChangelogDesc">本系統之歷史重構與優化明細項目：</p>
-          <div class="changelog-box">
-            <div class="changelog-item">
-              <div class="changelog-version">v2.9.0 (Current)</div>
-              <div>
-                •
-                新增「手動指派副隊長」進階手風琴選單，可獨立設定姓名與戰力，直接參與平衡分配。
-              </div>
-              <div>
-                •
-                強化「防呆機制」：嚴格檢查正/副隊長重複設定，並防止隊長名單出現在主名單與特殊小隊中。
-              </div>
-              <div>
-                • 發布視窗全面改版：新增「兵工廠 / 雪域 /
-                測試」活動選單，自動計算當週週日日期與智慧帶入標題。
-              </div>
-              <div>
-                • 響應式佈局優化：小螢幕 (≤1200px)
-                自動切換為「4大組折疊手風琴」，解決特殊小隊卡位與佈局混亂問題。
-              </div>
-              <div>
-                • 升級 6x2
-                獨立截圖機制：無視使用者裝置螢幕大小，強制背景生成包含「TSENG
-                PRO」斜向微光浮水印的高清完整看板。
-              </div>
-              <div>
-                •
-                修正翻譯系統同步機制：解決英文模式下分配結果需手動切換兩次翻譯的漏洞。
-              </div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.8.5</div>
-              <div>
-                • 新增「📂
-                載入雲端舊戰局微調」功能：直接讀取雲端分配表格至微調區，拖曳調整後可直接覆寫更新！
-              </div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.7.0</div>
-              <div>
-                •
-                發布視窗新增「軍團切換下拉選單」與「存取密碼設定盒」，全面對接後端雙軍團與權限驗證。
-              </div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.6.4</div>
-              <div>
-                • 精準修正看板佈局：前 4 建築 + 採集小隊 + 子彈小隊(第一列,
-                特殊小隊各跨2列)，後 4 建築位於第二列，完美實現 6x2 看板佈局。
-              </div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.6.0</div>
-              <div>• 新增「📸 點擊截圖表格區並儲存」功能 (紅色按鈕)。</div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.5.1</div>
-              <div>• 發布視窗新增「分配員名稱」輸入框。</div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.5.0</div>
-              <div>• 新增「☁️ 發布分配結果」雲端同步功能。</div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.4.3</div>
-              <div>• 修正翻譯漏洞，修正翻譯錯誤名稱。</div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.4.2</div>
-              <div>• 修正翻譯漏洞。</div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.4.1</div>
-              <div>
-                • 移除體積過大的分配中動畫 GIF，全面替換為輕量紙飛機 GIF。
-              </div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.3.0</div>
-              <div>• 加入更新紀錄。</div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v2.2.0</div>
-              <div>• 鎖定選取功能，並加入enter 換行功能。</div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v1.1.0</div>
-              <div>• 加入翻譯系統。</div>
-            </div>
-            <div class="changelog-item">
-              <div class="changelog-version">v1.0.0</div>
-              <div>• 系統誕生。</div>
-            </div>
-          </div>
-        </div>
-        <div class="cyber-modal-actions">
-          <button
-            class="btn btn-modal-cancel"
-            style="width: 100%"
-            id="btnCloseChangelog"
-            onclick="closeChangelogModal()"
-          >
-            關閉視窗 / Close
-          </button>
-        </div>
-      </div>
-    </div>
-    <!-- 新增模式選擇確認 Modal -->
+    <!-- 模式選擇確認 Modal -->
     <div id="reallocateModal" class="cyber-modal-overlay">
       <div class="cyber-modal">
         <h3 id="uiReallocateTitle">⚙️ 偵測到名單變更 / 選擇分配模式</h3>
@@ -902,6 +818,35 @@
         </div>
       </div>
     </div>
+
+    <!-- 更新日誌 Modal -->
+    <div id="changelogModal" class="cyber-modal-overlay">
+      <div class="cyber-modal">
+        <h3 id="uiChangelogTitle">💾 系統更新紀錄 / Changelog</h3>
+        <div class="cyber-modal-content">
+          <p id="uiChangelogDesc">本系統之歷史重構與優化明細項目：</p>
+          <div class="changelog-box">
+            <div class="changelog-item">
+              <div class="changelog-version">v3.0.0 (Current)</div>
+              <div>
+                • 系統架構全面升級 3.0：接入模組化 GAS 後端與集中式權限控管。
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cyber-modal-actions">
+          <button
+            class="btn btn-modal-cancel"
+            style="width: 100%"
+            id="btnCloseChangelog"
+            onclick="closeChangelogModal()"
+          >
+            關閉視窗 / Close
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 右下角懸浮按鈕 -->
     <div class="changelog-trigger" onclick="openChangelogModal()">
       <img
@@ -910,8 +855,8 @@
       />
     </div>
 
-    <!-- 3. 腳本模組引入 (注意載入順序：先字典，後邏輯) -->
+    <!-- 3. 腳本模組引入 -->
     <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/118n.js"></script>
-    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/index.js?v=5"></script>
+    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/index.js?v=67"></script>
   </body>
 </html>
