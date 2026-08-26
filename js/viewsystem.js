@@ -1,10 +1,10 @@
 /* ============================================================
-   兵工廠人員檢視系統 - 核心業務邏輯 (viewsystem.js)
+   兵工廠人員檢視系統 - 核心業務邏輯 v3.0 (viewsystem.js)
    依賴：需先載入 js/i18n.js
    ============================================================ */
 
 const GAS_WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbwcO_cum0wC8lYbQZHVdexJ-qghfddEAdZTID-5CHOYUMGhrz9-rMZEzXBODp5KQtG7/exec";
+  "https://script.google.com/macros/s/AKfycbz-nozNOlqqn3EmBwjDNU_vPkpf6lPiM2RYWFpQ82pd8GCHv-p9Tov4UaWgkrCEleL6/exec";
 
 let historyList = [];
 let currentRecord = null;
@@ -12,66 +12,19 @@ let currentLegion = "LegionA";
 let currentUIClassLang = "zht";
 let currentCopyLang = "zht";
 let pendingHistoryIndex = null;
-let isCurrentlyMaintenance = false;
 
-// 1. 全螢幕維修狀態檢查 (含 60 秒輪詢與重整按鈕)
-async function checkSystemStatus() {
-  try {
-    const res = await fetch(
-      `${GAS_WEB_APP_URL}?action=getSystemStatus&t=${new Date().getTime()}`,
-    );
-    const data = await res.json();
-    const status = data.status;
-
-    const overlay = document.getElementById("fullscreenOverlay");
-    const title = document.getElementById("overlayTitle");
-    const msg = document.getElementById("overlayMessage");
-    const btnReload = document.getElementById("btnOverlayReload");
-
-    if (status === "offline" || status === "maintenance") {
-      isCurrentlyMaintenance = true;
-      overlay.style.display = "flex";
-
-      if (status === "offline") {
-        title.innerText = "⛔ 網站目前已關閉";
-        msg.innerHTML = "系統目前暫停對外開放，請聯繫管理員！";
-      } else {
-        title.innerText = "🔧 系統維修中";
-        msg.innerHTML =
-          "系統目前正在進行維護升級，請稍後再試！<br><span style='font-size:0.85rem; color:#94a3b8;'>（系統每 60 秒會自動嘗試連線檢查）</span>";
-      }
-    } else if (status === "active") {
-      if (isCurrentlyMaintenance) {
-        title.innerText = "🟢 系統維護完成";
-        msg.innerHTML =
-          "系統已成功恢復運行，請點擊下方按鈕重新載入畫面！";
-        btnReload.style.display = "inline-block";
-      } else {
-        overlay.style.display = "none";
-      }
-    }
-  } catch (err) {
-    console.error("狀態檢查失敗：", err);
-  }
-}
-
-// 2. 開場動畫 2.2 秒後切換至主畫面並啟動跑馬燈
+// 1. 開場動畫與初始化啟動 (已移除系統狀態檢查與跑馬燈啟動)
 window.addEventListener("load", function () {
-  checkSystemStatus();
-  setInterval(checkSystemStatus, 60000);
-
   setTimeout(() => {
     const intro = document.getElementById("intro");
     const mainContent = document.getElementById("main-content");
-    intro.style.display = "none";
-    mainContent.style.display = "block";
-    setTimeout(() => {
-      mainContent.style.opacity = "1";
-    }, 50);
 
-    const marquee = document.getElementById("announcementMarquee");
-    if (marquee) {
-      marquee.start();
+    if (intro) intro.style.display = "none";
+    if (mainContent) {
+      mainContent.style.display = "block";
+      setTimeout(() => {
+        mainContent.style.opacity = "1";
+      }, 50);
     }
   }, 2200);
 
@@ -113,21 +66,17 @@ window.addEventListener("resize", () => {
   }
 });
 
-// 3. 抓取雲端歷史紀錄選單
+// 2. 抓取雲端歷史紀錄選單 (自動過濾軟刪除)
 function fetchHistoryList() {
   if (!GAS_WEB_APP_URL) {
     alert("請在腳本中設定 GAS_WEB_APP_URL！");
     return;
   }
 
-  fetch(`${GAS_WEB_APP_URL}?t=${new Date().getTime()}`)
+  fetch(`${GAS_WEB_APP_URL}?action=getHistory&t=${new Date().getTime()}`)
     .then((res) => res.json())
     .then((res) => {
-      if (
-        res.status === "empty" ||
-        !res.history ||
-        res.history.length === 0
-      ) {
+      if (res.status === "empty" || !res.history || res.history.length === 0) {
         document.getElementById("loadingScreen").style.display = "none";
         alert("目前試算表中尚無發布的紀錄！");
         return;
@@ -148,10 +97,8 @@ function fetchHistoryList() {
           };
         } else {
           mergedHistoryMap[titleKey].rowIndices.push(item.rowIndex);
-          if (item.author)
-            mergedHistoryMap[titleKey].authors.push(item.author);
-          if (item.hasPasscode)
-            mergedHistoryMap[titleKey].hasPasscode = true;
+          if (item.author) mergedHistoryMap[titleKey].authors.push(item.author);
+          if (item.hasPasscode) mergedHistoryMap[titleKey].hasPasscode = true;
         }
       });
 
@@ -164,8 +111,7 @@ function fetchHistoryList() {
         const option = document.createElement("option");
         option.value = i;
         const lockIcon = item.hasPasscode ? "🔒 " : "";
-        const legionCountText =
-          item.rowIndices.length > 1 ? " [雙軍團]" : "";
+        const legionCountText = item.rowIndices.length > 1 ? " [雙軍團]" : "";
         const displayAuthors = [...new Set(item.authors)].join(" & ");
         option.innerText = `${lockIcon} ${item.title}${legionCountText} (By ${displayAuthors})`;
         select.appendChild(option);
@@ -188,7 +134,7 @@ function onSelectHistoryChange() {
   loadDetailDataByIndex(selectedIndex);
 }
 
-// 4. 讀取指定紀錄內容
+// 3. 讀取指定紀錄內容
 function loadDetailDataByIndex(historyIndex, passcode = "") {
   const targetGroup = historyList[historyIndex];
   if (!targetGroup) return;
@@ -196,7 +142,7 @@ function loadDetailDataByIndex(historyIndex, passcode = "") {
   pendingHistoryIndex = historyIndex;
 
   const fetchPromises = targetGroup.rowIndices.map((rIndex) => {
-    let url = `${GAS_WEB_APP_URL}?rowIndex=${rIndex}&t=${new Date().getTime()}`;
+    let url = `${GAS_WEB_APP_URL}?action=getHistory&rowIndex=${rIndex}&t=${new Date().getTime()}`;
     if (passcode) url += `&passcode=${encodeURIComponent(passcode)}`;
     return fetch(url).then((res) => res.json());
   });
@@ -237,10 +183,8 @@ function loadDetailDataByIndex(historyIndex, passcode = "") {
           const p = res.payload;
 
           if (p.reactions) {
-            combinedRecord.payload.reactions.heart +=
-              p.reactions.heart || 0;
-            combinedRecord.payload.reactions.angry +=
-              p.reactions.angry || 0;
+            combinedRecord.payload.reactions.heart += p.reactions.heart || 0;
+            combinedRecord.payload.reactions.angry += p.reactions.angry || 0;
           }
 
           if (p.legions) {
@@ -325,7 +269,7 @@ function changeLanguage(lang) {
   renderViewer();
 }
 
-// 5. 表情回覆 (LocalStorage 樂觀快取)
+// 4. 表情回覆 (LocalStorage 快取)
 function getSafeLocalReaction(title) {
   try {
     return localStorage.getItem(`reacted_${title}`);
@@ -343,8 +287,7 @@ function setSafeLocalReaction(title, type) {
 }
 
 function sendReaction(type) {
-  if (!currentRecord || !currentRecord.rowIndex || !currentRecord.title)
-    return;
+  if (!currentRecord || !currentRecord.rowIndex || !currentRecord.title) return;
 
   const title = currentRecord.title;
   const previousReaction = getSafeLocalReaction(title);
@@ -426,7 +369,7 @@ function updateReactionsUI(reactions) {
   }
 }
 
-// 6. 渲染看板卡片與主畫面
+// 5. 渲染看板卡片與主畫面
 function createViewerBuildingCard(b, lang, p) {
   const card = document.createElement("div");
   card.className = `building-card b-group-${b.gIdx}`;
@@ -471,8 +414,7 @@ function renderViewer() {
   const lang = langPack[currentUIClassLang];
 
   document.getElementById("uiSelectLabel").innerText = lang.selectLabel;
-  document.getElementById("uiMetaAuthorLabel").innerText =
-    lang.metaAuthor;
+  document.getElementById("uiMetaAuthorLabel").innerText = lang.metaAuthor;
   document.getElementById("uiMetaTimeLabel").innerText = lang.metaTime;
   document.getElementById("uiCopyTitle").innerText = lang.copyTitle;
   document.getElementById("btnCopyText").innerText = lang.btnCopyText;
@@ -521,9 +463,7 @@ function renderViewer() {
 
   const gatherCard = document.createElement("div");
   gatherCard.className = "building-card b-group-spec";
-  let gatherArr = p.manualGatherText
-    ? p.manualGatherText.split("\n")
-    : [];
+  let gatherArr = p.manualGatherText ? p.manualGatherText.split("\n") : [];
   let gatherTags = gatherArr
     .map((name) =>
       name.trim()
@@ -643,7 +583,7 @@ function copyText() {
   alert(langPack[currentUIClassLang].alertSuccess);
 }
 
-// 7. 分享網址彈窗
+// 6. 分享網址彈窗
 const BASE_SHARE_URL =
   "https://jeremytseng12.github.io/2647WOSFOUNDRY/viewsystem";
 
@@ -663,8 +603,7 @@ function closeShareModal() {
 }
 
 function updateShareUrlInput() {
-  const selectedLegion =
-    document.getElementById("shareLegionSelect").value;
+  const selectedLegion = document.getElementById("shareLegionSelect").value;
   const urlInput = document.getElementById("shareUrlInput");
 
   if (selectedLegion === "LegionB") {
