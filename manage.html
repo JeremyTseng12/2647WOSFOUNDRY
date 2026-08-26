@@ -3,427 +3,219 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>兵工廠人員分配系統 Pro</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montenegrin+Gothic+One&family=Noto+Sans+HK:wght@500;700;900&family=Share+Tech+Mono&display=swap"
-      rel="stylesheet"
-    />
+    <title>管理後台 - 兵工廠管理系統</title>
+    <link rel="stylesheet" href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/manage.css" />
     <link
       rel="icon"
       type="image/webp"
       href="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/foundry.webp"
     />
-
-    <style>
-      :root {
-        --bg-cyber: #080b11;
-        --panel-bg: #0f1524;
-        --panel-border: #1a233a;
-        --text-neon: #00ffcc;
-        --text-main: #e2e8f0;
-        --text-muted: #7ee8cc;
-        --color-danger: #ff3838;
-        --color-success: #00ff66;
-      }
-
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        user-select: none;
-      }
-
-      input,
-      button {
-        user-select: text !important;
-      }
-
-      body {
-        font-family: "Montenegrin Gothic One", "Noto Sans HK", sans-serif;
-        background-color: var(--bg-cyber);
-        background-image:
-          linear-gradient(rgba(26, 35, 58, 0.4) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(26, 35, 58, 0.4) 1px, transparent 1px);
-        background-size: 25px 25px;
-        color: var(--text-main);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-      }
-
-      .admin-card {
-        background: var(--panel-bg);
-        border: 2px solid var(--panel-border);
-        width: 100%;
-        max-width: 460px;
-        padding: 40px 30px;
-        border-radius: 4px;
-        box-shadow:
-          0 25px 60px rgba(0, 0, 0, 0.8),
-          inset 0 0 30px rgba(0, 255, 204, 0.03);
-        position: relative;
-        transition: all 0.3s ease;
-      }
-
-      .admin-card::before {
-        content: "";
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        width: 20px;
-        height: 20px;
-        border-top: 4px solid var(--text-neon);
-        border-left: 4px solid var(--text-neon);
-      }
-
-      .admin-card::after {
-        content: "";
-        position: absolute;
-        bottom: -2px;
-        right: -2px;
-        width: 20px;
-        height: 20px;
-        border-bottom: 4px solid var(--text-neon);
-        border-right: 4px solid var(--text-neon);
-      }
-
-      .logo-icon {
-        width: 120px;
-        height: auto;
-        display: block;
-        margin: 0 auto 15px auto;
-      }
-
-      h1 {
-        font-family: "Bebas Neue", "Montenegrin Gothic One", sans-serif;
-        font-size: 2.5rem;
-        color: #fff;
-        text-align: center;
-        letter-spacing: 3px;
-        margin-bottom: 6px;
-        text-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
-      }
-
-      .subtitle {
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        font-family: "Share Tech Mono", monospace;
-        margin-bottom: 25px;
-        border-bottom: 1px dashed var(--panel-border);
-        padding-bottom: 15px;
-      }
-
-      .form-group {
-        margin-bottom: 20px;
-      }
-
-      .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-size: 0.9rem;
-        color: var(--text-neon);
-        font-weight: bold;
-      }
-
-      input[type="password"] {
-        width: 100%;
-        padding: 12px 14px;
-        background: #060a12;
-        border: 1px solid #223052;
-        color: #fff;
-        border-radius: 4px;
-        font-size: 1rem;
-        outline: none;
-        transition: all 0.2s;
-        font-family: "Share Tech Mono", monospace;
-      }
-
-      input[type="password"]:focus {
-        border-color: var(--text-neon);
-        box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
-      }
-
-      .btn-submit {
-        width: 100%;
-        background: linear-gradient(135deg, #00ffcc, #00aaff);
-        color: #080b11;
-        border: none;
-        padding: 14px;
-        font-family: "Montenegrin Gothic One", sans-serif;
-        font-size: 1.05rem;
-        font-weight: 900;
-        letter-spacing: 2px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.2s;
-        box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
-      }
-
-      .btn-submit:hover {
-        transform: translateY(-2px);
-        filter: brightness(1.1);
-        box-shadow: 0 6px 20px rgba(0, 255, 204, 0.35);
-      }
-
-      /* 階段二：主控制面板 (預設隱藏) */
-      #dashboardSection {
-        display: none;
-      }
-
-      .status-indicator-box {
-        background: #060a12;
-        border: 1px solid var(--panel-border);
-        padding: 22px;
-        border-radius: 4px;
-        text-align: center;
-        margin-bottom: 25px;
-      }
-
-      .status-title {
-        font-size: 0.85rem;
-        color: #94a3b8;
-        margin-bottom: 8px;
-      }
-
-      .status-badge {
-        font-family: "Share Tech Mono", monospace;
-        font-size: 1.5rem;
-        font-weight: bold;
-        letter-spacing: 1px;
-      }
-
-      .status-badge.online {
-        color: var(--color-success);
-        text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
-      }
-
-      .status-badge.maintenance {
-        color: var(--color-danger);
-        text-shadow: 0 0 10px rgba(255, 56, 56, 0.4);
-      }
-
-      .btn-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-      }
-
-      .btn-status {
-        padding: 14px;
-        font-family: "Montenegrin Gothic One", sans-serif;
-        font-size: 0.95rem;
-        font-weight: bold;
-        border-radius: 4px;
-        cursor: pointer;
-        border: none;
-        transition: all 0.2s;
-      }
-
-      .btn-online {
-        background: linear-gradient(135deg, #00ff66, #00b344);
-        color: #080b11;
-      }
-
-      .btn-maintenance {
-        background: linear-gradient(135deg, #ff3838, #c00000);
-        color: #ffffff;
-      }
-
-      .btn-status:hover {
-        transform: translateY(-2px);
-        filter: brightness(1.1);
-      }
-
-      .btn-status:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-        transform: none;
-      }
-
-      .error-text {
-        color: var(--color-danger);
-        font-size: 0.85rem;
-        text-align: center;
-        margin-top: 10px;
-        display: none;
-      }
-    </style>
   </head>
   <body>
-    <div class="admin-card">
-      <img
-        class="logo-icon"
-        src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/foundry.webp"
-        alt="Logo"
-      />
-      <h1>兵工廠人員分配系統管理後台</h1>
-      <div class="subtitle">TSENG PRO</div>
-
-      <!-- 1. 登入身分驗證區塊 -->
-      <div id="loginSection">
+    <!-- 登入驗證畫面 -->
+    <div id="loginOverlay" class="login-container">
+      <div class="login-card">
+        <h2>系統登入</h2>
+        <p class="login-subtitle">請輸入管理員帳號與密碼</p>
         <div class="form-group">
-          <label>🔑 請輸入管理員解鎖金鑰：</label>
+          <label>帳號</label>
           <input
-            type="password"
-            id="adminPasscode"
-            placeholder="Passcode Required"
-            onkeydown="if (event.key === 'Enter') verifyLogin();"
+            type="text"
+            id="loginAccount"
+            placeholder="請輸入帳號"
+            autofocus
           />
         </div>
-        <button class="btn-submit" onclick="verifyLogin()" id="btn-sub">
-          登入驗證
-        </button>
-        <div id="loginError" class="error-text">
-          ⚠️ 金鑰驗證失敗，請重新輸入！
+        <div class="form-group">
+          <label>密碼</label>
+          <input
+            type="password"
+            id="loginPasskey"
+            placeholder="請輸入密碼"
+            onkeydown="if (event.key === 'Enter') handleLogin();"
+          />
         </div>
+        <button class="btn-primary" onclick="handleLogin()">登入</button>
+        <div id="loginError" class="error-text"></div>
       </div>
+    </div>
 
-      <!-- 2. 控制台主介面 (登入成功後顯示) -->
-      <div id="dashboardSection">
-        <div class="status-indicator-box">
-          <div class="status-title">當前系統運行狀態：</div>
-          <div id="statusBadge" class="status-badge online">⏳ 讀取中...</div>
+    <!-- 主管理介面 -->
+    <div id="mainApp" class="app-layout" style="display: none">
+      <!-- 頂部黑色導覽列 -->
+      <header class="top-navbar">
+        <div class="nav-brand">兵工廠人員分配系統 3.0 - 管理後台</div>
+        <div class="nav-user-info">
+          <span id="userNameDisplay">使用者</span>
+          <span id="userRoleBadge" class="role-tag">管理員</span>
+          <button class="btn-text" onclick="handleLogout()">登出</button>
         </div>
+      </header>
 
-        <div class="btn-grid">
-          <button
-            id="btnSetOnline"
-            class="btn-status btn-online"
-            onclick="updateSystemStatus('active')"
-          >
-            ✅ 正常運作
-          </button>
-          <button
-            id="btnSetMaintenance"
-            class="btn-status btn-maintenance"
-            onclick="updateSystemStatus('maintenance')"
-          >
-            ⚠️ 維修中
+      <!-- 頁籤導覽 -->
+      <nav class="sub-nav">
+        <button class="tab-btn active" onclick="switchTab('dashboard')">
+          系統總覽
+        </button>
+        <button class="tab-btn" onclick="switchTab('history')">歷史紀錄</button>
+        <button class="tab-btn supreme-only" onclick="switchTab('users')">
+          帳號管理
+        </button>
+        <button class="tab-btn supreme-only" onclick="switchTab('config')">
+          系統設定
+        </button>
+        <a
+          href="https://jeremytseng12.github.io/2647WOSFOUNDRY/"
+          class="tab-link"
+          target="_blank"
+          >返回分配系統 ↗</a
+        >
+      </nav>
+
+      <!-- 內容區域 -->
+      <main class="content-container">
+        <!-- 1. 系統總覽 (Dashboard) -->
+        <section id="tabDashboard" class="tab-panel active">
+          <h3>系統總覽</h3>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">分配紀錄總數</div>
+              <div id="statTotalRecords" class="stat-value"></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">系統帳號總數</div>
+              <div id="statTotalUsers" class="stat-value"></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">當前運作狀態</div>
+              <div id="statSystemStatus" class="stat-value status-text-active">
+                讀取資料中...
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. 歷史紀錄管理 -->
+        <section id="tabHistory" class="tab-panel">
+          <div class="panel-header">
+            <h3>分配紀錄管理</h3>
+            <button class="btn-secondary" onclick="loadHistoryData()">
+              重新整理
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>列號</th>
+                  <th>發布時間</th>
+                  <th>標題</th>
+                  <th>發布者</th>
+                  <th>狀態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <tr>
+                  <td colspan="6" class="text-center">載入中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 3. 帳號管理 (最高管理員專屬) -->
+        <section id="tabUsers" class="tab-panel supreme-only">
+          <div class="panel-header">
+            <h3>管理員名冊</h3>
+            <button class="btn-primary" onclick="openUserModal()">
+              新增帳號
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>列號</th>
+                  <th>帳號</th>
+                  <th>密碼</th>
+                  <th>顯示名稱</th>
+                  <th>權限角色</th>
+                  <th>狀態</th>
+                  <th>建立時間</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr>
+                  <td colspan="8" class="text-center">載入中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 4. 系統設定 (最高管理員專屬) -->
+        <section id="tabConfig" class="tab-panel supreme-only">
+          <h3>系統設定與公告</h3>
+          <div class="config-card">
+            <div class="form-group">
+              <label>系統運作狀態</label>
+              <select id="configSystemStatus" class="form-control">
+                <option value="active">正常開放 (Active)</option>
+                <option value="maintenance">系統維護中 (Maintenance)</option>
+                <option value="offline">伺服器離線 (Offline)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>分配系統公告</label>
+              <textarea
+                id="configAnnouncement"
+                class="form-control"
+                rows="3"
+                placeholder="請輸入公告內容..."
+              ></textarea>
+            </div>
+            <button class="btn-primary" onclick="saveSystemConfig()">
+              儲存設定
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- 新增帳號彈窗 -->
+    <div id="userModal" class="modal-overlay" style="display: none">
+      <div class="modal-card">
+        <h3>新增管理員帳號</h3>
+        <div class="form-group">
+          <label>帳號</label>
+          <input type="text" id="newAccount" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>密碼</label>
+          <input type="text" id="newPasskey" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>顯示名稱</label>
+          <input type="text" id="newDisplayName" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>權限角色</label>
+          <select id="newRole" class="form-control">
+            <option value="manager">管理員</option>
+            <option value="supreme">最高管理員</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeUserModal()">取消</button>
+          <button class="btn-primary" onclick="submitNewUser()">
+            確認建立
           </button>
         </div>
       </div>
     </div>
 
-    <script>
-      const GAS_WEB_APP_URL =
-        "https://script.google.com/macros/s/AKfycbwcO_cum0wC8lYbQZHVdexJ-qghfddEAdZTID-5CHOYUMGhrz9-rMZEzXBODp5KQtG7/exec";
-
-      let verifiedPasscode = "";
-
-      // 1. 執行登入驗證
-      function verifyLogin() {
-        const inputPwd = document.getElementById("adminPasscode").value.trim();
-        const errorDiv = document.getElementById("loginError");
-        errorDiv.style.display = "none";
-        document.getElementById("btn-sub").textContent = "驗證密碼中...";
-        if (!inputPwd) {
-          alert("請輸入管理員解鎖金鑰！");
-          return;
-        }
-
-        // 向後端驗證密碼是否正確
-        fetch(
-          `${GAS_WEB_APP_URL}?action=verifyAdmin&passcode=${encodeURIComponent(inputPwd)}&t=${new Date().getTime()}`,
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.status === "success") {
-              verifiedPasscode = inputPwd;
-              document.getElementById("loginSection").style.display = "none";
-              document.getElementById("dashboardSection").style.display =
-                "block";
-              fetchCurrentStatus();
-            } else {
-              errorDiv.style.display = "block";
-            }
-          })
-          .catch((err) => {
-            console.error("驗證連線失敗：", err);
-            alert("通訊失敗，請確認網路連線。");
-          });
-      }
-
-      // 2. 取得當前系統狀態
-      function fetchCurrentStatus() {
-        const badge = document.getElementById("statusBadge");
-
-        fetch(
-          `${GAS_WEB_APP_URL}?action=getSystemStatus&t=${new Date().getTime()}`,
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.status === "maintenance") {
-              badge.innerText = "⚠️ 維修狀態中 (MAINTENANCE)";
-              badge.className = "status-badge maintenance";
-            } else {
-              badge.innerText = "🟢 系統正常運作 (ONLINE)";
-              badge.className = "status-badge online";
-            }
-          })
-          .catch((err) => {
-            console.error("讀取狀態失敗：", err);
-            badge.innerText = "❌ 狀態連線失敗";
-          });
-      }
-
-      // 3. 切換系統狀態
-      function updateSystemStatus(targetStatus) {
-        if (!verifiedPasscode) {
-          alert("身分驗證過期，請重新登入！");
-          location.reload();
-          return;
-        }
-
-        const btnOnline = document.getElementById("btnSetOnline");
-        const btnMain = document.getElementById("btnSetMaintenance");
-        btnOnline.disabled = true;
-        btnMain.disabled = true;
-
-        const payload = {
-          action: "setSystemStatus",
-          status: targetStatus,
-          passcode: verifiedPasscode,
-        };
-
-        fetch(GAS_WEB_APP_URL, {
-          method: "POST",
-          body: JSON.stringify(payload),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            btnOnline.disabled = false;
-            btnMain.disabled = false;
-
-            if (data.status === "error") {
-              alert("更新失敗：" + data.message);
-            } else {
-              fetchCurrentStatus();
-              if (targetStatus === "active") {
-                btnOnline.textContent = "成功";
-                setTimeout(() => {
-                  btnOnline.textContent = "✅ 正常運作";
-                }, 2000);
-              } else {
-                btnMain.textContent = "成功";
-                setTimeout(() => {
-                  btnMain.textContent = "⚠️ 維修中";
-                }, 2000);
-              }
-            }
-          })
-          .catch((err) => {
-            btnOnline.disabled = false;
-            btnMain.disabled = false;
-            console.error("更新失敗：", err);
-            alert("通訊失敗，請稍後再試。");
-          });
-        fetchCurrentStatus();
-      }
-    </script>
+    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/manage.js"></script>
   </body>
 </html>
