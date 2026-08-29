@@ -809,25 +809,31 @@ select:disabled {
    ============================================================ */
 .support-link-wrapper {
   text-align: center;
+  margin: 12px 0 16px 0;
 }
 
 .support-subtle-link {
   display: inline-block;
-  color: linear-gradient(135deg, #00ffcc, #00aaff);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-family: "Share Tech Mono", monospace;
   text-decoration: none;
-  padding: 4px 12px;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  background: rgba(13, 19, 34, 0.6);
-  transition: all 0.25s ease;
+  padding: 5px 14px;
+  border: 1px solid rgba(0, 255, 204, 0.25);
+  border-radius: 20px;
+  background: rgba(13, 19, 34, 0.7);
   letter-spacing: 0.5px;
+  transition: all 0.25s ease;
+
+  /* 正確文字漸層渲染設定 */
+  background-image: linear-gradient(135deg, #00ffcc, #00aaff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .support-subtle-link:hover {
-  color: var(--text-neon);
-  border-color: rgba(0, 255, 204, 0.4);
-  background: rgba(0, 255, 204, 0.05);
-  box-shadow: 0 0 8px rgba(0, 255, 204, 0.15);
+  border-color: #00ffcc;
+  background-color: rgba(0, 255, 204, 0.08);
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.25);
+  transform: translateY(-1px);
 }
