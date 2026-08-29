@@ -328,28 +328,28 @@ select.history-select {
   font-family: "Noto Sans HK", sans-serif;
   letter-spacing: 0.5px;
 }
-
-/* Portaly 贊助按鈕樣式 */
-.btn-support {
-  background: linear-gradient(135deg, #00ffcc, #00aaff);
-  color: #080b11;
-  border: none;
-  padding: 8px 22px;
-  font-family: "Noto Sans HK", sans-serif;
-  font-size: 0.85rem;
-  font-weight: 900;
-  letter-spacing: 1px;
-  border-radius: 20px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+/* 極簡低調贊助連結 */
+.support-link-wrapper {
+  margin: 10px 0 14px 0;
 }
 
-.btn-support:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
-  filter: brightness(1.1);
+.support-subtle-link {
+  display: inline-block;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-family: "Share Tech Mono", monospace;
+  text-decoration: none;
+  padding: 4px 12px;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  background: rgba(13, 19, 34, 0.6);
+  transition: all 0.25s ease;
+  letter-spacing: 0.5px;
+}
+
+.support-subtle-link:hover {
+  color: var(--text-neon);
+  border-color: rgba(0, 255, 204, 0.4);
+  background: rgba(0, 255, 204, 0.05);
+  box-shadow: 0 0 8px rgba(0, 255, 204, 0.15);
 }
