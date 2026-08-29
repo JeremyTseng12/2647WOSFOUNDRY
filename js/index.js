@@ -483,7 +483,7 @@ function triggerAllocation() {
     activeGif.style.cssText = "width: 250px; height: auto; border-radius: 4px;";
     container.appendChild(activeGif);
   } else {
-    container.innerHTML = `<img src="https://jeremytseng12.github.io/2647WOSFOUNDRY/3.gif" style="width: 250px; height: auto; border-radius: 4px;" />`;
+    container.innerHTML = `<img src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/loading.gif" style="width: 250px; height: auto; border-radius: 4px;" />`;
   }
 
   shimmer.appendChild(container);
@@ -1278,6 +1278,13 @@ function captureBuildingGrid() {
     }
   });
 
+  // 🚀 關鍵：在截圖前將臨時容器中的「新增按鈕」與「刪除垃圾桶」全部移除
+  tempContainer
+    .querySelectorAll(".btn-card-add, .btn-player-delete")
+    .forEach((el) => {
+      el.remove();
+    });
+
   document.body.appendChild(tempContainer);
 
   html2canvas(tempContainer, {
@@ -1308,7 +1315,6 @@ function captureBuildingGrid() {
       btn.disabled = false;
     });
 }
-
 function openLoadHistoryModal() {
   if (!GAS_WEB_APP_URL) {
     alert("請先設定 GAS_WEB_APP_URL！");
