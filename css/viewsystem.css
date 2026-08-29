@@ -328,3 +328,28 @@ select.history-select {
   font-family: "Noto Sans HK", sans-serif;
   letter-spacing: 0.5px;
 }
+
+/* Portaly 贊助按鈕樣式 */
+.btn-support {
+  background: linear-gradient(135deg, #00ffcc, #00aaff);
+  color: #080b11;
+  border: none;
+  padding: 8px 22px;
+  font-family: "Noto Sans HK", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-support:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
+  filter: brightness(1.1);
+}
