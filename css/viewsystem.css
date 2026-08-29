@@ -335,7 +335,7 @@ select.history-select {
 
 .support-subtle-link {
   display: inline-block;
-  color: #64748b;
+  color: linear-gradient(135deg, #00ffcc, #00aaff);;
   font-size: 0.78rem;
   font-family: "Share Tech Mono", monospace;
   text-decoration: none;
