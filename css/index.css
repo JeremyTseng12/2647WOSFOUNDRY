@@ -803,3 +803,31 @@ select:disabled {
   text-align: center;
   font-weight: bold;
 }
+
+/* ============================================================
+   極簡低調贊助連結 (與 viewsystem 一致風格)
+   ============================================================ */
+.support-link-wrapper {
+  text-align: center;
+}
+
+.support-subtle-link {
+  display: inline-block;
+  color: linear-gradient(135deg, #00ffcc, #00aaff);
+  font-size: 0.78rem;
+  font-family: "Share Tech Mono", monospace;
+  text-decoration: none;
+  padding: 4px 12px;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  background: rgba(13, 19, 34, 0.6);
+  transition: all 0.25s ease;
+  letter-spacing: 0.5px;
+}
+
+.support-subtle-link:hover {
+  color: var(--text-neon);
+  border-color: rgba(0, 255, 204, 0.4);
+  background: rgba(0, 255, 204, 0.05);
+  box-shadow: 0 0 8px rgba(0, 255, 204, 0.15);
+}
