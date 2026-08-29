@@ -29,11 +29,11 @@
     <meta property="og:title" content="兵工廠人員分配系統 3.0" />
     <meta
       property="og:description"
-      content="進行分配兵工廠與雪域兵器聯賽人員位置。"
+      content="點擊查看最新兵工廠與雪域兵器聯賽分配結果、人員清單及詳細配置看板。"
     />
     <meta
       name="description"
-      content="進行分配兵工廠與雪域兵器聯賽人員位置。"
+      content="點擊查看最新兵工廠與雪域兵器聯賽分配結果、人員清單及詳細配置看板。"
     />
     <meta property="og:type" content="website" />
     <meta
@@ -45,10 +45,10 @@
     <!-- 1. 登入防護視窗 (未驗證前顯示) -->
     <div id="indexLoginOverlay" class="login-container">
       <div class="login-card">
-        <h2>身分認證 LOGIN</h2>
+        <h2>身分認證</h2>
         <p class="login-subtitle">請輸入使用者帳號以及密碼以存取分配系統</p>
         <div class="form-group">
-          <label>帳號 ACCOUNT</label>
+          <label>帳號</label>
           <input
             type="text"
             id="loginAccount"
@@ -57,7 +57,7 @@
           />
         </div>
         <div class="form-group">
-          <label>密碼 PASSSWORD</label>
+          <label>通行密碼</label>
           <input
             type="password"
             id="loginPasskey"
@@ -66,9 +66,9 @@
           />
         </div>
         <button class="btn-primary" onclick="handleIndexLogin()">
-          驗證並進入系統 ENTER
+          驗證並進入系統
         </button>
-        <div id="loginErrorMsg" class="error-text">請輸入帳號密碼進行登入</div>
+        <div id="loginErrorMsg" class="error-text"></div>
       </div>
     </div>
 
@@ -586,6 +586,20 @@
             🗺️ 下載「兵工廠地圖版」人員分配圖
           </button>
           <div class="building-grid" id="buildingGrid"></div>
+          <!-- ☕ 表格下方極簡低調贊助連結 (與 viewsystem 一致) -->
+          <div
+            class="support-link-wrapper"
+            style="text-align: center; margin-top: 35px; margin-bottom: 20px"
+          >
+            <a
+              href="https://portaly.cc/jt1226"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="support-subtle-link"
+            >
+              ☕ Support Developer
+            </a>
+          </div>
         </div>
       </div>
     </div>
