@@ -5,21 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>兵工廠人員分配系統 3.0</title>
 
-    <!-- 1. 樣式模組引入 -->
+    <!-- 1. 樣式模組引入 (固定官方路徑) -->
     <link
       rel="stylesheet"
-      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/fonts.css"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/fonts.css?v=6767"
     />
     <link
       rel="stylesheet"
-      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/cyber-core.css"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/cyber-core.css?v=6767"
     />
     <link
       rel="stylesheet"
-      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/index.css"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/index.css?v=6767"
     />
 
-    <!-- 2. 外部函式庫與圖標 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link
       rel="icon"
@@ -28,7 +27,32 @@
     />
   </head>
   <body>
-    <!-- 1. 登入防護視窗 (支援獨立即時多語切換) -->
+    <!-- 0. 全螢幕系統狀態遮罩 -->
+    <div
+      id="fullscreenOverlay"
+      class="login-container"
+      style="display: none; z-index: 9999999"
+    >
+      <div class="login-card" style="text-align: center">
+        <h2 id="overlayTitle" style="color: #ff3838">🔧 系統維修中</h2>
+        <p
+          id="overlayMessage"
+          style="color: #94a3b8; font-size: 14px; margin: 15px 0"
+        >
+          系統維護中，請稍後再試！
+        </p>
+        <button
+          id="btnOverlayReload"
+          class="btn-primary"
+          style="display: none"
+          onclick="location.reload()"
+        >
+          重新載入
+        </button>
+      </div>
+    </div>
+
+    <!-- 1. 登入防護視窗 -->
     <div id="indexLoginOverlay" class="login-container">
       <div class="login-card">
         <div class="login-lang-bar">
@@ -80,7 +104,7 @@
       </div>
     </div>
 
-    <!-- 全螢幕開場動畫 Intro -->
+    <!-- 2. 全螢幕開場動畫 Intro -->
     <div id="intro" style="display: none">
       <div class="logo-container">
         <h1 class="logo">兵工廠人員分配系統 3.0</h1>
@@ -100,8 +124,11 @@
       />
     </div>
 
-    <!-- 2. 主要系統畫面內容 -->
-    <div id="main-content" style="display: none">
+    <!-- 3. 主要系統畫面內容 -->
+    <div
+      id="main-content"
+      style="display: none; opacity: 0; transition: opacity 0.3s ease"
+    >
       <div class="container">
         <div class="top-control-bar">
           <div class="top-control-bar-left">
@@ -507,7 +534,6 @@
               margin-bottom: 25px;
             "
           />
-
           <button
             id="btnPublish"
             class="btn btn-publish"
@@ -515,7 +541,6 @@
           >
             ☁️ 發布最新分配結果 (公開給所有人檢視)
           </button>
-
           <h2 id="uiSummaryTitle">📊 數據總計</h2>
           <div class="summary-box" id="summaryBox"></div>
 
@@ -550,7 +575,6 @@
           <h2 id="uiTweakTitle">
             ⚡ 建築物人員微調區 (可直接滑鼠拖曳名字更換位置)
           </h2>
-
           <button
             id="btnScreenshot"
             class="btn btn-screenshot"
@@ -633,7 +657,6 @@
               <option value="LegionB">[軍團2] Legion 2</option>
             </select>
           </div>
-
           <div class="form-group" id="eventTypeGroup" style="margin-top: 15px">
             <label id="lblPublishEventType" style="color: #7ee8cc"
               >2. 請選擇活動名稱：</label
@@ -647,7 +670,6 @@
               <option value="test">TEST (測試)</option>
             </select>
           </div>
-
           <div
             class="form-group"
             id="tundraDatePickerGroup"
@@ -660,7 +682,6 @@
               onchange="onTundraDateChange()"
             />
           </div>
-
           <div class="form-group" style="margin-top: 15px">
             <label id="lblPublishTitle" style="color: #7ee8cc"
               >3. 標題 / Title：(自動填入 / Auto fill in)：</label
@@ -672,14 +693,12 @@
               style="background-color: #060a12; color: #a7f3d0"
             />
           </div>
-
           <div class="form-group" style="margin-top: 15px">
             <label id="lblPublishAuthor" style="color: #00ffcc"
               >4. 分配員暱稱：</label
             >
             <input type="text" id="publishAuthorInput" placeholder="例：塔卡" />
           </div>
-
           <div class="form-group" style="margin-top: 15px">
             <label id="lblPublishPasscode" style="color: #ff3838"
               >5. 設定存取密碼 (停用中)：</label
@@ -825,10 +844,10 @@
           </div>
         </div>
         <div class="cyber-modal-actions">
-          <button class="btn-modal-cancel" onclick="closeQuickAddModal()">
+          <button class="btn btn-modal-cancel" onclick="closeQuickAddModal()">
             取消
           </button>
-          <button class="btn-modal-confirm" onclick="confirmQuickAdd()">
+          <button class="btn btn-modal-confirm" onclick="confirmQuickAdd()">
             確認新增
           </button>
         </div>
@@ -878,8 +897,8 @@
       />
     </div>
 
-    <!-- 3. 腳本模組引入 -->
-    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/118n.js"></script>
-    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/index.js"></script>
+    <!-- 4. 腳本模組引入 (固定官方路徑) -->
+    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/i18n.js?v=6767"></script>
+    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/index.js?v=6767"></script>
   </body>
 </html>
