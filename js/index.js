@@ -198,31 +198,41 @@ function handlePowerEnter(event, currentIdx) {
 }
 
 function changeLanguage(lang) {
-  if (!window.langPack || !langPack[lang]) return;
+  // 防呆：確保字典已載入
+  if (typeof langPack === "undefined" || !langPack[lang]) {
+    console.warn("字典檔尚未載入完成或缺少語系：", lang);
+    return;
+  }
+
   currentData.currentLang = lang;
   currentData.copyLang = lang;
   localStorage.setItem("wos_pref_lang", lang);
   const p = langPack[lang];
-
   const isZht = (lang === "zht");
-  const setBtnActive = (id, active) => {
+
+  // 1. 同步切換所有語言按鈕 (登入卡片 + 頂部導覽列 + 複製名單滑桿)
+  const toggleActive = (id, condition) => {
     const el = document.getElementById(id);
     if (el) {
-      if (active) el.classList.add("active");
+      if (condition) el.classList.add("active");
       else el.classList.remove("active");
     }
   };
 
-  setBtnActive("btnLangZht", isZht);
-  setBtnActive("btnLangEn", !isZht);
-  setBtnActive("btnLoginLangZht", isZht);
-  setBtnActive("btnLoginLangEn", !isZht);
-  setBtnActive("btnCopyLangZht", isZht);
-  setBtnActive("btnCopyLangEn", !isZht);
+  toggleActive("btnLangZht", isZht);
+  toggleActive("btnLangEn", !isZht);
+  toggleActive("btnLoginLangZht", isZht);
+  toggleActive("btnLoginLangEn", !isZht);
+  toggleActive("btnCopyLangZht", isZht);
+  toggleActive("btnCopyLangEn", !isZht);
 
-  if (isZht) document.body.classList.remove("lang-en");
-  else document.body.classList.add("lang-en");
+  if (isZht) {
+    document.body.classList.remove("lang-en");
+  } else {
+    document.body.classList.add("lang-en");
+  }
 
+  // 2. 安全賦值輔助函式 (避免找不到 DOM 時拋出例外)
   const setElText = (id, text) => {
     const el = document.getElementById(id);
     if (el && text !== undefined) el.innerText = text;
@@ -232,7 +242,7 @@ function changeLanguage(lang) {
     if (el && ph !== undefined) el.placeholder = ph;
   };
 
-  // 登入介面 (帶防呆)
+  // 3. 更新登入卡片文字
   setElText("uiLoginTitle", p.loginTitle);
   setElText("uiLoginSubtitle", p.loginSubtitle);
   setElText("uiLoginAccountLabel", p.loginAccountLabel);
@@ -242,7 +252,7 @@ function changeLanguage(lang) {
   setElText("uiBtnLogin", p.btnLogin);
   setElText("btnLogoutTop", p.btnLogout);
 
-  // 主頁面導航與標題
+  // 4. 更新主畫面文字
   setElText("btnMapScreenshot", p.btnMapScreenshot);
   setElText("introText", p.introText);
   setElText("btnHistoryModal", p.btnHistoryModal);
@@ -283,7 +293,7 @@ function changeLanguage(lang) {
     }
   }
 
-  // 建築清單
+  // 5. 更新建築清單
   const infoList = document.getElementById("uiInfoList");
   if (infoList && p.infoItems) {
     infoList.innerHTML = "";
@@ -294,7 +304,7 @@ function changeLanguage(lang) {
     });
   }
 
-  // 彈窗
+  // 6. 更新彈窗
   setElText("modalTitle", p.modalTitle);
   setElText("modalDesc", p.modalDesc);
   setElText("btnModalCancel", p.modalCancel);
@@ -319,8 +329,11 @@ function changeLanguage(lang) {
   setElText("btnLoadCancel", p.btnLoadCancel);
   setElText("btnConfirmLoad", p.btnConfirmLoad);
 
-  updateUserBadge();
+  if (typeof updateUserBadge === "function") {
+    updateUserBadge();
+  }
 
+  // 7. 若結果看板已開啟則重新渲染
   const resultSec = document.getElementById("resultSection");
   if (resultSec && resultSec.style.display !== "none") {
     setElText("btnPublish", p.btnPublish);
