@@ -70,7 +70,7 @@ async function initDashboard() {
       .forEach((el) => (el.style.display = "none"));
   }
 
-  // 🚀 一次性載入總覽卡片
+  // 一次性載入總覽卡片
   loadDashboardStats();
 }
 
@@ -113,6 +113,7 @@ async function loadDashboardStats() {
     elStatus.textContent = "讀取失敗";
   }
 }
+
 // 切換頁籤
 function switchTab(tabName) {
   document
@@ -125,25 +126,25 @@ function switchTab(tabName) {
   if (tabName === "dashboard") {
     document.getElementById("tabDashboard").classList.add("active");
     event.target.classList.add("active");
-    loadDashboardStats(); // 重新整理總覽數字
+    loadDashboardStats();
   } else if (tabName === "history") {
     document.getElementById("tabHistory").classList.add("active");
     event.target.classList.add("active");
-    loadHistoryData(); // 點進來才讀取歷史清單
+    loadHistoryData();
   } else if (tabName === "users") {
     document.getElementById("tabUsers").classList.add("active");
     event.target.classList.add("active");
-    loadUsersData(); // 點進來才讀取名冊
+    loadUsersData();
   } else if (tabName === "config") {
     document.getElementById("tabConfig").classList.add("active");
     event.target.classList.add("active");
   }
 }
 
-// 載入歷史紀錄 (包含已刪除)
+// 載入歷史紀錄 (支援軍團欄位與 7 欄版面)
 async function loadHistoryData() {
   const tbody = document.getElementById("historyTableBody");
-  tbody.innerHTML = `<tr><td colspan="6" class="text-center">資料載入中...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" class="text-center">資料載入中...</td></tr>`;
 
   try {
     const response = await fetch(
@@ -157,33 +158,58 @@ async function loadHistoryData() {
         historyCache.filter((h) => h.status !== "deleted").length;
 
       if (historyCache.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center">目前無任何紀錄</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center">目前無任何紀錄</td></tr>`;
         return;
       }
 
       tbody.innerHTML = historyCache
-        .map(
-          (item) => `
-                <tr>
-                    <td>${item.rowIndex}</td>
-                    <td>${item.updateTime}</td>
-                    <td>${item.title}</td>
-                    <td>${item.author}</td>
-                    <td><span class="status-badge ${item.status === "deleted" ? "status-deleted" : "status-active"}">${item.status === "deleted" ? "停用" : "正常"}</span></td>
-                    <td>
-                        ${
-                          item.status === "deleted"
-                            ? `<button class="btn-secondary" onclick="changeRecordStatus(${item.rowIndex}, 'restoreRecord')">還原</button>`
-                            : `<button class="btn-danger" onclick="changeRecordStatus(${item.rowIndex}, 'deleteRecord')">停用</button>`
-                        }
-                    </td>
-                </tr>
-            `,
-        )
+        .map((item) => {
+          // 判斷軍團徽章
+          let legionBadge = '<span class="status-badge" style="background:#1e293b; color:#94a3b8;">全軍團</span>';
+          const legionKey = item.activeLegion || item.legion;
+          
+          if (legionKey === "LegionA") {
+            legionBadge = '<span class="status-badge" style="background:rgba(0,170,255,0.15); border:1px solid #00aaff; color:#00aaff;">🛡️ 軍團 1</span>';
+          } else if (legionKey === "LegionB") {
+            legionBadge = '<span class="status-badge" style="background:rgba(255,85,0,0.15); border:1px solid #ff5500; color:#ff5500;">⚔️ 軍團 2</span>';
+          } else if (item.legions) {
+            const hasA = !!item.legions.LegionA;
+            const hasB = !!item.legions.LegionB;
+            if (hasA && hasB) {
+              legionBadge = '<span class="status-badge" style="background:rgba(0,255,204,0.15); border:1px solid #00ffcc; color:#00ffcc;">雙軍團</span>';
+            } else if (hasA) {
+              legionBadge = '<span class="status-badge" style="background:rgba(0,170,255,0.15); border:1px solid #00aaff; color:#00aaff;">🛡️ 軍團 1</span>';
+            } else if (hasB) {
+              legionBadge = '<span class="status-badge" style="background:rgba(255,85,0,0.15); border:1px solid #ff5500; color:#ff5500;">⚔️ 軍團 2</span>';
+            }
+          }
+
+          return `
+            <tr>
+              <td>${item.rowIndex}</td>
+              <td>${item.updateTime || "-"}</td>
+              <td>${item.title || "無標題"}</td>
+              <td>${legionBadge}</td>
+              <td>${item.author || "指揮官"}</td>
+              <td>
+                <span class="status-badge ${item.status === "deleted" ? "status-deleted" : "status-active"}">
+                  ${item.status === "deleted" ? "停用" : "正常"}
+                </span>
+              </td>
+              <td>
+                ${
+                  item.status === "deleted"
+                    ? `<button class="btn-secondary" onclick="changeRecordStatus(${item.rowIndex}, 'restoreRecord')">還原</button>`
+                    : `<button class="btn-danger" onclick="changeRecordStatus(${item.rowIndex}, 'deleteRecord')">停用</button>`
+                }
+              </td>
+            </tr>
+          `;
+        })
         .join("");
     }
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center">讀取失敗</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center">讀取失敗</td></tr>`;
   }
 }
 
@@ -225,19 +251,19 @@ async function loadUsersData() {
       tbody.innerHTML = usersCache
         .map(
           (u) => `
-                <tr>
-                    <td>${u.rowIndex}</td>
-                    <td>${u.account}</td>
-                    <td>${u.passkey}</td>
-                    <td>${u.displayName}</td>
-                    <td>${u.role === "supreme" ? "最高管理員" : "管理員"}</td>
-                    <td><span class="status-badge ${u.status === "disabled" ? "status-deleted" : "status-active"}">${u.status === "disabled" ? "停用" : "啟用"}</span></td>
-                    <td>${new Date(u.createdAt).toLocaleDateString()}</td>
-                    <td>
-                        ${u.account !== currentUser.account ? `<button class="btn-danger" onclick="deleteUser(${u.rowIndex})">刪除</button>` : "-"}
-                    </td>
-                </tr>
-            `,
+            <tr>
+              <td>${u.rowIndex}</td>
+              <td>${u.account}</td>
+              <td>${u.passkey}</td>
+              <td>${u.displayName}</td>
+              <td>${u.role === "supreme" ? "最高管理員" : "管理員"}</td>
+              <td><span class="status-badge ${u.status === "disabled" ? "status-deleted" : "status-active"}">${u.status === "disabled" ? "停用" : "啟用"}</span></td>
+              <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+              <td>
+                ${u.account !== currentUser.account ? `<button class="btn-danger" onclick="deleteUser(${u.rowIndex})">刪除</button>` : "-"}
+              </td>
+            </tr>
+          `,
         )
         .join("");
     }
