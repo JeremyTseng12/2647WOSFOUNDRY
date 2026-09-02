@@ -70,7 +70,6 @@ async function initDashboard() {
       .forEach((el) => (el.style.display = "none"));
   }
 
-  // 一次性載入總覽卡片
   loadDashboardStats();
 }
 
@@ -99,7 +98,6 @@ async function loadDashboardStats() {
       };
       elStatus.textContent = statusMap[data.systemStatus] || "正常運行";
 
-      // 順便預先填入設定頁面的值
       if (currentUser.role === "supreme") {
         const sel = document.getElementById("configSystemStatus");
         const ann = document.getElementById("configAnnouncement");
@@ -141,7 +139,7 @@ function switchTab(tabName) {
   }
 }
 
-// 載入歷史紀錄 (支援軍團欄位與 7 欄版面)
+// 載入歷史紀錄 (包含軍團 1 / 2 欄位與 7 欄配置)
 async function loadHistoryData() {
   const tbody = document.getElementById("historyTableBody");
   tbody.innerHTML = `<tr><td colspan="7" class="text-center">資料載入中...</td></tr>`;
@@ -164,24 +162,34 @@ async function loadHistoryData() {
 
       tbody.innerHTML = historyCache
         .map((item) => {
-          // 判斷軍團徽章
-          let legionBadge = '<span class="status-badge" style="background:#1e293b; color:#94a3b8;">全軍團</span>';
+          let legionBadge = "";
           const legionKey = item.activeLegion || item.legion;
-          
+
           if (legionKey === "LegionA") {
-            legionBadge = '<span class="status-badge" style="background:rgba(0,170,255,0.15); border:1px solid #00aaff; color:#00aaff;">🛡️ 軍團 1</span>';
+            legionBadge =
+              '<span class="status-badge" style="background:rgba(0,170,255,0.15); border:1px solid #00aaff; color:#00aaff;">🛡️ 軍團 1</span>';
           } else if (legionKey === "LegionB") {
-            legionBadge = '<span class="status-badge" style="background:rgba(255,85,0,0.15); border:1px solid #ff5500; color:#ff5500;">⚔️ 軍團 2</span>';
+            legionBadge =
+              '<span class="status-badge" style="background:rgba(255,85,0,0.15); border:1px solid #ff5500; color:#ff5500;">⚔️ 軍團 2</span>';
           } else if (item.legions) {
             const hasA = !!item.legions.LegionA;
             const hasB = !!item.legions.LegionB;
             if (hasA && hasB) {
-              legionBadge = '<span class="status-badge" style="background:rgba(0,255,204,0.15); border:1px solid #00ffcc; color:#00ffcc;">雙軍團</span>';
+              legionBadge =
+                '<span class="status-badge" style="background:rgba(0,170,255,0.15); border:1px solid #00aaff; color:#00aaff; margin-right:4px;">🛡️ 軍團 1</span>' +
+                '<span class="status-badge" style="background:rgba(255,85,0,0.15); border:1px solid #ff5500; color:#ff5500;">⚔️ 軍團 2</span>';
             } else if (hasA) {
-              legionBadge = '<span class="status-badge" style="background:rgba(0,170,255,0.15); border:1px solid #00aaff; color:#00aaff;">🛡️ 軍團 1</span>';
+              legionBadge =
+                '<span class="status-badge" style="background:rgba(0,170,255,0.15); border:1px solid #00aaff; color:#00aaff;">🛡️ 軍團 1</span>';
             } else if (hasB) {
-              legionBadge = '<span class="status-badge" style="background:rgba(255,85,0,0.15); border:1px solid #ff5500; color:#ff5500;">⚔️ 軍團 2</span>';
+              legionBadge =
+                '<span class="status-badge" style="background:rgba(255,85,0,0.15); border:1px solid #ff5500; color:#ff5500;">⚔️ 軍團 2</span>';
             }
+          }
+
+          if (!legionBadge) {
+            legionBadge =
+              '<span class="status-badge" style="background:rgba(0,170,255,0.15); border:1px solid #00aaff; color:#00aaff;">🛡️ 軍團 1</span>';
           }
 
           return `
