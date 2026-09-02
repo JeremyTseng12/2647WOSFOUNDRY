@@ -1,5 +1,6 @@
 /* ============================================================
    兵工廠人員分配系統 - 核心業務邏輯 v3.0 (index.js)
+   依賴：需先載入 js/118n.js
    ============================================================ */
 
 const GAS_WEB_APP_URL =
@@ -158,7 +159,7 @@ function updateUserBadge() {
   }
 }
 
-// 3. 系統初始化
+// 3. 系統初始化 (載入偏好語言、狀態檢查與登入檢查)
 window.addEventListener("load", async function () {
   const prefLang = localStorage.getItem("wos_pref_lang") || "zht";
   changeLanguage(prefLang);
@@ -197,8 +198,8 @@ function handlePowerEnter(event, currentIdx) {
   }
 }
 
+// 4. 多國語系切換 (全面支援各彈窗與動態按鈕)
 function changeLanguage(lang) {
-  // 防呆：確保字典已載入
   if (typeof langPack === "undefined" || !langPack[lang]) {
     console.warn("字典檔尚未載入完成或缺少語系：", lang);
     return;
@@ -210,7 +211,7 @@ function changeLanguage(lang) {
   const p = langPack[lang];
   const isZht = (lang === "zht");
 
-  // 1. 同步切換所有語言按鈕 (登入卡片 + 頂部導覽列 + 複製名單滑桿)
+  // 同步切換所有語言按鈕狀態
   const toggleActive = (id, condition) => {
     const el = document.getElementById(id);
     if (el) {
@@ -226,13 +227,9 @@ function changeLanguage(lang) {
   toggleActive("btnCopyLangZht", isZht);
   toggleActive("btnCopyLangEn", !isZht);
 
-  if (isZht) {
-    document.body.classList.remove("lang-en");
-  } else {
-    document.body.classList.add("lang-en");
-  }
+  if (isZht) document.body.classList.remove("lang-en");
+  else document.body.classList.add("lang-en");
 
-  // 2. 安全賦值輔助函式 (避免找不到 DOM 時拋出例外)
   const setElText = (id, text) => {
     const el = document.getElementById(id);
     if (el && text !== undefined) el.innerText = text;
@@ -242,7 +239,7 @@ function changeLanguage(lang) {
     if (el && ph !== undefined) el.placeholder = ph;
   };
 
-  // 3. 更新登入卡片文字
+  // 登入介面
   setElText("uiLoginTitle", p.loginTitle);
   setElText("uiLoginSubtitle", p.loginSubtitle);
   setElText("uiLoginAccountLabel", p.loginAccountLabel);
@@ -252,12 +249,13 @@ function changeLanguage(lang) {
   setElText("uiBtnLogin", p.btnLogin);
   setElText("btnLogoutTop", p.btnLogout);
 
-  // 4. 更新主畫面文字
+  // 主頁面導航與標題
   setElText("btnMapScreenshot", p.btnMapScreenshot);
   setElText("introText", p.introText);
   setElText("btnHistoryModal", p.btnHistoryModal);
   setElText("btnViewSystem", p.btnViewSystem);
   setElText("btnOldSystem", p.btnOldSystem);
+  setElText("btnManageSystem", p.btnManageSystem);
   setElText("btnCancelEdit", p.btnCancelEdit);
   setElText("uiMainTitle", p.mainTitle);
   setElText("uiInfoTitle", p.infoTitle);
@@ -293,7 +291,7 @@ function changeLanguage(lang) {
     }
   }
 
-  // 5. 更新建築清單
+  // 建築物清單
   const infoList = document.getElementById("uiInfoList");
   if (infoList && p.infoItems) {
     infoList.innerHTML = "";
@@ -304,7 +302,7 @@ function changeLanguage(lang) {
     });
   }
 
-  // 6. 更新彈窗
+  // 彈窗與設定
   setElText("modalTitle", p.modalTitle);
   setElText("modalDesc", p.modalDesc);
   setElText("btnModalCancel", p.modalCancel);
@@ -329,11 +327,25 @@ function changeLanguage(lang) {
   setElText("btnLoadCancel", p.btnLoadCancel);
   setElText("btnConfirmLoad", p.btnConfirmLoad);
 
-  if (typeof updateUserBadge === "function") {
-    updateUserBadge();
-  }
+  // 變更偵測彈窗 (補齊多語系)
+  setElText("uiReallocateTitle", p.reallocateTitle);
+  setElText("uiReallocateDesc", p.reallocateDesc);
+  setElText("btnAppendNewMembers", p.btnAppendNew);
+  setElText("btnTriggerFullReallocate", p.btnFullReallocate);
+  setElText("btnReallocateCancel", p.btnReallocateCancel);
 
-  // 7. 若結果看板已開啟則重新渲染
+  // 快速新增成員彈窗 (補齊多語系)
+  setElText("uiAddMemberTitle", p.quickAddTitleDefault);
+  setElText("uiQuickAddNameLabel", p.quickAddLabelName);
+  setElPlaceholder("quickAddName", p.quickAddPlaceholderName);
+  setElText("uiQuickAddPowerLabel", p.quickAddLabelPower);
+  setElPlaceholder("quickAddPower", p.quickAddPlaceholderPower);
+  setElText("btnQuickAddCancel", p.btnQuickAddCancel);
+  setElText("btnQuickAddConfirm", p.btnQuickAddConfirm);
+
+  updateUserBadge();
+
+  // 若結果看板已顯示，重新渲染卡片
   const resultSec = document.getElementById("resultSection");
   if (resultSec && resultSec.style.display !== "none") {
     setElText("btnPublish", p.btnPublish);
@@ -448,6 +460,7 @@ function openConfirmationModal() {
   document.getElementById("errorMessage").style.display = "none";
   if (!validateInputs()) return;
 
+  const p = langPack[currentData.currentLang];
   const resultVisible = document.getElementById("resultSection").style.display !== "none";
 
   if (resultVisible) {
@@ -458,10 +471,10 @@ function openConfirmationModal() {
     const previewBox = document.getElementById("newMembersListPreview");
     if (newMembers.length > 0) {
       previewBox.innerHTML =
-        `<strong>偵測到新增 ${newMembers.length} 名成員：</strong><br>` +
+        `<strong>${p.reallocateDetectPrefix}${newMembers.length}${p.reallocateDetectSuffix}</strong><br>` +
         newMembers.map((m) => `${m.name} (${m.power})`).join("、");
     } else {
-      previewBox.innerHTML = `⚠️ 目前主名單中未偵測到未分配的新成員。`;
+      previewBox.innerHTML = p.reallocateNoNew;
     }
     document.getElementById("reallocateModal").style.display = "flex";
     return;
@@ -469,7 +482,6 @@ function openConfirmationModal() {
 
   const data = parseCurrentInputs();
   const totalCount = data.uniqueNames.size;
-  const p = langPack[currentData.currentLang];
 
   if (totalCount < 15) {
     showError(
@@ -865,20 +877,31 @@ function removePlayer(sourceId, pIdx, event) {
 
 function openQuickAddModal(targetId) {
   quickAddTarget = targetId;
+  const p = langPack[currentData.currentLang];
   const isSpec = targetId === "gather" || targetId === "ammo";
   document.getElementById("quickAddName").value = "";
   document.getElementById("quickAddPower").value = "";
   document.getElementById("quickAddPowerGroup").style.display = isSpec ? "none" : "block";
 
-  let title = "➕ 新增人員";
-  if (targetId === "gather") title = "⚡ 新增至採集小隊";
-  else if (targetId === "ammo") title = "🎒 新增至子彈小隊";
+  let title = p.quickAddTitleDefault;
+  if (targetId === "gather") title = p.quickAddTitleGather;
+  else if (targetId === "ammo") title = p.quickAddTitleAmmo;
   else {
     const b = buildingsConfig.find((item) => item.id === targetId);
-    if (b) title = `➕ 新增至 ${currentData.currentLang === "en" ? b.nameEn : b.nameZht}`;
+    if (b) {
+      const bName = currentData.currentLang === "en" ? b.nameEn : b.nameZht;
+      title = `${p.quickAddTitlePrefix}${bName}`;
+    }
   }
 
   document.getElementById("uiAddMemberTitle").innerText = title;
+  document.getElementById("uiQuickAddNameLabel").innerText = p.quickAddLabelName;
+  document.getElementById("quickAddName").placeholder = p.quickAddPlaceholderName;
+  document.getElementById("uiQuickAddPowerLabel").innerText = p.quickAddLabelPower;
+  document.getElementById("quickAddPower").placeholder = p.quickAddPlaceholderPower;
+  document.getElementById("btnQuickAddCancel").innerText = p.btnQuickAddCancel;
+  document.getElementById("btnQuickAddConfirm").innerText = p.btnQuickAddConfirm;
+
   document.getElementById("addMemberQuickModal").style.display = "flex";
   document.getElementById("quickAddName").focus();
 }
@@ -948,13 +971,13 @@ function createBuildingCardElement(b, p) {
     const canDrag = !isLocked;
     const dragAttr = canDrag
       ? `draggable="true" ondragstart="dragStart(event, '${b.id}', ${pIdx})"`
-      : `draggable="false" style="cursor:not-allowed;" title="隊長/手動副隊長固定無法移動"`;
+      : `draggable="false" style="cursor:not-allowed;" title="${p.lockedLeaderTip}"`;
 
     const rightHtml = isLocked
       ? `<span class="player-power-val">${player.power || 0}</span>`
       : `
           <span class="player-power-val">${player.power || 0}</span>
-          <button class="btn-player-delete" onclick="removePlayer('${b.id}', ${pIdx}, event)" title="直接移除此人">🗑️</button>
+          <button class="btn-player-delete" onclick="removePlayer('${b.id}', ${pIdx}, event)" title="${p.deleteBtnTitle}">🗑️</button>
         `;
 
     pTagsHtml += `
@@ -969,7 +992,7 @@ function createBuildingCardElement(b, p) {
     <div class="building-title">${currentData.currentLang === "en" ? b.nameEn : b.nameZht}</div>
     <div class="building-power">${p.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
     <div class="drop-zone">${pTagsHtml}</div>
-    <button class="btn-card-add" onclick="openQuickAddModal('${b.id}')">➕ 新增人員</button>
+    <button class="btn-card-add" onclick="openQuickAddModal('${b.id}')">${p.btnAddMemberCard}</button>
   `;
   return card;
 }
@@ -990,14 +1013,14 @@ function createUnassignedPoolCard(p) {
       <div class="player-tag" draggable="true" ondragstart="dragStart(event, 'unassignedPool', ${pIdx})">
           <span>🎒 ${player.name}</span>
           <span class="player-power-val">${player.power || 0}</span>
-          <button class="btn-player-delete" onclick="removePlayer('unassignedPool', ${pIdx}, event)" title="直接移除此人">🗑️</button>
+          <button class="btn-player-delete" onclick="removePlayer('unassignedPool', ${pIdx}, event)" title="${p.deleteBtnTitle}">🗑️</button>
       </div>
     `;
   });
 
   card.innerHTML = `
-    <div class="building-title" style="color:#ff66ff;">🎒 待分配新進人員 (${currentData.unassignedPool.length}人)</div>
-    <div class="building-power" style="color:#f0abfc;">請直接拖曳以下人員至各建築分配</div>
+    <div class="building-title" style="color:#ff66ff;">${p.unassignedTitle} (${currentData.unassignedPool.length}${currentData.currentLang === "en" ? "" : "人"})</div>
+    <div class="building-power" style="color:#f0abfc;">${p.unassignedDesc}</div>
     <div class="drop-zone">${poolTagsHtml}</div>
   `;
   return card;
@@ -1030,7 +1053,7 @@ function renderAll() {
     <div class="player-tag" style="cursor:default;">
       <span>⚡ ${name.trim()}</span>
       <span class="player-power-val"></span>
-      <button class="btn-player-delete" onclick="removePlayer('gather', ${idx}, event)" title="直接移除此人">🗑️</button>
+      <button class="btn-player-delete" onclick="removePlayer('gather', ${idx}, event)" title="${p.deleteBtnTitle}">🗑️</button>
     </div>`
         : "",
     )
@@ -1039,7 +1062,7 @@ function renderAll() {
     <div class="building-title">${p.specTitleGather}</div>
     <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabel : p.specLabelGather}</div>
     <div class="drop-zone">${gatherTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
-    <button class="btn-card-add" onclick="openQuickAddModal('gather')">➕ 新增採集人員</button>
+    <button class="btn-card-add" onclick="openQuickAddModal('gather')">${p.btnAddGatherMember}</button>
   `;
 
   const ammoCard = document.createElement("div");
@@ -1052,7 +1075,7 @@ function renderAll() {
     <div class="player-tag" style="cursor:default; border-color:#ff3838;">
       <span>🎒 ${name.trim()}</span>
       <span class="player-power-val"></span>
-      <button class="btn-player-delete" onclick="removePlayer('ammo', ${idx}, event)" title="直接移除此人">🗑️</button>
+      <button class="btn-player-delete" onclick="removePlayer('ammo', ${idx}, event)" title="${p.deleteBtnTitle}">🗑️</button>
     </div>`
         : "",
     )
@@ -1061,7 +1084,7 @@ function renderAll() {
     <div class="building-title">${p.specTitleAmmo}</div>
     <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabelAmmo : p.specLabelAmmo}</div>
     <div class="drop-zone">${ammoTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
-    <button class="btn-card-add" onclick="openQuickAddModal('ammo')">➕ 新增子彈人員</button>
+    <button class="btn-card-add" onclick="openQuickAddModal('ammo')">${p.btnAddAmmoMember}</button>
   `;
 
   if (isMobileView) {
@@ -1258,6 +1281,7 @@ function captureBuildingGrid() {
     }
   });
 
+  // 截圖前自動移除「新增按鈕」與「刪除垃圾桶」
   tempContainer.querySelectorAll(".btn-card-add, .btn-player-delete").forEach((el) => el.remove());
 
   document.body.appendChild(tempContainer);
@@ -1593,13 +1617,9 @@ function submitToGoogleSheet() {
         alert("作業失敗：" + data.message);
       } else {
         if (isEditingOldRecord) {
-          alert(
-            `💾 成功覆寫更新歷史分配紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}\n\n檢視系統已自動同步至最新版本！`,
-          );
+          alert(`💾 成功覆寫更新歷史分配紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}\n\n檢視系統已自動同步至最新版本！`);
         } else {
-          alert(
-            `🎉 成功發布全新分配紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}`,
-          );
+          alert(`🎉 成功發布全新分配紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}`);
         }
         resetToInitialState();
       }
