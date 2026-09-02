@@ -32,6 +32,7 @@ const langPack = {
     btnHistoryModal: "📂 編輯歷史分配紀錄",
     btnViewSystem: "📲 進入檢視系統",
     btnOldSystem: "📲 查看舊版本分配系統",
+    btnManageSystem: "⚙️ 管理中心(ADMIN)",
     btnCancelEdit: "取消編輯 (恢復全新發布)",
     mainTitle: "兵工廠人員分配系統 3.0",
     infoTitle: "當前兵工廠建築清單：",
@@ -88,6 +89,37 @@ const langPack = {
     modalCancel: "返回",
     modalConfirm: "確認無誤，開始分配",
 
+    // 名單變更偵測彈窗 (補齊)
+    reallocateTitle: "⚙️ 偵測到名單變更 / 選擇分配模式",
+    reallocateDesc: "目前已有分配結果。系統偵測到有變更或新進人員，請選擇處理方式：",
+    reallocateDetectPrefix: "偵測到新增 ",
+    reallocateDetectSuffix: " 名成員：",
+    reallocateNoNew: "⚠️ 目前主名單中未偵測到未分配的新成員。",
+    btnAppendNew: "➕ 僅增補新進人員至暫存區 (保留現有分配)",
+    btnFullReallocate: "🔄 重新完全分配 (覆蓋所有當前名單)",
+    btnReallocateCancel: "取消",
+
+    // 快速新增成員彈窗 (補齊)
+    quickAddTitleDefault: "➕ 手動新增成員",
+    quickAddTitlePrefix: "➕ 新增至 ",
+    quickAddTitleGather: "⚡ 新增至採集小隊",
+    quickAddTitleAmmo: "🎒 新增至子彈小隊",
+    quickAddLabelName: "成員名稱：",
+    quickAddPlaceholderName: "例：Tom",
+    quickAddLabelPower: "戰力數值：",
+    quickAddPlaceholderPower: "例：5200",
+    btnQuickAddCancel: "取消",
+    btnQuickAddConfirm: "確認新增",
+
+    // 卡片內部按鈕與暫存池 (補齊)
+    btnAddMemberCard: "➕ 新增人員",
+    btnAddGatherMember: "➕ 新增採集人員",
+    btnAddAmmoMember: "➕ 新增子彈人員",
+    unassignedTitle: "🎒 待分配新進人員",
+    unassignedDesc: "請直接拖曳以下人員至各建築分配",
+    deleteBtnTitle: "直接移除此人",
+    lockedLeaderTip: "隊長/手動副隊長固定無法移動",
+
     // 發布彈窗
     publishHeader: "☁️ 發布分配結果",
     lblPublishLegion: "1. 請選擇發布軍團 (Legion)：",
@@ -111,7 +143,7 @@ const langPack = {
     changelogDesc: "本系統之歷史重構與優化明細項目：",
     btnCloseChangelog: "關閉視窗 / Close",
 
-    // 結果看板與卡片
+    // 結果看板
     btnPublish: "☁️ 發布最新分配結果 (公開給所有人檢視)",
     summaryTitle: "📊 數據總計",
     summaryText: ["總參戰人數：", "總戰力：", "每組平均戰力："],
@@ -140,7 +172,7 @@ const langPack = {
   },
 
   en: {
-    // 登入介面 (英文)
+    // Login Screen
     loginTitle: "Staff Authentication",
     loginSubtitle: "Please enter your staff account and passcode to access",
     loginAccountLabel: "Account",
@@ -153,11 +185,12 @@ const langPack = {
     loginNetworkError: "Connection failed. Please check your network.",
     btnLogout: "Logout",
 
-    // 開場與導覽
+    // Intro & Nav
     introText: "MADE BY TSENG",
     btnHistoryModal: "📂 Edit History Record",
     btnViewSystem: "📲 Public View System",
     btnOldSystem: "📲 Old Version System",
+    btnManageSystem: "⚙️ Admin Center",
     btnCancelEdit: "Cancel Edit (New Publish)",
     mainTitle: "WOS FOUNDRY ALLOCATION 3.0",
     infoTitle: "Current Building List:",
@@ -168,7 +201,7 @@ const langPack = {
       "Relay (1200)", "Boiler (1700)"
     ],
 
-    // 隊長設定
+    // Leader Setup
     leaderTitle: "Squad Leader Settings (Power ≥ 4000)",
     labels: [
       "Group 1 Leader (Facility 1 & Repair 1)",
@@ -186,7 +219,7 @@ const langPack = {
     vicePlaceholderName: "Vice-CDR Name",
     vicePlaceholderPower: "Vice-CDR Power",
 
-    // 隊員輸入
+    // Member Inputs
     memberTitle: "Troop Member Allocation",
     labelMainList: "⚔️ 1. Main Balancing Pool (One per line: Name Power)",
     memberDesc: "Members in this pool will be <strong>equally split</strong> into 8 buildings.",
@@ -198,7 +231,7 @@ const langPack = {
     btnLoadTestData: "Load Test Data",
     quickTitle: "⚡ Quick Assign Leaders (Click to assign empty slot)",
 
-    // 確認彈窗
+    // Confirm Modal
     modalTitle: "🛡️ Pre-battle Data Confirmation",
     modalDesc: "Please verify the allocated roster figures below:",
     overviewTitle: "[Overview]",
@@ -214,7 +247,38 @@ const langPack = {
     modalCancel: "Back",
     modalConfirm: "Confirm & Start",
 
-    // 發布彈窗
+    // Roster Change Modal (Added)
+    reallocateTitle: "⚙️ Roster Change Detected / Select Allocation Mode",
+    reallocateDesc: "Allocation exists. Changes or new members detected. Please select an action:",
+    reallocateDetectPrefix: "Detected ",
+    reallocateDetectSuffix: " new member(s):",
+    reallocateNoNew: "⚠️ No unassigned new members detected in the main list.",
+    btnAppendNew: "➕ Add New Members to Pool Only (Keep Current)",
+    btnFullReallocate: "🔄 Full Rebalance (Overwrite All Current)",
+    btnReallocateCancel: "Cancel",
+
+    // Quick Add Modal (Added)
+    quickAddTitleDefault: "➕ Add Member Manually",
+    quickAddTitlePrefix: "➕ Add to ",
+    quickAddTitleGather: "⚡ Add to Gathering Squad",
+    quickAddTitleAmmo: "🎒 Add to Ammo Squad",
+    quickAddLabelName: "Member Name:",
+    quickAddPlaceholderName: "e.g., Tom",
+    quickAddLabelPower: "Power:",
+    quickAddPlaceholderPower: "e.g., 5200",
+    btnQuickAddCancel: "Cancel",
+    btnQuickAddConfirm: "Confirm & Add",
+
+    // Cards & Unassigned Pool (Added)
+    btnAddMemberCard: "➕ Add Member",
+    btnAddGatherMember: "➕ Add Gathering Member",
+    btnAddAmmoMember: "➕ Add Ammo Member",
+    unassignedTitle: "🎒 Unassigned Pool",
+    unassignedDesc: "Drag members to assign them to buildings",
+    deleteBtnTitle: "Remove member",
+    lockedLeaderTip: "Leader/Vice locked and cannot be moved",
+
+    // Publish Modal
     publishHeader: "☁️ Publish Allocation",
     lblPublishLegion: "1. Select Legion:",
     lblPublishEventType: "2. Event Type:",
@@ -224,7 +288,7 @@ const langPack = {
     btnPublishCancel: "Cancel",
     btnConfirmPublish: "Confirm & Publish",
 
-    // 歷史紀錄彈窗
+    // History Modal
     uiLoadHistoryTitle: "📂 Edit History Record",
     lblLoadHistory: "Select Record to Load:",
     lblLoadLegion: "Select Legion:",
@@ -232,12 +296,12 @@ const langPack = {
     btnLoadCancel: "Cancel",
     btnConfirmLoad: "Proceed",
 
-    // 更新日誌
+    // Changelog
     changelogTitle: "💾 System Changelog",
     changelogDesc: "Version updates and optimizations:",
     btnCloseChangelog: "Close",
 
-    // 結果看板與卡片
+    // Result & Board
     btnPublish: "☁️ Publish Latest Result (Public View)",
     summaryTitle: "📊 Total Overview",
     summaryText: ["Total Players: ", "Total Power: ", "Avg Group Power: "],
@@ -259,7 +323,7 @@ const langPack = {
     alertRepeat: "already assigned!",
     alertFull: "Leader slots are full!",
 
-    // 檢視系統專用
+    // Viewer
     selectLabel: "📜 Select Record:",
     metaAuthor: "Author: ",
     metaTime: "Time: "
