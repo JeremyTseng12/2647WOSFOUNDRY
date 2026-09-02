@@ -8,15 +8,15 @@
     <!-- 1. 樣式模組引入 (固定官方路徑) -->
     <link
       rel="stylesheet"
-      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/fonts.css?v=6767"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/fonts.css"
     />
     <link
       rel="stylesheet"
-      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/cyber-core.css?v=6767"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/cyber-core.css"
     />
     <link
       rel="stylesheet"
-      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/index.css?v=6767"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/css/index.css"
     />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -27,62 +27,27 @@
     />
   </head>
   <body>
-    <!-- 0. 全螢幕系統狀態遮罩 -->
-    <div
-      id="fullscreenOverlay"
-      class="login-container"
-      style="display: none; z-index: 9999999"
-    >
-      <div class="login-card" style="text-align: center">
-        <h2 id="overlayTitle" style="color: #ff3838">🔧 系統維修中</h2>
-        <p
-          id="overlayMessage"
-          style="color: #94a3b8; font-size: 14px; margin: 15px 0"
-        >
-          系統維護中，請稍後再試！
-        </p>
-        <button
-          id="btnOverlayReload"
-          class="btn-primary"
-          style="display: none"
-          onclick="location.reload()"
-        >
-          重新載入
-        </button>
+    <!-- 0. 全螢幕系統狀態遮罩 (維護/離線時顯示) -->
+    <div id="fullscreenOverlay" class="login-container" style="display: none; z-index: 9999999;">
+      <div class="login-card" style="text-align: center;">
+        <h2 id="overlayTitle" style="color: #ff3838;">🔧 系統維修中</h2>
+        <p id="overlayMessage" style="color: #94a3b8; font-size: 14px; margin: 15px 0;">系統維護中，請稍後再試！</p>
+        <button id="btnOverlayReload" class="btn-primary" style="display: none;" onclick="location.reload()">重新載入</button>
       </div>
     </div>
 
-    <!-- 1. 登入防護視窗 -->
+    <!-- 1. 登入防護視窗 (支援雙語即時切換) -->
     <div id="indexLoginOverlay" class="login-container">
       <div class="login-card">
         <div class="login-lang-bar">
-          <button
-            id="btnLoginLangZht"
-            class="btn-lang active"
-            onclick="changeLanguage('zht')"
-          >
-            ZH-TW
-          </button>
-          <button
-            id="btnLoginLangEn"
-            class="btn-lang"
-            onclick="changeLanguage('en')"
-          >
-            EN-US
-          </button>
+          <button id="btnLoginLangZht" class="btn-lang active" onclick="changeLanguage('zht')">ZH-TW</button>
+          <button id="btnLoginLangEn" class="btn-lang" onclick="changeLanguage('en')">EN-US</button>
         </div>
         <h2 id="uiLoginTitle">幹部身分認證</h2>
-        <p class="login-subtitle" id="uiLoginSubtitle">
-          請輸入指派之幹部帳號與通行密碼以存取分配系統
-        </p>
+        <p class="login-subtitle" id="uiLoginSubtitle">請輸入指派之幹部帳號與通行密碼以存取分配系統</p>
         <div class="form-group">
           <label id="uiLoginAccountLabel">帳號</label>
-          <input
-            type="text"
-            id="loginAccount"
-            placeholder="請輸入帳號"
-            autofocus
-          />
+          <input type="text" id="loginAccount" placeholder="請輸入帳號" autofocus />
         </div>
         <div class="form-group">
           <label id="uiLoginPasskeyLabel">通行密碼</label>
@@ -90,137 +55,56 @@
             type="password"
             id="loginPasskey"
             placeholder="請輸入密碼"
-            onkeydown="if (event.key === 'Enter') handleIndexLogin();"
+            onkeydown="if(event.key==='Enter') handleIndexLogin()"
           />
         </div>
-        <button
-          class="btn-primary"
-          id="uiBtnLogin"
-          onclick="handleIndexLogin()"
-        >
-          驗證並進入系統
-        </button>
+        <button class="btn-primary" id="uiBtnLogin" onclick="handleIndexLogin()">驗證並進入系統</button>
         <div id="loginErrorMsg" class="error-text"></div>
       </div>
     </div>
 
     <!-- 2. 全螢幕開場動畫 Intro -->
-    <div id="intro" style="display: none">
+    <div id="intro" style="display: none;">
       <div class="logo-container">
         <h1 class="logo">兵工廠人員分配系統 3.0</h1>
         <h3 class="logo_text" id="introText">MADE BY TSENG</h3>
-        <img
-          class="logo_img"
-          src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/loading.gif"
-          alt="Loading..."
-        />
+        <img class="logo_img" src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/loading.gif" alt="Loading..." />
       </div>
     </div>
     <div style="display: none">
-      <img
-        id="preloadGif"
-        src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/loading.gif"
-        alt="preload"
-      />
+      <img id="preloadGif" src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/loading.gif" alt="preload" />
     </div>
 
     <!-- 3. 主要系統畫面內容 -->
-    <div
-      id="main-content"
-      style="display: none; opacity: 0; transition: opacity 0.3s ease"
-    >
+    <div id="main-content" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
       <div class="container">
         <div class="top-control-bar">
           <div class="top-control-bar-left">
-            <button
-              class="btn-load-history"
-              id="btnHistoryModal"
-              onclick="openLoadHistoryModal()"
-            >
+            <button class="btn-load-history" id="btnHistoryModal" onclick="openLoadHistoryModal()">
               📂 編輯歷史分配紀錄
             </button>
-            <button
-              class="btn-load-history"
-              id="btnViewSystem"
-              onclick="
-                window.open(
-                  'https://jeremytseng12.github.io/2647WOSFOUNDRY/redirect',
-                  '_blank',
-                )
-              "
-            >
+            <button class="btn-load-history" id="btnViewSystem" onclick="window.open('https://jeremytseng12.github.io/2647WOSFOUNDRY/redirect', '_blank')">
               📲 進入檢視系統
             </button>
-            <button
-              class="btn-load-history"
-              id="btnOldSystem"
-              onclick="
-                window.open(
-                  'https://jeremytseng12.github.io/2647WOSFOUNDRY/old',
-                  '_blank',
-                )
-              "
-            >
+            <button class="btn-load-history" id="btnOldSystem" onclick="window.open('https://jeremytseng12.github.io/2647WOSFOUNDRY/old', '_blank')">
               📲 查看舊版本分配系統
             </button>
-            <button
-              class="btn-load-history"
-              id="btnManageSystem"
-              onclick="window.open('manage.html', '_blank')"
-            >
+            <button class="btn-load-history" id="btnManageSystem" onclick="window.open('manage.html', '_blank')">
               ⚙️ 管理中心(ADMIN)
             </button>
           </div>
 
           <div class="lang-switch-top">
-            <span
-              id="userBadge"
-              style="
-                color: #7ee8cc;
-                font-size: 0.85rem;
-                font-weight: bold;
-                margin-right: 8px;
-              "
-            ></span>
-            <button
-              class="btn-lang"
-              id="btnLogoutTop"
-              onclick="handleIndexLogout()"
-              style="border-color: #ff3838; color: #ff3838"
-            >
-              登出
-            </button>
-            <button
-              id="btnLangZht"
-              class="btn-lang active"
-              onclick="changeLanguage('zht')"
-            >
-              ZH-TW
-            </button>
-            <button
-              id="btnLangEn"
-              class="btn-lang"
-              onclick="changeLanguage('en')"
-            >
-              EN-US
-            </button>
+            <span id="userBadge" style="color: #7ee8cc; font-size: 0.85rem; font-weight: bold; margin-right: 8px;"></span>
+            <button class="btn-lang" id="btnLogoutTop" onclick="handleIndexLogout()" style="border-color: #ff3838; color: #ff3838;">登出</button>
+            <button id="btnLangZht" class="btn-lang active" onclick="changeLanguage('zht')">ZH-TW</button>
+            <button id="btnLangEn" class="btn-lang" onclick="changeLanguage('en')">EN-US</button>
           </div>
         </div>
 
         <div id="editingNoticeBar" class="editing-notice-bar">
           <span id="editingNoticeText">✏️ 目前正在編輯歷史紀錄</span>
-          <button
-            style="
-              background: transparent;
-              border: 1px solid #ffb300;
-              color: #ffe066;
-              border-radius: 2px;
-              cursor: pointer;
-              padding: 2px 8px;
-            "
-            id="btnCancelEdit"
-            onclick="exitEditMode()"
-          >
+          <button style="background: transparent; border: 1px solid #ffb300; color: #ffe066; border-radius: 2px; cursor: pointer; padding: 2px 8px;" id="btnCancelEdit" onclick="exitEditMode()">
             取消編輯 (恢復全新發布)
           </button>
         </div>
@@ -249,155 +133,66 @@
 
             <div class="card">
               <div class="form-group">
-                <label id="uiLabelG0"
-                  >第一組隊長（1號武器試驗場 & 1號武器維修廠）</label
-                >
-                <input
-                  type="text"
-                  id="leaderName0"
-                  placeholder="輸入或點擊指派隊長名字"
-                />
-                <input
-                  type="number"
-                  id="leaderPower0"
-                  placeholder="輸入隊長戰力"
-                  style="margin-top: 8px"
-                  onkeydown="handlePowerEnter(event, 0)"
-                />
+                <label id="uiLabelG0">第一組隊長（1號武器試驗場 & 1號武器維修廠）</label>
+                <input type="text" id="leaderName0" placeholder="輸入或點擊指派隊長名字" />
+                <input type="number" id="leaderPower0" placeholder="輸入隊長戰力" style="margin-top: 8px" onkeydown="handlePowerEnter(event, 0)" />
               </div>
             </div>
 
             <div class="card">
               <div class="form-group">
-                <label id="uiLabelG1"
-                  >第二組隊長（2號武器試驗場 & 2號武器維修廠）</label
-                >
-                <input
-                  type="text"
-                  id="leaderName1"
-                  placeholder="輸入或點擊指派隊長名字"
-                />
-                <input
-                  type="number"
-                  id="leaderPower1"
-                  placeholder="輸入隊長戰力"
-                  style="margin-top: 8px"
-                  onkeydown="handlePowerEnter(event, 1)"
-                />
+                <label id="uiLabelG1">第二組隊長（2號武器試驗場 & 2號武器維修廠）</label>
+                <input type="text" id="leaderName1" placeholder="輸入或點擊指派隊長名字" />
+                <input type="number" id="leaderPower1" placeholder="輸入隊長戰力" style="margin-top: 8px" onkeydown="handlePowerEnter(event, 1)" />
               </div>
             </div>
 
             <div class="card">
               <div class="form-group">
-                <label id="uiLabelG2"
-                  >第三組隊長（3號武器維修廠 & 中轉站.）</label
-                >
-                <input
-                  type="text"
-                  id="leaderName2"
-                  placeholder="輸入或點擊指派隊長名字"
-                />
-                <input
-                  type="number"
-                  id="leaderPower2"
-                  placeholder="輸入隊長戰力"
-                  style="margin-top: 8px"
-                  onkeydown="handlePowerEnter(event, 2)"
-                />
+                <label id="uiLabelG2">第三組隊長（3號武器維修廠 & 中轉站.）</label>
+                <input type="text" id="leaderName2" placeholder="輸入或點擊指派隊長名字" />
+                <input type="number" id="leaderPower2" placeholder="輸入隊長戰力" style="margin-top: 8px" onkeydown="handlePowerEnter(event, 2)" />
               </div>
             </div>
 
             <div class="card">
               <div class="form-group">
-                <label id="uiLabelG3"
-                  >第四組隊長（4號武器維修廠 & 蒸氣鍋爐）</label
-                >
-                <input
-                  type="text"
-                  id="leaderName3"
-                  placeholder="輸入或點擊指派隊長名字"
-                />
-                <input
-                  type="number"
-                  id="leaderPower3"
-                  placeholder="輸入隊長戰力"
-                  style="margin-top: 8px"
-                  onkeydown="handlePowerEnter(event, 3)"
-                />
+                <label id="uiLabelG3">第四組隊長（4號武器維修廠 & 蒸氣鍋爐）</label>
+                <input type="text" id="leaderName3" placeholder="輸入或點擊指派隊長名字" />
+                <input type="number" id="leaderPower3" placeholder="輸入隊長戰力" style="margin-top: 8px" onkeydown="handlePowerEnter(event, 3)" />
               </div>
             </div>
 
             <div class="vice-accordion closed" id="viceAccordion">
-              <div
-                class="vice-accordion-header"
-                onclick="toggleViceAccordion()"
-              >
-                <span id="uiViceAccordionTitle"
-                  >⚙️ 進階設定：手動指定各組副隊長 (預設自動揀選)</span
-                >
+              <div class="vice-accordion-header" onclick="toggleViceAccordion()">
+                <span id="uiViceAccordionTitle">⚙️ 進階設定：手動指定各組副隊長 (預設自動揀選)</span>
                 <span class="vice-accordion-icon">▲</span>
               </div>
               <div class="vice-accordion-body">
                 <div style="grid-column: span 2">
-                  <p
-                    id="uiViceNoticeText"
-                    style="
-                      margin: 0 0 10px 0;
-                      font-size: 0.8rem;
-                      color: #94a3b8;
-                    "
-                  >
-                    💡
-                    提示：手動指定之副隊長會自動併入平衡分配，無需在主名單重複輸入。
+                  <p id="uiViceNoticeText" style="margin: 0 0 10px 0; font-size: 0.8rem; color: #94a3b8;">
+                    💡 提示：手動指定之副隊長會自動併入平衡分配，無需在主名單重複輸入。
                   </p>
                 </div>
                 <div class="form-group">
-                  <label id="uiLabelVice0" style="color: #99d6ff"
-                    >第 1 組副隊長 (維修廠 I)</label
-                  >
+                  <label id="uiLabelVice0" style="color: #99d6ff">第 1 組副隊長 (維修廠 I)</label>
                   <input type="text" id="viceName0" placeholder="副隊長名字" />
-                  <input
-                    type="number"
-                    id="vicePower0"
-                    placeholder="副隊長戰力"
-                    style="margin-top: 6px"
-                  />
+                  <input type="number" id="vicePower0" placeholder="副隊長戰力" style="margin-top: 6px" />
                 </div>
                 <div class="form-group">
-                  <label id="uiLabelVice1" style="color: #99d6ff"
-                    >第 2 組副隊長 (維修廠 II)</label
-                  >
+                  <label id="uiLabelVice1" style="color: #99d6ff">第 2 組副隊長 (維修廠 II)</label>
                   <input type="text" id="viceName1" placeholder="副隊長名字" />
-                  <input
-                    type="number"
-                    id="vicePower1"
-                    placeholder="副隊長戰力"
-                    style="margin-top: 6px"
-                  />
+                  <input type="number" id="vicePower1" placeholder="副隊長戰力" style="margin-top: 6px" />
                 </div>
                 <div class="form-group">
-                  <label id="uiLabelVice2" style="color: #99d6ff"
-                    >第 3 組副隊長 (中轉站)</label
-                  >
+                  <label id="uiLabelVice2" style="color: #99d6ff">第 3 組副隊長 (中轉站)</label>
                   <input type="text" id="viceName2" placeholder="副隊長名字" />
-                  <input
-                    type="number"
-                    id="vicePower2"
-                    placeholder="副隊長戰力"
-                    style="margin-top: 6px"
-                  />
+                  <input type="number" id="vicePower2" placeholder="副隊長戰力" style="margin-top: 6px" />
                 </div>
                 <div class="form-group">
-                  <label id="uiLabelVice3" style="color: #99d6ff"
-                    >第 4 組副隊長 (蒸氣鍋爐)</label
-                  >
+                  <label id="uiLabelVice3" style="color: #99d6ff">第 4 組副隊長 (蒸氣鍋爐)</label>
                   <input type="text" id="viceName3" placeholder="副隊長名字" />
-                  <input
-                    type="number"
-                    id="vicePower3"
-                    placeholder="副隊長戰力"
-                    style="margin-top: 6px"
-                  />
+                  <input type="number" id="vicePower3" placeholder="副隊長戰力" style="margin-top: 6px" />
                 </div>
               </div>
             </div>
@@ -408,65 +203,29 @@
 
             <div class="card">
               <div class="form-group">
-                <label id="uiLabelMainList" style="color: var(--text-neon)"
-                  >⚔️ 1. 主平衡分配名單 (一行為一筆：名字 戰力)</label
-                >
-                <p
-                  id="uiMemberDesc"
-                  style="
-                    font-size: 0.85rem;
-                    color: #94a3b8;
-                    margin: 4px 0 10px 0;
-                  "
-                >
-                  填入此區的人員會自動依戰力<strong>平均拆分</strong>進入 8
-                  大建築。
+                <label id="uiLabelMainList" style="color: var(--text-neon)">⚔️ 1. 主平衡分配名單 (一行為一筆：名字 戰力)</label>
+                <p id="uiMemberDesc" style="font-size: 0.85rem; color: #94a3b8; margin: 4px 0 10px 0;">
+                  填入此區的人員會自動依戰力<strong>平均拆分</strong>進入 8 大建築。
                 </p>
-                <textarea
-                  id="memberInput"
-                  style="height: 120px"
-                  placeholder="名字A 3500&#10;名字B 2800"
-                ></textarea>
+                <textarea id="memberInput" style="height: 120px" placeholder="名字A 3500&#10;名字B 2800"></textarea>
               </div>
             </div>
 
             <div class="card" style="border-color: rgba(0, 255, 204, 0.2)">
               <div class="form-group">
-                <label id="uiLabelGatherList" style="color: #ffb300"
-                  >⚡ 2. 採集小隊名單 (手動填寫)</label
-                >
-                <textarea
-                  id="gatherInput"
-                  style="height: 70px"
-                  placeholder="輸入負責採集的人名，一行為一人 (例：塔卡)"
-                ></textarea>
+                <label id="uiLabelGatherList" style="color: #ffb300">⚡ 2. 採集小隊名單 (手動填寫)</label>
+                <textarea id="gatherInput" style="height: 70px" placeholder="輸入負責採集的人名，一行為一人 (例：塔卡)"></textarea>
               </div>
               <div class="form-group" style="margin-top: 15px">
-                <label id="uiLabelAmmoList" style="color: #ff3838"
-                  >🎒 3. 子彈小隊名單 (手動填寫)</label
-                >
-                <textarea
-                  id="ammoInput"
-                  style="height: 70px"
-                  placeholder="輸入撿子彈的 8 人名單，一行為一人"
-                ></textarea>
+                <label id="uiLabelAmmoList" style="color: #ff3838">🎒 3. 子彈小隊名單 (手動填寫)</label>
+                <textarea id="ammoInput" style="height: 70px" placeholder="輸入撿子彈的 8 人名單，一行為一人"></textarea>
               </div>
             </div>
 
-            <button
-              id="btnDistribute"
-              class="btn"
-              style="margin-top: 10px"
-              onclick="openConfirmationModal()"
-            >
+            <button id="btnDistribute" class="btn" style="margin-top: 10px" onclick="openConfirmationModal()">
               開始戰力平衡分配
             </button>
-            <button
-              id="btnLoadTestData"
-              class="btn"
-              style="margin-top: 10px"
-              onclick="InputTestData()"
-            >
+            <button id="btnLoadTestData" class="btn" style="margin-top: 10px" onclick="InputTestData()">
               載入測試用資料
             </button>
             <div class="quick-assign-box">
@@ -474,48 +233,14 @@
                 ⚡ 快速指派隊長（點擊填入左側空缺）
               </div>
               <div class="quick-btn-grid">
-                <button
-                  class="btn-assign"
-                  onclick="quickAssignLeader('塔卡 Taca')"
-                >
-                  1. 塔卡 Taca
-                </button>
-                <button
-                  class="btn-assign"
-                  onclick="quickAssignLeader('躺平玩家')"
-                >
-                  2. 躺平玩家
-                </button>
-                <button class="btn-assign" onclick="quickAssignLeader('TSENG')">
-                  3. TSENG
-                </button>
-                <button class="btn-assign" onclick="quickAssignLeader('Iris')">
-                  4. Iris
-                </button>
-                <button
-                  class="btn-assign"
-                  onclick="quickAssignLeader('Penguin')"
-                >
-                  5. Penguin
-                </button>
-                <button
-                  class="btn-assign"
-                  onclick="quickAssignLeader('LazyGoat')"
-                >
-                  6. LazyGoat
-                </button>
-                <button
-                  class="btn-assign"
-                  onclick="quickAssignLeader('Baby shark')"
-                >
-                  7. Baby shark
-                </button>
-                <button
-                  class="btn-assign"
-                  onclick="quickAssignLeader('馬拉桑')"
-                >
-                  8. 馬拉桑
-                </button>
+                <button class="btn-assign" onclick="quickAssignLeader('塔卡 Taca')">1. 塔卡 Taca</button>
+                <button class="btn-assign" onclick="quickAssignLeader('躺平玩家')">2. 躺平玩家</button>
+                <button class="btn-assign" onclick="quickAssignLeader('TSENG')">3. TSENG</button>
+                <button class="btn-assign" onclick="quickAssignLeader('Iris')">4. Iris</button>
+                <button class="btn-assign" onclick="quickAssignLeader('Penguin')">5. Penguin</button>
+                <button class="btn-assign" onclick="quickAssignLeader('LazyGoat')">6. LazyGoat</button>
+                <button class="btn-assign" onclick="quickAssignLeader('Baby shark')">7. Baby shark</button>
+                <button class="btn-assign" onclick="quickAssignLeader('馬拉桑')">8. 馬拉桑</button>
               </div>
             </div>
           </div>
@@ -527,18 +252,8 @@
         </div>
 
         <div id="resultSection" style="display: none; margin-top: 40px">
-          <hr
-            style="
-              border: 0;
-              border-top: 2px solid #1a233a;
-              margin-bottom: 25px;
-            "
-          />
-          <button
-            id="btnPublish"
-            class="btn btn-publish"
-            onclick="openPublishModal()"
-          >
+          <hr style="border: 0; border-top: 2px solid #1a233a; margin-bottom: 25px;" />
+          <button id="btnPublish" class="btn btn-publish" onclick="openPublishModal()">
             ☁️ 發布最新分配結果 (公開給所有人檢視)
           </button>
           <h2 id="uiSummaryTitle">📊 數據總計</h2>
@@ -546,52 +261,19 @@
 
           <h2 id="uiCopyTitle">📋 分配後的人員清單 (可直接複製)</h2>
           <div class="action-bar-copy">
-            <button
-              id="btnCopyText"
-              class="btn btn-copy"
-              onclick="copyTextOutput()"
-            >
+            <button id="btnCopyText" class="btn btn-copy" onclick="copyTextOutput()">
               點擊一鍵複製名單
             </button>
             <div class="copy-lang-switch">
-              <button
-                id="btnCopyLangZht"
-                class="btn-copy-lang active"
-                onclick="toggleCopyLanguage('zht')"
-              >
-                ZH-TW
-              </button>
-              <button
-                id="btnCopyLangEn"
-                class="btn-copy-lang"
-                onclick="toggleCopyLanguage('en')"
-              >
-                EN-US
-              </button>
+              <button id="btnCopyLangZht" class="btn-copy-lang active" onclick="toggleCopyLanguage('zht')">ZH-TW</button>
+              <button id="btnCopyLangEn" class="btn-copy-lang" onclick="toggleCopyLanguage('en')">EN-US</button>
             </div>
           </div>
           <textarea id="copyTextarea" class="copy-textarea" readonly></textarea>
 
-          <h2 id="uiTweakTitle">
-            ⚡ 建築物人員微調區 (可直接滑鼠拖曳名字更換位置)
-          </h2>
-          <button
-            id="btnScreenshot"
-            class="btn btn-screenshot"
-            onclick="captureBuildingGrid()"
-          >
-            <svg
-              stroke-linejoin="round"
-              stroke-linecap="round"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              viewBox="0 0 24 24"
-              height="40"
-              width="40"
-              class="button__icon"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+          <h2 id="uiTweakTitle">⚡ 建築物人員微調區 (可直接滑鼠拖曳名字更換位置)</h2>
+          <button id="btnScreenshot" class="btn btn-screenshot" onclick="captureBuildingGrid()">
+            <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" height="40" width="40" class="button__icon" xmlns="http://www.w3.org/2000/svg">
               <path fill="none" d="M0 0h24v24H0z" stroke="none"></path>
               <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
               <path d="M7 11l5 5l5 -5"></path>
@@ -599,16 +281,7 @@
             </svg>
             <span id="btnScreenshotText">點擊截圖表格區並儲存</span>
           </button>
-          <button
-            id="btnMapScreenshot"
-            class="btn btn-screenshot"
-            style="
-              background: linear-gradient(135deg, #00ffcc, #00aaff);
-              color: #080b11;
-              margin-top: 10px;
-            "
-            onclick="captureMapWithAllocation()"
-          >
+          <button id="btnMapScreenshot" class="btn btn-screenshot" style="background: linear-gradient(135deg, #00ffcc, #00aaff); color: #080b11; margin-top: 10px;" onclick="captureMapWithAllocation()">
             🗺️ 下載「兵工廠地圖版」人員分配圖
           </button>
           <div class="building-grid" id="buildingGrid"></div>
@@ -625,20 +298,8 @@
           <div id="modalDataContent" class="modal-data-box"></div>
         </div>
         <div class="cyber-modal-actions">
-          <button
-            id="btnModalCancel"
-            class="btn btn-modal-cancel"
-            onclick="closeConfirmationModal()"
-          >
-            返回
-          </button>
-          <button
-            id="btnModalConfirm"
-            class="btn btn-modal-confirm"
-            onclick="confirmAndAllocate()"
-          >
-            確認無誤，開始分配
-          </button>
+          <button id="btnModalCancel" class="btn btn-modal-cancel" onclick="closeConfirmationModal()">返回</button>
+          <button id="btnModalConfirm" class="btn btn-modal-confirm" onclick="confirmAndAllocate()">確認無誤，開始分配</button>
         </div>
       </div>
     </div>
@@ -649,78 +310,40 @@
         <h3 id="publishModalHeaderTitle">☁️ 發布分配結果</h3>
         <div class="cyber-modal-content">
           <div class="form-group">
-            <label id="lblPublishLegion" style="color: #7ee8cc"
-              >1. 請選擇發布軍團 (Legion)：</label
-            >
+            <label id="lblPublishLegion" style="color: #7ee8cc">1. 請選擇發布軍團 (Legion)：</label>
             <select id="publishLegionSelect">
               <option value="LegionA">[軍團1] Legion 1</option>
               <option value="LegionB">[軍團2] Legion 2</option>
             </select>
           </div>
           <div class="form-group" id="eventTypeGroup" style="margin-top: 15px">
-            <label id="lblPublishEventType" style="color: #7ee8cc"
-              >2. 請選擇活動名稱：</label
-            >
-            <select
-              id="publishEventTypeSelect"
-              onchange="onPublishEventTypeChange()"
-            >
+            <label id="lblPublishEventType" style="color: #7ee8cc">2. 請選擇活動名稱：</label>
+            <select id="publishEventTypeSelect" onchange="onPublishEventTypeChange()">
               <option value="foundry">Foundry battle (兵工廠)</option>
               <option value="tundra">Tundra Arms League (雪域)</option>
               <option value="test">TEST (測試)</option>
             </select>
           </div>
-          <div
-            class="form-group"
-            id="tundraDatePickerGroup"
-            style="margin-top: 15px; display: none"
-          >
+          <div class="form-group" id="tundraDatePickerGroup" style="margin-top: 15px; display: none">
             <label style="color: #99d6ff">2-1. DATE：</label>
-            <input
-              type="date"
-              id="tundraDatePicker"
-              onchange="onTundraDateChange()"
-            />
+            <input type="date" id="tundraDatePicker" onchange="onTundraDateChange()" />
           </div>
           <div class="form-group" style="margin-top: 15px">
-            <label id="lblPublishTitle" style="color: #7ee8cc"
-              >3. 標題 / Title：(自動填入 / Auto fill in)：</label
-            >
-            <input
-              type="text"
-              id="publishTitleInput"
-              disabled
-              style="background-color: #060a12; color: #a7f3d0"
-            />
+            <label id="lblPublishTitle" style="color: #7ee8cc">3. 標題 / Title：(自動填入 / Auto fill in)：</label>
+            <input type="text" id="publishTitleInput" disabled style="background-color: #060a12; color: #a7f3d0" />
           </div>
           <div class="form-group" style="margin-top: 15px">
-            <label id="lblPublishAuthor" style="color: #00ffcc"
-              >4. 分配員暱稱：</label
-            >
+            <label id="lblPublishAuthor" style="color: #00ffcc">4. 分配員暱稱：</label>
             <input type="text" id="publishAuthorInput" placeholder="例：塔卡" />
           </div>
           <div class="form-group" style="margin-top: 15px">
-            <label id="lblPublishPasscode" style="color: #ff3838"
-              >5. 設定存取密碼 (停用中)：</label
-            >
+            <label id="lblPublishPasscode" style="color: #ff3838">5. 設定存取密碼 (停用中)：</label>
             <input type="password" id="publishPasscodeInput" disabled />
           </div>
         </div>
         <div class="cyber-modal-actions">
-          <button
-            class="btn btn-modal-cancel"
-            id="btnPublishCancel"
-            onclick="closePublishModal()"
-          >
-            取消
-          </button>
-          <button
-            id="btnConfirmPublish"
-            class="btn btn-modal-confirm"
-            onclick="submitToGoogleSheet()"
-          >
-            確認並發布
-          </button>
+          <button class="btn btn-modal-cancel" id="btnPublishCancel" onclick="closePublishModal()">取消</button>
+          <button id="btnConfirmPublish" class="btn btn-modal-confirm" onclick="submitToGoogleSheet()">確認並發布</button>
         </div>
       </div>
     </div>
@@ -731,52 +354,29 @@
         <h3 id="uiLoadHistoryTitle">📂 編輯歷史分配紀錄</h3>
         <div class="cyber-modal-content">
           <div class="form-group">
-            <label id="lblLoadHistory" style="color: #7ee8cc"
-              >選擇要載入的分配紀錄：</label
-            >
+            <label id="lblLoadHistory" style="color: #7ee8cc">選擇要載入的分配紀錄：</label>
             <select id="loadHistorySelect"></select>
           </div>
           <div class="form-group" style="margin-top: 15px">
-            <label id="lblLoadLegion" style="color: #00ffcc"
-              >選擇要載入的軍團：</label
-            >
+            <label id="lblLoadLegion" style="color: #00ffcc">選擇要載入的軍團：</label>
             <select id="loadLegionSelect">
               <option value="LegionA">軍團 1 (Legion 1)</option>
               <option value="LegionB">軍團 2 (Legion 2)</option>
             </select>
           </div>
           <div class="form-group" style="margin-top: 15px">
-            <label id="lblLoadPasscode" style="color: #ff3838"
-              >解鎖密碼 (若該紀錄受密碼保護需填寫)：</label
-            >
-            <input
-              type="password"
-              id="loadPasscodeInput"
-              placeholder="請輸入該紀錄的存取密碼"
-              disabled
-            />
+            <label id="lblLoadPasscode" style="color: #ff3838">解鎖密碼 (若該紀錄受密碼保護需填寫)：</label>
+            <input type="password" id="loadPasscodeInput" placeholder="請輸入該紀錄的存取密碼" disabled />
           </div>
         </div>
         <div class="cyber-modal-actions">
-          <button
-            class="btn btn-modal-cancel"
-            id="btnLoadCancel"
-            onclick="closeLoadHistoryModal()"
-          >
-            取消
-          </button>
-          <button
-            id="btnConfirmLoad"
-            class="btn btn-modal-confirm"
-            onclick="fetchAndRestoreGridData()"
-          >
-            繼續
-          </button>
+          <button class="btn btn-modal-cancel" id="btnLoadCancel" onclick="closeLoadHistoryModal()">取消</button>
+          <button id="btnConfirmLoad" class="btn btn-modal-confirm" onclick="fetchAndRestoreGridData()">繼續</button>
         </div>
       </div>
     </div>
 
-    <!-- 模式選擇確認 Modal -->
+    <!-- 模式選擇確認 Modal (已補齊多語系 ID) -->
     <div id="reallocateModal" class="cyber-modal-overlay">
       <div class="cyber-modal">
         <h3 id="uiReallocateTitle">⚙️ 偵測到名單變更 / 選擇分配模式</h3>
@@ -784,72 +384,37 @@
           <p id="uiReallocateDesc" style="line-height: 1.6; color: #cbd5e1">
             目前已有分配結果。系統偵測到有變更或新進人員，請選擇處理方式：
           </p>
-          <div
-            id="newMembersListPreview"
-            class="modal-data-box"
-            style="margin-bottom: 12px; color: #00ffcc"
-          ></div>
+          <div id="newMembersListPreview" class="modal-data-box" style="margin-bottom: 12px; color: #00ffcc"></div>
         </div>
-        <div
-          class="cyber-modal-actions"
-          style="flex-direction: column; gap: 10px"
-        >
-          <button
-            class="btn btn-modal-confirm"
-            style="
-              width: 100%;
-              background: linear-gradient(135deg, #00ffcc, #00aaff) !important;
-            "
-            onclick="appendNewMembersOnly()"
-          >
+        <div class="cyber-modal-actions" style="flex-direction: column; gap: 10px">
+          <button class="btn btn-modal-confirm" id="btnAppendNewMembers" style="width: 100%; background: linear-gradient(135deg, #00ffcc, #00aaff) !important;" onclick="appendNewMembersOnly()">
             ➕ 僅增補新進人員至暫存區 (保留現有分配)
           </button>
-          <button
-            class="btn btn-modal-confirm"
-            style="
-              width: 100%;
-              background: linear-gradient(135deg, #ff5500, #ff0055) !important;
-            "
-            onclick="triggerFullReallocate()"
-          >
+          <button class="btn btn-modal-confirm" id="btnTriggerFullReallocate" style="width: 100%; background: linear-gradient(135deg, #ff5500, #ff0055) !important;" onclick="triggerFullReallocate()">
             🔄 重新完全分配 (覆蓋所有當前名單)
           </button>
-          <button
-            class="btn btn-modal-cancel"
-            style="width: 100%"
-            onclick="closeReallocateModal()"
-          >
-            取消
-          </button>
+          <button class="btn btn-modal-cancel" id="btnReallocateCancel" style="width: 100%" onclick="closeReallocateModal()">取消</button>
         </div>
       </div>
     </div>
 
-    <!-- 快速新增單一成員 Modal -->
+    <!-- 快速新增單一成員 Modal (已補齊多語系 ID) -->
     <div id="addMemberQuickModal" class="cyber-modal-overlay">
       <div class="cyber-modal" style="max-width: 360px">
         <h3 id="uiAddMemberTitle">➕ 手動新增成員</h3>
         <div class="cyber-modal-content">
           <div class="form-group">
-            <label style="color: #7ee8cc">成員名稱：</label>
+            <label id="uiQuickAddNameLabel" style="color: #7ee8cc">成員名稱：</label>
             <input type="text" id="quickAddName" placeholder="例：Tom" />
           </div>
-          <div
-            class="form-group"
-            style="margin-top: 10px"
-            id="quickAddPowerGroup"
-          >
-            <label style="color: #7ee8cc">戰力數值：</label>
+          <div class="form-group" style="margin-top: 10px" id="quickAddPowerGroup">
+            <label id="uiQuickAddPowerLabel" style="color: #7ee8cc">戰力數值：</label>
             <input type="number" id="quickAddPower" placeholder="例：5200" />
           </div>
         </div>
         <div class="cyber-modal-actions">
-          <button class="btn btn-modal-cancel" onclick="closeQuickAddModal()">
-            取消
-          </button>
-          <button class="btn btn-modal-confirm" onclick="confirmQuickAdd()">
-            確認新增
-          </button>
+          <button class="btn btn-modal-cancel" id="btnQuickAddCancel" onclick="closeQuickAddModal()">取消</button>
+          <button class="btn btn-modal-confirm" id="btnQuickAddConfirm" onclick="confirmQuickAdd()">確認新增</button>
         </div>
       </div>
     </div>
@@ -863,26 +428,14 @@
           <div class="changelog-box">
             <div class="changelog-item">
               <div class="changelog-version">v3.0.0 (Current)</div>
-              <div>
-                • 系統架構全面升級 3.0：接入模組化 GAS 後端與集中式權限控管。
-              </div>
-              <div>
-                • 新增「🎒
-                待分配暫存池」與「微調區卡片人員快速新增/懸停刪除」功能。
-              </div>
-              <div>
-                • 發布作業支援歷史紀錄覆寫更新，發布後自動重置輸入介面。
-              </div>
+              <div>• 系統架構全面升級 3.0：接入模組化 GAS 後端與集中式權限控管。</div>
+              <div>• 新增「🎒 待分配暫存池」與「微調區卡片人員快速新增/懸停刪除」功能。</div>
+              <div>• 發布作業支援歷史紀錄覆寫更新，發布後自動重置輸入介面。</div>
             </div>
           </div>
         </div>
         <div class="cyber-modal-actions">
-          <button
-            class="btn btn-modal-cancel"
-            style="width: 100%"
-            id="btnCloseChangelog"
-            onclick="closeChangelogModal()"
-          >
+          <button class="btn btn-modal-cancel" style="width: 100%" id="btnCloseChangelog" onclick="closeChangelogModal()">
             關閉視窗 / Close
           </button>
         </div>
@@ -891,14 +444,11 @@
 
     <!-- 右下角懸浮按鈕 -->
     <div class="changelog-trigger" onclick="openChangelogModal()">
-      <img
-        src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/log.png"
-        alt="Changelog"
-      />
+      <img src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/log.png" alt="Changelog" />
     </div>
 
-    <!-- 4. 腳本模組引入 (固定官方路徑) -->
-    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/118n.js?v=6767"></script>
-    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/index.js?v=6767"></script>
+    <!-- 4. 腳本模組引入 (固定官方路徑 118n.js 與 index.js) -->
+    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/118n.js"></script>
+    <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/index.js"></script>
   </body>
 </html>
