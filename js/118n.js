@@ -195,26 +195,26 @@ const langPack = {
     mainTitle: "WOS FOUNDRY ALLOCATION 3.0",
     infoTitle: "Current Building List:",
     infoItems: [
-      "Facility 1 (6000)", "Facility 2 (6000)",
-      "Repair 1 (3000)", "Repair 2 (3000)",
-      "Repair 3 (3000)", "Repair 4 (3000)",
-      "Relay (1200)", "Boiler (1700)"
+      "Prototype Site I (6000)", "Prototype Site II (6000)",
+      "Repair Facility I (3000)", "Repair Facility II (3000)",
+      "Repair Facility III (3000)", "Repair Facility IV (3000)",
+      "Transit Station (1200)", "Boiler room (1700)"
     ],
 
     // Leader Setup
     leaderTitle: "Squad Leader Settings (Power ≥ 4000)",
     labels: [
-      "Group 1 Leader (Facility 1 & Repair 1)",
-      "Group 2 Leader (Facility 2 & Repair 2)",
-      "Group 3 Leader (Repair 3 & Relay)",
-      "Group 4 Leader (Repair 4 & Boiler)"
+      "Group 1 Leader (Prototype Site I & Repair Facility I)",
+      "Group 2 Leader (Prototype Site II & Repair Facility II)",
+      "Group 3 Leader (Repair Facility III & Transit Station)",
+      "Group 4 Leader (Repair Facility IV & Boiler room)"
     ],
     placeholders: { name: "Enter or assign leader name", power: "Leader power" },
     viceAccordionTitle: "⚙️ Advanced: Assign Vice-Leaders (Auto Pick Default)",
     viceNoticeText: "💡 Note: Vice-leaders will be auto balanced. Do not repeat in the main list.",
     viceLabels: [
-      "Group 1 Vice-CDR (Repair I)", "Group 2 Vice-CDR (Repair II)",
-      "Group 3 Vice-CDR (Relay)", "Group 4 Vice-CDR (Boiler)"
+      "Group 1 Vice-CDR (Repair Facility I)", "Group 2 Vice-CDR (Repair Facility II)",
+      "Group 3 Vice-CDR (Transit Station)", "Group 4 Vice-CDR (Boiler room)"
     ],
     vicePlaceholderName: "Vice-CDR Name",
     vicePlaceholderPower: "Vice-CDR Power",
