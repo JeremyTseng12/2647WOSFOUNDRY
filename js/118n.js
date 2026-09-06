@@ -2,14 +2,14 @@
    2647 WOS FOUNDRY - 多國語系字典檔 (118n.js)
    ============================================================ */
 const buildingsConfig = [
-  { id: "b0", gIdx: 0, nameZht: "1號武器試驗場 (6000)", nameEn: "Facility 1 (6000)", needVice: false },
-  { id: "b1", gIdx: 0, nameZht: "1號武器維修站 (3000)", nameEn: "Repair 1 (3000)", needVice: true },
-  { id: "b2", gIdx: 1, nameZht: "2號武器試驗場 (6000)", nameEn: "Facility 2 (6000)", needVice: false },
-  { id: "b3", gIdx: 1, nameZht: "2號武器維修站 (3000)", nameEn: "Repair 2 (3000)", needVice: true },
-  { id: "b4", gIdx: 2, nameZht: "3號武器維修站 (3000)", nameEn: "Repair 3 (3000)", needVice: false },
-  { id: "b5", gIdx: 2, nameZht: "中轉站 (1200)", nameEn: "Relay (1200)", needVice: true },
-  { id: "b6", gIdx: 3, nameZht: "4號武器維修站 (3000)", nameEn: "Repair 4 (3000)", needVice: false },
-  { id: "b7", gIdx: 3, nameZht: "蒸氣鍋爐 (1700)", nameEn: "Boiler (1700)", needVice: true }
+  { id: "b0", gIdx: 0, nameZht: "1號武器試驗場 (6000)", nameEn: "Prototype Site I (6000)", needVice: false },
+  { id: "b1", gIdx: 0, nameZht: "1號武器維修站 (3000)", nameEn: "Repair Facility I (3000)", needVice: true },
+  { id: "b2", gIdx: 1, nameZht: "2號武器試驗場 (6000)", nameEn: "Prototype Site II (6000)", needVice: false },
+  { id: "b3", gIdx: 1, nameZht: "2號武器維修站 (3000)", nameEn: "Repair Facility II (3000)", needVice: true },
+  { id: "b4", gIdx: 2, nameZht: "3號武器維修站 (3000)", nameEn: "Repair Facility III (3000)", needVice: false },
+  { id: "b5", gIdx: 2, nameZht: "中轉站 (1200)", nameEn: "Transit Station (1200)", needVice: true },
+  { id: "b6", gIdx: 3, nameZht: "4號武器維修站 (3000)", nameEn: "Repair Facility IV (3000)", needVice: false },
+  { id: "b7", gIdx: 3, nameZht: "蒸氣鍋爐 (1700)", nameEn: "Boiler room (1700)", needVice: true }
 ];
 
 const langPack = {
