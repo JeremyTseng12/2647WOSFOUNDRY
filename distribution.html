@@ -285,7 +285,7 @@
       </div>
     </div>
 
-    <!-- 簡潔歷史紀錄載入視窗 (只顯示 [軍團] 標題，一鍵直達) -->
+    <!-- 簡潔歷史紀錄載入視窗 (純標題 + 自選軍團) -->
     <div id="loadHistoryModal" class="modal-backdrop" style="display: none;">
       <div class="modal-box">
         <div class="modal-head">
@@ -294,8 +294,15 @@
         </div>
         <div class="modal-body">
           <div class="field-group">
-            <label id="lblLoadHistory">選擇要編輯的場次（已自動對應軍團）：</label>
+            <label id="lblLoadHistory">1. 選擇場次標題：</label>
             <select id="loadHistorySelect"></select>
+          </div>
+          <div class="field-group">
+            <label id="lblLoadLegion">2. 選擇軍團：</label>
+            <select id="loadLegionSelect">
+              <option value="LegionA">🛡️ 軍團 1 (Legion 1)</option>
+              <option value="LegionB">⚔️ 軍團 2 (Legion 2)</option>
+            </select>
           </div>
         </div>
         <div class="modal-foot">
@@ -304,6 +311,7 @@
         </div>
       </div>
     </div>
+    
 
     <!-- 腳本引入 -->
     <script src="https://jeremytseng12.github.io/2647WOSFOUNDRY/js/118n.js"></script>
