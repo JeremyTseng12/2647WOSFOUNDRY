@@ -1,6 +1,5 @@
 /* ============================================================
-   兵工廠人員分配系統 - 核心業務邏輯 v3.0 (index.js)
-   依賴：需先載入 js/118n.js
+   兵工廠人員分配系統 3.0 - 核心邏輯 (index.js)
    ============================================================ */
 
 const GAS_WEB_APP_URL =
@@ -18,7 +17,6 @@ let currentData = {
     b0: [], b1: [], b2: [], b3: [],
     b4: [], b5: [], b6: [], b7: []
   },
-  unassignedPool: [],
   manualGatherText: "",
   manualAmmoText: ""
 };
@@ -29,16 +27,13 @@ let currentEditingTitle = "";
 let currentEditingAuthor = "";
 let historyRecordsList = [];
 let isCurrentlyMaintenance = false;
-let quickAddTarget = null;
 
-// 1. 全域系統狀態與公告檢查
+// 1. 系統狀態檢查
 async function checkSystemStatus() {
   try {
-    const res = await fetch(
-      `${GAS_WEB_APP_URL}?action=getSystemConfig&t=${new Date().getTime()}`,
-    );
+    const res = await fetch(`${GAS_WEB_APP_URL}?action=getSystemConfig&t=${Date.now()}`);
     const data = await res.json();
-    const status = data.systemStatus || data.system_status || data.status || "active";
+    const status = data.systemStatus || data.status || "active";
     const annText = (data.announcement || "").trim();
 
     const overlay = document.getElementById("fullscreenOverlay");
@@ -49,25 +44,12 @@ async function checkSystemStatus() {
     if (status === "offline" || status === "maintenance") {
       isCurrentlyMaintenance = true;
       if (overlay) overlay.style.display = "flex";
-
-      if (status === "offline") {
-        if (title) title.innerText = "⛔ 系統目前已關閉";
-        if (msg) msg.innerHTML = "系統目前暫停對外開放，請聯繫最高管理員！";
-      } else {
-        if (title) title.innerText = "🔧 系統維修中";
-        if (msg)
-          msg.innerHTML =
-            "系統目前正在進行維護升級，請稍後再試！<br><span style='font-size:0.85rem; color:#94a3b8;'>（系統每 60 秒會自動嘗試連線檢查）</span>";
-      }
+      if (title) title.innerText = status === "offline" ? "⛔ 系統目前已關閉" : "🔧 系統維修中";
+      if (msg) msg.innerText = status === "offline" ? "系統目前暫停對外開放，請聯繫管理員。" : "系統維護升級中，請稍後再試。";
       return false;
     } else {
-      if (isCurrentlyMaintenance) {
-        if (title) title.innerText = "🟢 系統維護完成";
-        if (msg) msg.innerHTML = "系統已成功恢復運行，請點擊下方按鈕重新載入畫面！";
-        if (btnReload) btnReload.style.display = "inline-block";
-      } else {
-        if (overlay) overlay.style.display = "none";
-      }
+      if (isCurrentlyMaintenance && btnReload) btnReload.style.display = "inline-block";
+      else if (overlay) overlay.style.display = "none";
       isCurrentlyMaintenance = false;
     }
 
@@ -77,13 +59,12 @@ async function checkSystemStatus() {
     }
     return true;
   } catch (err) {
-    console.warn("狀態檢查連線異常，保持預設開放：", err);
     isCurrentlyMaintenance = false;
     return true;
   }
 }
 
-// 2. 身分驗證邏輯
+// 2. 登入與登出
 async function handleIndexLogin() {
   const p = (window.langPack && langPack[currentData.currentLang]) || {};
   const account = document.getElementById("loginAccount").value.trim();
@@ -91,7 +72,7 @@ async function handleIndexLogin() {
   const errorEl = document.getElementById("loginErrorMsg");
 
   if (!account || !passkey) {
-    errorEl.textContent = p.loginEmptyError || "請輸入幹部帳號與通行密碼";
+    errorEl.textContent = p.loginEmptyError || "請輸入帳號與密碼";
     return;
   }
 
@@ -109,10 +90,10 @@ async function handleIndexLogin() {
       sessionStorage.setItem("wos_admin_user", JSON.stringify(currentUser));
       unlockSystemUI();
     } else {
-      errorEl.textContent = result.message || "帳號或密碼錯誤！";
+      errorEl.textContent = result.message || "帳號或密碼錯誤";
     }
   } catch (err) {
-    errorEl.textContent = p.loginNetworkError || "連線驗證失敗，請檢查網路後再試。";
+    errorEl.textContent = p.loginNetworkError || "連線失敗，請檢查網路";
   }
 }
 
@@ -123,23 +104,8 @@ function handleIndexLogout() {
 }
 
 function unlockSystemUI() {
-  const loginOverlay = document.getElementById("indexLoginOverlay");
-  if (loginOverlay) loginOverlay.style.display = "none";
-
-  const intro = document.getElementById("intro");
-  const mainContent = document.getElementById("main-content");
-  if (intro) intro.style.display = "flex";
-
-  setTimeout(() => {
-    if (intro) intro.style.display = "none";
-    if (mainContent) {
-      mainContent.style.display = "block";
-      setTimeout(() => {
-        mainContent.style.opacity = "1";
-      }, 50);
-    }
-  }, 1000);
-
+  document.getElementById("indexLoginOverlay").style.display = "none";
+  document.getElementById("main-content").style.display = "block";
   updateUserBadge();
 
   const authorInput = document.getElementById("publishAuthorInput");
@@ -151,16 +117,12 @@ function unlockSystemUI() {
 function updateUserBadge() {
   const badge = document.getElementById("userBadge");
   if (badge && currentUser) {
-    const isEn = currentData.currentLang === "en";
-    const roleText = currentUser.role === "supreme" 
-      ? (isEn ? "Supreme Admin" : "最高管理員") 
-      : (isEn ? "Admin" : "管理員");
-    badge.textContent = `👤 ${currentUser.displayName} [${roleText}]`;
+    badge.textContent = `👤 ${currentUser.displayName}`;
   }
 }
 
-// 3. 系統初始化 (載入偏好語言、狀態檢查與登入檢查)
-window.addEventListener("load", async function () {
+// 初始化
+window.addEventListener("load", async () => {
   const prefLang = localStorage.getItem("wos_pref_lang") || "zht";
   changeLanguage(prefLang);
 
@@ -176,212 +138,139 @@ window.addEventListener("load", async function () {
   }
 });
 
-function toggleViceAccordion() {
-  const acc = document.getElementById("viceAccordion");
-  if (acc) acc.classList.toggle("closed");
-}
-
-function handlePowerEnter(event, currentIdx) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    let nextFocusField = null;
-    for (let i = 1; i <= 4; i++) {
-      let checkIdx = (currentIdx + i) % 4;
-      let val = document.getElementById(`leaderPower${checkIdx}`).value.trim();
-      if (val === "") {
-        nextFocusField = document.getElementById(`leaderPower${checkIdx}`);
-        break;
-      }
-    }
-    if (nextFocusField) nextFocusField.focus();
-    else document.getElementById("memberInput").focus();
-  }
-}
-
-// 4. 多國語系切換 (全面支援各彈窗與動態按鈕)
+// 3. 多國語言切換
 function changeLanguage(lang) {
-  if (typeof langPack === "undefined" || !langPack[lang]) {
-    console.warn("字典檔尚未載入完成或缺少語系：", lang);
-    return;
-  }
-
+  if (typeof langPack === "undefined" || !langPack[lang]) return;
   currentData.currentLang = lang;
   currentData.copyLang = lang;
   localStorage.setItem("wos_pref_lang", lang);
   const p = langPack[lang];
-  const isZht = (lang === "zht");
+  const isZht = lang === "zht";
 
-  // 同步切換所有語言按鈕狀態
-  const toggleActive = (id, condition) => {
+  const setActive = (id, active) => {
     const el = document.getElementById(id);
-    if (el) {
-      if (condition) el.classList.add("active");
-      else el.classList.remove("active");
-    }
+    if (el) el.classList.toggle("active", active);
   };
+  setActive("btnLangZht", isZht);
+  setActive("btnLangEn", !isZht);
+  setActive("btnLoginLangZht", isZht);
+  setActive("btnLoginLangEn", !isZht);
+  setActive("btnCopyLangZht", isZht);
+  setActive("btnCopyLangEn", !isZht);
 
-  toggleActive("btnLangZht", isZht);
-  toggleActive("btnLangEn", !isZht);
-  toggleActive("btnLoginLangZht", isZht);
-  toggleActive("btnLoginLangEn", !isZht);
-  toggleActive("btnCopyLangZht", isZht);
-  toggleActive("btnCopyLangEn", !isZht);
-
-  if (isZht) document.body.classList.remove("lang-en");
-  else document.body.classList.add("lang-en");
-
-  const setElText = (id, text) => {
+  const setText = (id, txt) => {
     const el = document.getElementById(id);
-    if (el && text !== undefined) el.innerText = text;
+    if (el && txt !== undefined) el.innerText = txt;
   };
-  const setElPlaceholder = (id, ph) => {
+  const setPh = (id, ph) => {
     const el = document.getElementById(id);
     if (el && ph !== undefined) el.placeholder = ph;
   };
 
-  // 登入介面
-  setElText("uiLoginTitle", p.loginTitle);
-  setElText("uiLoginSubtitle", p.loginSubtitle);
-  setElText("uiLoginAccountLabel", p.loginAccountLabel);
-  setElPlaceholder("loginAccount", p.loginAccountPlaceholder);
-  setElText("uiLoginPasskeyLabel", p.loginPasskeyLabel);
-  setElPlaceholder("loginPasskey", p.loginPasskeyPlaceholder);
-  setElText("uiBtnLogin", p.btnLogin);
-  setElText("btnLogoutTop", p.btnLogout);
+  setText("uiLoginTitle", p.loginTitle);
+  setText("uiLoginSubtitle", p.loginSubtitle);
+  setText("uiLoginAccountLabel", p.loginAccountLabel);
+  setPh("loginAccount", p.loginAccountPlaceholder);
+  setText("uiLoginPasskeyLabel", p.loginPasskeyLabel);
+  setPh("loginPasskey", p.loginPasskeyPlaceholder);
+  setText("uiBtnLogin", p.btnLogin);
+  setText("btnLogoutTop", p.btnLogout);
 
-  // 主頁面導航與標題
-  setElText("btnMapScreenshot", p.btnMapScreenshot);
-  setElText("introText", p.introText);
-  setElText("btnHistoryModal", p.btnHistoryModal);
-  setElText("btnViewSystem", p.btnViewSystem);
-  setElText("btnOldSystem", p.btnOldSystem);
-  setElText("btnManageSystem", p.btnManageSystem);
-  setElText("btnCancelEdit", p.btnCancelEdit);
-  setElText("uiMainTitle", p.mainTitle);
-  setElText("uiInfoTitle", p.infoTitle);
-  setElText("uiLeaderTitle", p.leaderTitle);
-  setElText("uiMemberTitle", p.memberTitle);
-  setElText("uiLabelMainList", p.labelMainList);
+  setText("uiMainTitle", p.mainTitle);
+  setText("btnHistoryModal", p.btnHistoryModal);
+  setText("btnViewSystem", p.btnViewSystem);
+  setText("btnManageSystem", p.btnManageSystem);
+  setText("btnCancelEdit", p.btnCancelEdit);
 
-  const memberDesc = document.getElementById("uiMemberDesc");
-  if (memberDesc && p.memberDesc) memberDesc.innerHTML = p.memberDesc;
+  setText("uiLeaderTitle", p.leaderTitle);
+  setText("uiMemberTitle", p.memberTitle);
+  setText("uiLabelMainList", p.labelMainList);
+  setText("uiLabelGatherList", p.labelGatherList);
+  setText("uiLabelAmmoList", p.labelAmmoList);
+  setPh("gatherInput", p.gatherPlaceholder);
+  setPh("ammoInput", p.ammoPlaceholder);
+  setText("btnDistribute", p.btnDistribute);
+  setText("btnLoadTestData", p.btnLoadTestData);
+  setText("uiQuickTitle", p.quickTitle);
 
-  setElText("uiLabelGatherList", p.labelGatherList);
-  setElText("uiLabelAmmoList", p.labelAmmoList);
-  setElPlaceholder("gatherInput", p.gatherPlaceholder);
-  setElPlaceholder("ammoInput", p.ammoPlaceholder);
-  setElText("btnDistribute", p.btnDistribute);
-  setElText("btnLoadTestData", p.btnLoadTestData);
-  setElText("uiQuickTitle", p.quickTitle);
-
-  setElText("uiViceAccordionTitle", p.viceAccordionTitle);
-  setElText("uiViceNoticeText", p.viceNoticeText);
+  setText("uiViceAccordionTitle", p.viceAccordionTitle);
+  setText("uiViceNoticeText", p.viceNoticeText);
   if (p.viceLabels) {
     for (let i = 0; i < 4; i++) {
-      setElText(`uiLabelVice${i}`, p.viceLabels[i]);
-      setElPlaceholder(`viceName${i}`, p.vicePlaceholderName);
-      setElPlaceholder(`vicePower${i}`, p.vicePlaceholderPower);
+      setText(`uiLabelVice${i}`, p.viceLabels[i]);
+      setPh(`viceName${i}`, p.vicePlaceholderName);
+      setPh(`vicePower${i}`, p.vicePlaceholderPower);
     }
   }
   if (p.labels) {
     for (let i = 0; i < 4; i++) {
-      setElText(`uiLabelG${i}`, p.labels[i]);
-      setElPlaceholder(`leaderName${i}`, p.placeholders ? p.placeholders.name : "");
-      setElPlaceholder(`leaderPower${i}`, p.placeholders ? p.placeholders.power : "");
+      setText(`uiLabelG${i}`, p.labels[i]);
+      setPh(`leaderName${i}`, p.placeholders?.name);
+      setPh(`leaderPower${i}`, p.placeholders?.power);
     }
   }
 
-  // 建築物清單
-  const infoList = document.getElementById("uiInfoList");
-  if (infoList && p.infoItems) {
-    infoList.innerHTML = "";
-    p.infoItems.forEach((item) => {
-      const li = document.createElement("li");
-      li.innerText = item;
-      infoList.appendChild(li);
-    });
-  }
+  setText("publishModalHeaderTitle", p.publishHeader);
+  setText("lblPublishLegion", p.lblPublishLegion);
+  setText("lblPublishEventType", p.lblPublishEventType);
+  setText("lblPublishTitle", p.lblPublishTitle);
+  setText("lblPublishAuthor", p.lblPublishAuthor);
+  setText("btnPublishCancel", p.btnPublishCancel);
+  setText("btnConfirmPublish", p.btnConfirmPublish);
 
-  // 彈窗與設定
-  setElText("modalTitle", p.modalTitle);
-  setElText("modalDesc", p.modalDesc);
-  setElText("btnModalCancel", p.modalCancel);
-  setElText("btnModalConfirm", p.modalConfirm);
-  setElText("uiChangelogTitle", p.changelogTitle);
-  setElText("uiChangelogDesc", p.changelogDesc);
-  setElText("btnCloseChangelog", p.btnCloseChangelog);
+  setText("uiLoadHistoryTitle", p.uiLoadHistoryTitle);
+  setText("lblLoadHistory", p.lblLoadHistory);
+  setText("btnLoadCancel", p.btnLoadCancel);
+  setText("btnConfirmLoad", p.btnConfirmLoad);
 
-  setElText("publishModalHeaderTitle", p.publishHeader);
-  setElText("lblPublishLegion", p.lblPublishLegion);
-  setElText("lblPublishEventType", p.lblPublishEventType);
-  setElText("lblPublishTitle", p.lblPublishTitle);
-  setElText("lblPublishAuthor", p.lblPublishAuthor);
-  setElText("lblPublishPasscode", p.lblPublishPasscode);
-  setElText("btnPublishCancel", p.btnPublishCancel);
-  setElText("btnConfirmPublish", p.btnConfirmPublish);
-
-  setElText("uiLoadHistoryTitle", p.uiLoadHistoryTitle);
-  setElText("lblLoadHistory", p.lblLoadHistory);
-  setElText("lblLoadLegion", p.lblLoadLegion);
-  setElText("lblLoadPasscode", p.lblLoadPasscode);
-  setElText("btnLoadCancel", p.btnLoadCancel);
-  setElText("btnConfirmLoad", p.btnConfirmLoad);
-
-  // 變更偵測彈窗 (補齊多語系)
-  setElText("uiReallocateTitle", p.reallocateTitle);
-  setElText("uiReallocateDesc", p.reallocateDesc);
-  setElText("btnAppendNewMembers", p.btnAppendNew);
-  setElText("btnTriggerFullReallocate", p.btnFullReallocate);
-  setElText("btnReallocateCancel", p.btnReallocateCancel);
-
-  // 快速新增成員彈窗 (補齊多語系)
-  setElText("uiAddMemberTitle", p.quickAddTitleDefault);
-  setElText("uiQuickAddNameLabel", p.quickAddLabelName);
-  setElPlaceholder("quickAddName", p.quickAddPlaceholderName);
-  setElText("uiQuickAddPowerLabel", p.quickAddLabelPower);
-  setElPlaceholder("quickAddPower", p.quickAddPlaceholderPower);
-  setElText("btnQuickAddCancel", p.btnQuickAddCancel);
-  setElText("btnQuickAddConfirm", p.btnQuickAddConfirm);
-
-  updateUserBadge();
-
-  // 若結果看板已顯示，重新渲染卡片
-  const resultSec = document.getElementById("resultSection");
-  if (resultSec && resultSec.style.display !== "none") {
-    setElText("btnPublish", p.btnPublish);
-    setElText("uiSummaryTitle", p.summaryTitle);
-    setElText("uiCopyTitle", p.copyTitle);
-    setElText("btnCopyText", p.btnCopyText);
-    setElText("uiTweakTitle", p.tweakTitle);
-    setElText("btnScreenshotText", p.btnScreenshotText);
+  if (document.getElementById("resultSection").style.display !== "none") {
+    setText("btnPublish", p.btnPublish);
+    setText("uiCopyTitle", p.copyTitle);
+    setText("btnCopyText", p.btnCopyText);
+    setText("uiTweakTitle", p.tweakTitle);
+    setText("btnScreenshotText", p.btnScreenshotText);
     renderAll();
   }
 }
 
 function toggleCopyLanguage(lang) {
   currentData.copyLang = lang;
-  if (lang === "zht") {
-    document.getElementById("btnCopyLangZht").classList.add("active");
-    document.getElementById("btnCopyLangEn").classList.remove("active");
-  } else {
-    document.getElementById("btnCopyLangEn").classList.add("active");
-    document.getElementById("btnCopyLangZht").classList.remove("active");
-  }
+  document.getElementById("btnCopyLangZht").classList.toggle("active", lang === "zht");
+  document.getElementById("btnCopyLangEn").classList.toggle("active", lang === "en");
   updateTextOutputOnly();
+}
+
+function toggleViceAccordion() {
+  document.getElementById("viceAccordion")?.classList.toggle("closed");
+}
+
+function handlePowerEnter(event, currentIdx) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    for (let i = 1; i <= 4; i++) {
+      let checkIdx = (currentIdx + i) % 4;
+      let field = document.getElementById(`leaderPower${checkIdx}`);
+      if (field && field.value.trim() === "") {
+        field.focus();
+        return;
+      }
+    }
+    document.getElementById("memberInput").focus();
+  }
 }
 
 function quickAssignLeader(name) {
   const p = langPack[currentData.currentLang];
   for (let i = 0; i < 4; i++) {
     if (document.getElementById(`leaderName${i}`).value.trim() === name) {
-      alert(currentData.currentLang === "zht" ? `「${name}」${p.alertRepeat}` : `"${name}" ${p.alertRepeat}`);
+      alert(`「${name}」${p.alertRepeat}`);
       return;
     }
   }
   for (let i = 0; i < 4; i++) {
-    const inputField = document.getElementById(`leaderName${i}`);
-    if (inputField.value.trim() === "") {
-      inputField.value = name;
+    const field = document.getElementById(`leaderName${i}`);
+    if (field.value.trim() === "") {
+      field.value = name;
       document.getElementById(`leaderPower${i}`).focus();
       return;
     }
@@ -389,28 +278,25 @@ function quickAssignLeader(name) {
   alert(p.alertFull);
 }
 
+// 4. 名單解析與直接平衡分配 (無多余彈窗)
 function parseLines(text) {
-  let results = [];
-  const lines = text.split("\n");
-  for (let line of lines) {
-    line = line.trim();
-    if (!line) continue;
-    const lastSpaceIdx = line.lastIndexOf(" ");
-    if (lastSpaceIdx !== -1) {
-      const name = line.substring(0, lastSpaceIdx).trim();
-      const power = parseInt(line.substring(lastSpaceIdx).trim());
-      if (!isNaN(power)) {
-        results.push({ name, power });
-        continue;
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const idx = line.lastIndexOf(" ");
+      if (idx !== -1) {
+        const name = line.substring(0, idx).trim();
+        const power = parseInt(line.substring(idx).trim());
+        if (!isNaN(power)) return { name, power };
       }
-    }
-    results.push({ name: line, power: 0 });
-  }
-  return results;
+      return { name: line, power: 0 };
+    });
 }
 
 function parseCurrentInputs() {
-  let parsed = {
+  const parsed = {
     leaders: [],
     viceLeaders: [],
     mainMembers: [],
@@ -431,314 +317,127 @@ function parseCurrentInputs() {
     if (vName) parsed.uniqueNames.add(vName);
   }
 
-  parseLines(document.getElementById("memberInput").value).forEach((p) => {
-    parsed.mainMembers.push(p);
-    parsed.uniqueNames.add(p.name);
+  parseLines(document.getElementById("memberInput").value).forEach((m) => {
+    parsed.mainMembers.push(m);
+    parsed.uniqueNames.add(m.name);
   });
-  parseLines(document.getElementById("gatherInput").value).forEach((p) => {
-    parsed.gatherMembers.push(p);
-    parsed.uniqueNames.add(p.name);
+  parseLines(document.getElementById("gatherInput").value).forEach((m) => {
+    parsed.gatherMembers.push(m);
+    parsed.uniqueNames.add(m.name);
   });
-  parseLines(document.getElementById("ammoInput").value).forEach((p) => {
-    parsed.ammoMembers.push(p);
-    parsed.uniqueNames.add(p.name);
+  parseLines(document.getElementById("ammoInput").value).forEach((m) => {
+    parsed.ammoMembers.push(m);
+    parsed.uniqueNames.add(m.name);
   });
 
   return parsed;
 }
 
-function getAllCurrentAssignedNames() {
-  const names = new Set();
-  buildingsConfig.forEach((b) => {
-    (currentData.buildings[b.id] || []).forEach((p) => names.add(p.name));
-  });
-  (currentData.unassignedPool || []).forEach((p) => names.add(p.name));
-  return names;
-}
-
-function openConfirmationModal() {
-  document.getElementById("errorMessage").style.display = "none";
-  if (!validateInputs()) return;
-
-  const p = langPack[currentData.currentLang];
-  const resultVisible = document.getElementById("resultSection").style.display !== "none";
-
-  if (resultVisible) {
-    const pool = parseCurrentInputs();
-    const assignedNames = getAllCurrentAssignedNames();
-    const newMembers = pool.mainMembers.filter((m) => !assignedNames.has(m.name));
-
-    const previewBox = document.getElementById("newMembersListPreview");
-    if (newMembers.length > 0) {
-      previewBox.innerHTML =
-        `<strong>${p.reallocateDetectPrefix}${newMembers.length}${p.reallocateDetectSuffix}</strong><br>` +
-        newMembers.map((m) => `${m.name} (${m.power})`).join("、");
-    } else {
-      previewBox.innerHTML = p.reallocateNoNew;
-    }
-    document.getElementById("reallocateModal").style.display = "flex";
-    return;
-  }
-
-  const data = parseCurrentInputs();
-  const totalCount = data.uniqueNames.size;
-
-  if (totalCount < 15) {
-    showError(
-      currentData.currentLang === "zht"
-        ? `錯誤：目前去重後總報名人數為 ${totalCount} 人，未達參戰基本門檻（15人以上）！`
-        : `Error: Total unique players is ${totalCount}, which is below the required 15 players!`,
-    );
-    return;
-  }
-
-  const dataBox = document.getElementById("modalDataContent");
-  let html = `<strong>${p.overviewTitle}</strong><br>${p.overviewCountText}${totalCount}${p.overviewCountUnit}<br><br>`;
-  html += `<strong>${p.leaderPreviewTitle}</strong><br>`;
-  data.leaders.forEach((l, idx) => {
-    const vObj = data.viceLeaders[idx];
-    const viceText = vObj.name ? ` [副: ${vObj.name} (${vObj.power})]` : "";
-    html += `${p.leaderGText}${idx + 1}${p.leaderGUnit}${l.name || p.emptyText} (${l.power || 0})${viceText}<br>`;
-  });
-  html += `<br><strong>${p.mainPoolTitle}${data.mainMembers.length}${p.poolUnit}</strong><br>`;
-  html += data.mainMembers.map((m) => m.name).join("、") || p.emptyText;
-  html += `<br><br><strong style="color:#ffb300;">${p.gatherPoolTitle}${data.gatherMembers.length}${p.poolUnit}</strong><br>`;
-  html += data.gatherMembers.map((m) => m.name).join("、") || p.emptyText;
-  html += `<br><br><strong style="color:#ff3838;">${p.ammoPoolTitle}${data.ammoMembers.length}${p.poolUnit}</strong><br>`;
-  html += data.ammoMembers.map((m) => m.name).join("、") || p.emptyText;
-
-  dataBox.innerHTML = html;
-  document.getElementById("confirmModal").style.display = "flex";
-}
-
-function closeConfirmationModal() {
-  document.getElementById("confirmModal").style.display = "none";
-}
-
-function closeReallocateModal() {
-  document.getElementById("reallocateModal").style.display = "none";
-}
-
-function openChangelogModal() {
-  document.getElementById("changelogModal").style.display = "flex";
-}
-function closeChangelogModal() {
-  document.getElementById("changelogModal").style.display = "none";
-}
-
-function confirmAndAllocate() {
-  closeConfirmationModal();
-  triggerAllocation();
-}
-
-function triggerFullReallocate() {
-  closeReallocateModal();
-  currentData.unassignedPool = [];
-  triggerAllocation();
-}
-
-function appendNewMembersOnly() {
-  closeReallocateModal();
-  const pool = parseCurrentInputs();
-  const assignedNames = getAllCurrentAssignedNames();
-
-  const newMembers = pool.mainMembers.filter((m) => !assignedNames.has(m.name));
-
-  if (newMembers.length === 0) {
-    alert("⚠️ 沒有偵測到新的待分配人員！");
-    return;
-  }
-
-  newMembers.forEach((m) => {
-    currentData.unassignedPool.push({
-      name: m.name,
-      power: m.power,
-      isLeader: false,
-      isVice: false,
-      isManualLeader: false,
-      isManualVice: false,
-    });
-  });
-
-  currentData.manualGatherText = document.getElementById("gatherInput").value.trim();
-  currentData.manualAmmoText = document.getElementById("ammoInput").value.trim();
-
-  renderAll();
-  alert(`✅ 已將 ${newMembers.length} 位新成員加入表格下方的「待分配新進人員」暫存區，請直接拖曳進行指派！`);
-}
-
-function triggerAllocation() {
-  document.getElementById("resultSection").style.display = "none";
-  const shimmer = document.getElementById("shimmerLoader");
-  shimmer.innerHTML = "";
-
-  const container = document.createElement("div");
-  container.style.cssText = "display: flex; justify-content: center; align-items: center; width: 100%; padding: 20px 0;";
-
-  const preloadImage = document.getElementById("preloadGif");
-  if (preloadImage) {
-    const activeGif = preloadImage.cloneNode(true);
-    activeGif.style.cssText = "width: 250px; height: auto; border-radius: 4px;";
-    container.appendChild(activeGif);
-  } else {
-    container.innerHTML = `<img src="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/loading.gif" style="width: 250px; height: auto; border-radius: 4px;" />`;
-  }
-
-  shimmer.appendChild(container);
-  shimmer.style.display = "block";
-  shimmer.scrollIntoView({ behavior: "smooth", block: "center" });
-
-  setTimeout(() => {
-    shimmer.style.display = "none";
-    distributeMembers();
-  }, 2000);
+function showError(msg) {
+  const errEl = document.getElementById("errorMessage");
+  errEl.innerText = msg;
+  errEl.style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function validateInputs() {
   const isEn = currentData.currentLang === "en";
-  const leaderNamesSet = new Set();
+  const leaderSet = new Set();
 
   for (let i = 0; i < 4; i++) {
     const name = document.getElementById(`leaderName${i}`).value.trim();
     const power = parseInt(document.getElementById(`leaderPower${i}`).value);
-
     if (!name) {
-      showError(isEn ? `Please enter the leader name for Group ${i + 1}!` : `請填寫第 ${i + 1} 組的隊長名字！`);
+      showError(isEn ? `Enter leader name for Group ${i + 1}` : `請填寫第 ${i + 1} 組隊長名字！`);
       return false;
     }
-    if (isNaN(power)) {
-      showError(isEn ? `Please enter the power for leader "${name}"!` : `請填寫隊長「${name}」的戰力數值！`);
+    if (isNaN(power) || power < 4000) {
+      showError(isEn ? `Leader "${name}" power must be ≥ 4000` : `隊長「${name}」戰力需 ≥ 4000！`);
       return false;
     }
-    if (power < 4000) {
-      showError(isEn ? `Error: Leader "${name}" power is below 4000!` : `錯誤：隊長「${name}」戰力低於 4000！`);
-      return false;
-    }
-    leaderNamesSet.add(name);
+    leaderSet.add(name);
   }
 
   for (let i = 0; i < 4; i++) {
     const vName = document.getElementById(`viceName${i}`).value.trim();
     const vPower = parseInt(document.getElementById(`vicePower${i}`).value);
-
     if (vName) {
-      if (leaderNamesSet.has(vName)) {
-        showError(isEn ? `Error: Vice-CDR "${vName}" is already assigned as a CDR!` : `防呆警告：「${vName}」已被指派為正隊長，無法重複設為副隊長！`);
+      if (leaderSet.has(vName)) {
+        showError(`「${vName}」已是正隊長，無法重複設為副隊長！`);
         return false;
       }
       if (isNaN(vPower) || vPower <= 0) {
-        showError(isEn ? `Please enter power for Vice-CDR "${vName}"!` : `請填寫副隊長「${vName}」的戰力數值！`);
+        showError(`請填寫副隊長「${vName}」的戰力！`);
         return false;
       }
-      leaderNamesSet.add(vName);
+      leaderSet.add(vName);
     }
   }
 
   const mainLines = parseLines(document.getElementById("memberInput").value);
   for (let m of mainLines) {
-    if (leaderNamesSet.has(m.name)) {
-      showError(isEn ? `Error: CDR/V-CDR "${m.name}" appears in the main balancing list!` : `防呆警告：隊長/副隊長「${m.name}」重複出現在「1. 主平衡分配名單」！系統已自動包含隊長，請自主名單中移除。`);
+    if (leaderSet.has(m.name)) {
+      showError(`「${m.name}」已是隊長/副隊長，請勿重複填寫在主平衡名單中！`);
       return false;
     }
   }
-
-  const gatherLines = parseLines(document.getElementById("gatherInput").value);
-  for (let g of gatherLines) {
-    if (leaderNamesSet.has(g.name)) {
-      showError(isEn ? `Error: CDR/V-CDR "${g.name}" appears in the Gathering Squad list!` : `防呆警告：隊長/副隊長「${g.name}」重複出現在「2. 採集小隊名單」！`);
-      return false;
-    }
-  }
-
-  const ammoLines = parseLines(document.getElementById("ammoInput").value);
-  for (let a of ammoLines) {
-    if (leaderNamesSet.has(a.name)) {
-      showError(isEn ? `Error: CDR/V-CDR "${a.name}" appears in the Ammo Squad list!` : `防呆警告：隊長/副隊長「${a.name}」重複出現在「3. 子彈小隊名單」！`);
-      return false;
-    }
-  }
-
   return true;
 }
 
-function distributeMembers() {
-  currentData.copyLang = currentData.currentLang;
+function handleDirectAllocate() {
+  document.getElementById("errorMessage").style.display = "none";
+  if (!validateInputs()) return;
+
+  const pool = parseCurrentInputs();
+  if (pool.uniqueNames.size < 15) {
+    showError(`目前參戰總人數為 ${pool.uniqueNames.size} 人，未達 15 人基本門檻！`);
+    return;
+  }
+
+  distributeMembers(pool);
+}
+
+function distributeMembers(pool) {
   currentData.buildings = { b0: [], b1: [], b2: [], b3: [], b4: [], b5: [], b6: [], b7: [] };
-  currentData.unassignedPool = [];
 
   let groups = [];
   let totalLeadersPower = 0;
-  let pool = parseCurrentInputs();
 
   for (let i = 0; i < 4; i++) {
-    let lData = pool.leaders[i];
-    let leaderObj = {
-      name: lData.name,
-      power: lData.power,
-      isLeader: true,
-      isVice: false,
-      isManualLeader: true,
-      isManualVice: false,
-    };
-
-    let manualViceObj = null;
-    let vData = pool.viceLeaders[i];
-    if (vData.name && vData.power > 0) {
-      manualViceObj = {
-        name: vData.name,
-        power: vData.power,
-        isLeader: false,
-        isVice: true,
-        isManualLeader: false,
-        isManualVice: true,
-      };
-      totalLeadersPower += vData.power;
-    }
+    const lData = pool.leaders[i];
+    const vData = pool.viceLeaders[i];
+    const leaderObj = { name: lData.name, power: lData.power, isLeader: true, isVice: false, isManualLeader: true, isManualVice: false };
+    const viceObj = (vData.name && vData.power > 0)
+      ? { name: vData.name, power: vData.power, isLeader: false, isVice: true, isManualLeader: false, isManualVice: true }
+      : null;
 
     groups.push({
       index: i,
       leader: leaderObj,
-      manualVice: manualViceObj,
+      manualVice: viceObj,
       members: [],
-      totalPower: lData.power + (manualViceObj ? manualViceObj.power : 0),
+      totalPower: lData.power + (viceObj ? viceObj.power : 0)
     });
-    totalLeadersPower += lData.power;
+    totalLeadersPower += lData.power + (viceObj ? viceObj.power : 0);
   }
 
-  let totalMembersPower = 0;
-  pool.mainMembers.forEach((m) => {
-    totalMembersPower += m.power;
-  });
-
-  currentData.totalPeople = pool.uniqueNames.size;
-  currentData.totalPower = totalLeadersPower + totalMembersPower;
-  currentData.avgPower = Math.round(currentData.totalPower / 4);
-
-  let sortedMain = [...pool.mainMembers].sort((a, b) => b.power - a.power);
-  for (let member of sortedMain) {
+  const sortedMain = [...pool.mainMembers].sort((a, b) => b.power - a.power);
+  for (let m of sortedMain) {
     groups.sort((a, b) => a.totalPower - b.totalPower);
-    groups[0].members.push({
-      name: member.name,
-      power: member.power,
-      isLeader: false,
-      isVice: false,
-      isManualLeader: false,
-      isManualVice: false,
-    });
-    groups[0].totalPower += member.power;
+    groups[0].members.push({ name: m.name, power: m.power, isLeader: false, isVice: false, isManualLeader: false, isManualVice: false });
+    groups[0].totalPower += m.power;
   }
   groups.sort((a, b) => a.index - b.index);
 
   groups.forEach((g) => {
-    let allPeopleInGroup = [g.leader];
-    if (g.manualVice) allPeopleInGroup.push(g.manualVice);
-    g.members.forEach((m) => allPeopleInGroup.push(m));
+    const people = [g.leader];
+    if (g.manualVice) people.push(g.manualVice);
+    g.members.forEach((m) => people.push(m));
 
-    const bId1 = `b${g.index * 2}`;
-    const bId2 = `b${g.index * 2 + 1}`;
-    allPeopleInGroup.forEach((person, idx) => {
-      if (idx % 2 === 0) currentData.buildings[bId1].push(person);
-      else currentData.buildings[bId2].push(person);
+    const b1 = `b${g.index * 2}`;
+    const b2 = `b${g.index * 2 + 1}`;
+    people.forEach((person, idx) => {
+      currentData.buildings[idx % 2 === 0 ? b1 : b2].push(person);
     });
   });
 
@@ -748,66 +447,22 @@ function distributeMembers() {
   renderAll();
   const resSec = document.getElementById("resultSection");
   resSec.style.display = "block";
-  resSec.classList.add("fade-in-view");
   resSec.scrollIntoView({ behavior: "smooth", block: "start" });
-  if (currentData.currentLang === "en") changeLanguage("en");
 }
 
-function getFormattedText(isEn) {
-  let textOutput = "";
-  buildingsConfig.forEach((b) => {
-    const bName = isEn ? b.nameEn : b.nameZht;
-    let formattedNames = (currentData.buildings[b.id] || []).map((player) => player.name);
-    textOutput += `${bName}～ ${formattedNames.join(" & ")}\n`;
-  });
-
-  textOutput += "========================\n";
-
-  if (isEn) {
-    textOutput += `[Gathering Squad]:${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (None)"}\n`;
-    textOutput += `[Ammo Squad]:${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (None)"}`;
-  } else {
-    textOutput += `【採集小隊】：${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (無)"}\n`;
-    textOutput += `【子彈小隊】：${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (無)"}`;
-  }
-  return textOutput.trim();
-}
-
-function updateTextOutputOnly() {
-  let textOutput = "";
-  const isEn = currentData.copyLang === "en";
-
-  buildingsConfig.forEach((b) => {
-    const bName = isEn ? b.nameEn : b.nameZht;
-    let formattedNames = (currentData.buildings[b.id] || []).map((player) => player.name);
-    textOutput += `${bName}～ ${formattedNames.join(" & ")}\n`;
-  });
-
-  textOutput += "========================\n";
-
-  if (isEn) {
-    textOutput += `[Gathering Squad]:${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (None)"}\n`;
-    textOutput += `[Ammo Squad]:${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (None)"}`;
-  } else {
-    textOutput += `【採集小隊】：${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (無)"}\n`;
-    textOutput += `【子彈小隊】：${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (無)"}`;
-  }
-
-  document.getElementById("copyTextarea").value = textOutput.trim();
-}
-
+// 5. 看板渲染與行內快速新增/刪除
 function reorderCommanders() {
   buildingsConfig.forEach((b) => {
-    let list = currentData.buildings[b.id];
+    const list = currentData.buildings[b.id];
     if (!list || list.length === 0) return;
 
-    let leaderIdx = list.findIndex((p) => p.isManualLeader || p.isLeader);
-    let leaderObj = leaderIdx !== -1 ? list.splice(leaderIdx, 1)[0] : null;
+    const lIdx = list.findIndex((p) => p.isManualLeader || p.isLeader);
+    const leaderObj = lIdx !== -1 ? list.splice(lIdx, 1)[0] : null;
 
-    let manualViceIdx = list.findIndex((p) => p.isManualVice);
-    let manualViceObj = manualViceIdx !== -1 ? list.splice(manualViceIdx, 1)[0] : null;
+    const vIdx = list.findIndex((p) => p.isManualVice);
+    const manualViceObj = vIdx !== -1 ? list.splice(vIdx, 1)[0] : null;
 
-    list.forEach((p) => { p.isVice = false; });
+    list.forEach((p) => (p.isVice = false));
     list.sort((a, b) => b.power - a.power);
 
     if (manualViceObj) {
@@ -821,507 +476,285 @@ function reorderCommanders() {
   });
 }
 
-function calculateCurrentGridTotals() {
+function calculateTotals() {
   let totalPower = 0;
-  let uniqueNames = new Set();
+  const names = new Set();
 
   buildingsConfig.forEach((b) => {
     (currentData.buildings[b.id] || []).forEach((p) => {
       totalPower += p.power || 0;
-      if (p.name) uniqueNames.add(p.name);
+      if (p.name) names.add(p.name);
     });
   });
 
-  (currentData.unassignedPool || []).forEach((p) => {
-    totalPower += p.power || 0;
-    if (p.name) uniqueNames.add(p.name);
+  (currentData.manualGatherText ? currentData.manualGatherText.split("\n") : []).forEach((n) => {
+    if (n.trim()) names.add(n.trim());
+  });
+  (currentData.manualAmmoText ? currentData.manualAmmoText.split("\n") : []).forEach((n) => {
+    if (n.trim()) names.add(n.trim());
   });
 
-  let gatherArr = currentData.manualGatherText ? currentData.manualGatherText.split("\n") : [];
-  gatherArr.forEach((n) => { if (n.trim()) uniqueNames.add(n.trim()); });
-
-  let ammoArr = currentData.manualAmmoText ? currentData.manualAmmoText.split("\n") : [];
-  ammoArr.forEach((n) => { if (n.trim()) uniqueNames.add(n.trim()); });
-
-  currentData.totalPeople = uniqueNames.size;
+  currentData.totalPeople = names.size;
   currentData.totalPower = totalPower;
   currentData.avgPower = Math.round(totalPower / 4);
 }
 
-function toggleAccordionGroup(groupId) {
-  const group = document.getElementById(groupId);
-  if (group) group.classList.toggle("closed");
-}
+function inlineAddPlayer(targetId) {
+  const nameInput = document.getElementById(`inName_${targetId}`);
+  const powerInput = document.getElementById(`inPower_${targetId}`);
+  const name = nameInput ? nameInput.value.trim() : "";
+  const power = powerInput ? parseInt(powerInput.value) || 0 : 0;
 
-function removePlayer(sourceId, pIdx, event) {
-  if (event) event.stopPropagation();
+  if (!name) return;
 
-  if (sourceId === "unassignedPool") {
-    currentData.unassignedPool.splice(pIdx, 1);
-  } else if (sourceId === "gather") {
-    let arr = currentData.manualGatherText ? currentData.manualGatherText.split("\n") : [];
-    arr.splice(pIdx, 1);
-    currentData.manualGatherText = arr.join("\n");
-    document.getElementById("gatherInput").value = currentData.manualGatherText;
-  } else if (sourceId === "ammo") {
-    let arr = currentData.manualAmmoText ? currentData.manualAmmoText.split("\n") : [];
-    arr.splice(pIdx, 1);
-    currentData.manualAmmoText = arr.join("\n");
-    document.getElementById("ammoInput").value = currentData.manualAmmoText;
-  } else if (currentData.buildings[sourceId]) {
-    currentData.buildings[sourceId].splice(pIdx, 1);
-  }
-
-  renderAll();
-}
-
-function openQuickAddModal(targetId) {
-  quickAddTarget = targetId;
-  const p = langPack[currentData.currentLang];
-  const isSpec = targetId === "gather" || targetId === "ammo";
-  document.getElementById("quickAddName").value = "";
-  document.getElementById("quickAddPower").value = "";
-  document.getElementById("quickAddPowerGroup").style.display = isSpec ? "none" : "block";
-
-  let title = p.quickAddTitleDefault;
-  if (targetId === "gather") title = p.quickAddTitleGather;
-  else if (targetId === "ammo") title = p.quickAddTitleAmmo;
-  else {
-    const b = buildingsConfig.find((item) => item.id === targetId);
-    if (b) {
-      const bName = currentData.currentLang === "en" ? b.nameEn : b.nameZht;
-      title = `${p.quickAddTitlePrefix}${bName}`;
-    }
-  }
-
-  document.getElementById("uiAddMemberTitle").innerText = title;
-  document.getElementById("uiQuickAddNameLabel").innerText = p.quickAddLabelName;
-  document.getElementById("quickAddName").placeholder = p.quickAddPlaceholderName;
-  document.getElementById("uiQuickAddPowerLabel").innerText = p.quickAddLabelPower;
-  document.getElementById("quickAddPower").placeholder = p.quickAddPlaceholderPower;
-  document.getElementById("btnQuickAddCancel").innerText = p.btnQuickAddCancel;
-  document.getElementById("btnQuickAddConfirm").innerText = p.btnQuickAddConfirm;
-
-  document.getElementById("addMemberQuickModal").style.display = "flex";
-  document.getElementById("quickAddName").focus();
-}
-
-function closeQuickAddModal() {
-  document.getElementById("addMemberQuickModal").style.display = "none";
-}
-
-function confirmQuickAdd() {
-  const name = document.getElementById("quickAddName").value.trim();
-  const power = parseInt(document.getElementById("quickAddPower").value) || 0;
-
-  if (!name) {
-    alert("請輸入成員名稱！");
-    return;
-  }
-
-  if (quickAddTarget === "gather") {
-    let cur = document.getElementById("gatherInput").value.trim();
+  if (targetId === "gather") {
+    const cur = document.getElementById("gatherInput").value.trim();
     document.getElementById("gatherInput").value = cur ? `${cur}\n${name}` : name;
     currentData.manualGatherText = document.getElementById("gatherInput").value;
-  } else if (quickAddTarget === "ammo") {
-    let cur = document.getElementById("ammoInput").value.trim();
+  } else if (targetId === "ammo") {
+    const cur = document.getElementById("ammoInput").value.trim();
     document.getElementById("ammoInput").value = cur ? `${cur}\n${name}` : name;
     currentData.manualAmmoText = document.getElementById("ammoInput").value;
-  } else if (currentData.buildings[quickAddTarget]) {
-    currentData.buildings[quickAddTarget].push({
-      name: name,
-      power: power,
+  } else if (currentData.buildings[targetId]) {
+    currentData.buildings[targetId].push({
+      name,
+      power,
       isLeader: false,
       isVice: false,
       isManualLeader: false,
-      isManualVice: false,
+      isManualVice: false
     });
   }
 
-  closeQuickAddModal();
   renderAll();
 }
 
-function createBuildingCardElement(b, p) {
-  const card = document.createElement("div");
-  card.className = `building-card b-group-${b.gIdx}`;
-  card.id = b.id;
+function removePlayer(sourceId, idx, event) {
+  if (event) event.stopPropagation();
 
-  card.addEventListener("dragover", dragOver);
-  card.addEventListener("dragenter", dragEnter);
-  card.addEventListener("dragleave", dragLeave);
-  card.addEventListener("drop", dragDrop);
+  if (sourceId === "gather") {
+    const arr = currentData.manualGatherText.split("\n");
+    arr.splice(idx, 1);
+    currentData.manualGatherText = arr.join("\n");
+    document.getElementById("gatherInput").value = currentData.manualGatherText;
+  } else if (sourceId === "ammo") {
+    const arr = currentData.manualAmmoText.split("\n");
+    arr.splice(idx, 1);
+    currentData.manualAmmoText = arr.join("\n");
+    document.getElementById("ammoInput").value = currentData.manualAmmoText;
+  } else if (currentData.buildings[sourceId]) {
+    currentData.buildings[sourceId].splice(idx, 1);
+  }
 
-  let bPower = 0;
-  (currentData.buildings[b.id] || []).forEach((pObj) => (bPower += pObj.power));
-
-  let pTagsHtml = "";
-  (currentData.buildings[b.id] || []).forEach((player, pIdx) => {
-    let roleClass = "";
-    let roleLabel = "";
-    if (player.isLeader) {
-      roleClass = "is-leader";
-      roleLabel = `<span class="tag-leader-label">${p.leaderTag}</span>`;
-    } else if (player.isVice) {
-      roleClass = "is-vice";
-      roleLabel = `<span class="tag-vice-label">${p.viceTag}</span>`;
-    }
-
-    const isLocked = player.isManualLeader || player.isManualVice;
-    const canDrag = !isLocked;
-    const dragAttr = canDrag
-      ? `draggable="true" ondragstart="dragStart(event, '${b.id}', ${pIdx})"`
-      : `draggable="false" style="cursor:not-allowed;" title="${p.lockedLeaderTip}"`;
-
-    const rightHtml = isLocked
-      ? `<span class="player-power-val">${player.power || 0}</span>`
-      : `
-          <span class="player-power-val">${player.power || 0}</span>
-          <button class="btn-player-delete" onclick="removePlayer('${b.id}', ${pIdx}, event)" title="${p.deleteBtnTitle}">🗑️</button>
-        `;
-
-    pTagsHtml += `
-      <div class="player-tag ${roleClass} ${isLocked ? "is-locked" : ""}" ${dragAttr}>
-          <span>${roleLabel}${player.name}</span>
-          ${rightHtml}
-      </div>
-    `;
-  });
-
-  card.innerHTML = `
-    <div class="building-title">${currentData.currentLang === "en" ? b.nameEn : b.nameZht}</div>
-    <div class="building-power">${p.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
-    <div class="drop-zone">${pTagsHtml}</div>
-    <button class="btn-card-add" onclick="openQuickAddModal('${b.id}')">${p.btnAddMemberCard}</button>
-  `;
-  return card;
-}
-
-function createUnassignedPoolCard(p) {
-  const card = document.createElement("div");
-  card.className = "building-card b-group-unassigned";
-  card.id = "unassignedPool";
-
-  card.addEventListener("dragover", dragOver);
-  card.addEventListener("dragenter", dragEnter);
-  card.addEventListener("dragleave", dragLeave);
-  card.addEventListener("drop", dragDrop);
-
-  let poolTagsHtml = "";
-  currentData.unassignedPool.forEach((player, pIdx) => {
-    poolTagsHtml += `
-      <div class="player-tag" draggable="true" ondragstart="dragStart(event, 'unassignedPool', ${pIdx})">
-          <span>🎒 ${player.name}</span>
-          <span class="player-power-val">${player.power || 0}</span>
-          <button class="btn-player-delete" onclick="removePlayer('unassignedPool', ${pIdx}, event)" title="${p.deleteBtnTitle}">🗑️</button>
-      </div>
-    `;
-  });
-
-  card.innerHTML = `
-    <div class="building-title" style="color:#ff66ff;">${p.unassignedTitle} (${currentData.unassignedPool.length}${currentData.currentLang === "en" ? "" : "人"})</div>
-    <div class="building-power" style="color:#f0abfc;">${p.unassignedDesc}</div>
-    <div class="drop-zone">${poolTagsHtml}</div>
-  `;
-  return card;
+  renderAll();
 }
 
 function renderAll() {
   reorderCommanders();
-  calculateCurrentGridTotals();
+  calculateTotals();
 
   const p = langPack[currentData.currentLang];
+  const isEn = currentData.currentLang === "en";
 
   document.getElementById("summaryBox").innerHTML = `
-      <p>${p.summaryText[0]} <strong>${currentData.totalPeople}</strong></p>
-      <p>${p.summaryText[1]} <strong>${currentData.totalPower.toLocaleString()}</strong></p>
-      <p>${p.summaryText[2]} <strong>${currentData.avgPower.toLocaleString()}</strong></p>
+    <span>${p.summaryText[0]} <strong>${currentData.totalPeople}</strong></span>
+    <span>${p.summaryText[1]} <strong>${currentData.totalPower.toLocaleString()}</strong></span>
+    <span>${p.summaryText[2]} <strong>${currentData.avgPower.toLocaleString()}</strong></span>
   `;
 
   const grid = document.getElementById("buildingGrid");
   grid.innerHTML = "";
 
-  const isMobileView = window.innerWidth <= 1200;
+  // 特殊小隊卡片
+  const createSpecCard = (type, title, label, textVal, badgeIcon) => {
+    const card = document.createElement("div");
+    card.className = "building-card b-group-spec";
+    const arr = textVal ? textVal.split("\n").filter((n) => n.trim()) : [];
+    const tagsHtml = arr.map((name, idx) => `
+      <div class="player-tag" style="cursor:default;">
+        <span>${badgeIcon} ${name.trim()}</span>
+        <button class="btn-del-mini" onclick="removePlayer('${type}', ${idx}, event)" title="移除">✕</button>
+      </div>
+    `).join("");
 
-  const gatherCard = document.createElement("div");
-  gatherCard.className = "building-card b-group-spec";
-  let gatherArr = currentData.manualGatherText ? currentData.manualGatherText.split("\n") : [];
-  let gatherTags = gatherArr
-    .map((name, idx) =>
-      name.trim()
-        ? `
-    <div class="player-tag" style="cursor:default;">
-      <span>⚡ ${name.trim()}</span>
-      <span class="player-power-val"></span>
-      <button class="btn-player-delete" onclick="removePlayer('gather', ${idx}, event)" title="${p.deleteBtnTitle}">🗑️</button>
-    </div>`
-        : "",
-    )
-    .join("");
-  gatherCard.innerHTML = `
-    <div class="building-title">${p.specTitleGather}</div>
-    <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabel : p.specLabelGather}</div>
-    <div class="drop-zone">${gatherTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
-    <button class="btn-card-add" onclick="openQuickAddModal('gather')">${p.btnAddGatherMember}</button>
-  `;
+    card.innerHTML = `
+      <div class="building-title">${title}</div>
+      <div class="building-power">${label}</div>
+      <div class="drop-zone">${tagsHtml}</div>
+      <div class="inline-add-row">
+        <input type="text" class="in-name" id="inName_${type}" placeholder="${isEn ? "Add name..." : "輸入名字..."}" onkeydown="if(event.key==='Enter') inlineAddPlayer('${type}')" />
+        <button type="button" class="btn-inline-add" onclick="inlineAddPlayer('${type}')">+</button>
+      </div>
+    `;
+    return card;
+  };
 
-  const ammoCard = document.createElement("div");
-  ammoCard.className = "building-card b-group-spec";
-  let ammoArr = currentData.manualAmmoText ? currentData.manualAmmoText.split("\n") : [];
-  let ammoTags = ammoArr
-    .map((name, idx) =>
-      name.trim()
-        ? `
-    <div class="player-tag" style="cursor:default; border-color:#ff3838;">
-      <span>🎒 ${name.trim()}</span>
-      <span class="player-power-val"></span>
-      <button class="btn-player-delete" onclick="removePlayer('ammo', ${idx}, event)" title="${p.deleteBtnTitle}">🗑️</button>
-    </div>`
-        : "",
-    )
-    .join("");
-  ammoCard.innerHTML = `
-    <div class="building-title">${p.specTitleAmmo}</div>
-    <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabelAmmo : p.specLabelAmmo}</div>
-    <div class="drop-zone">${ammoTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
-    <button class="btn-card-add" onclick="openQuickAddModal('ammo')">${p.btnAddAmmoMember}</button>
-  `;
+  const gatherCard = createSpecCard("gather", p.specTitleGather, p.specLabelGather, currentData.manualGatherText, "⚡");
+  const ammoCard = createSpecCard("ammo", p.specTitleAmmo, p.specLabelAmmo, currentData.manualAmmoText, "🎒");
 
-  if (isMobileView) {
-    for (let g = 0; g < 4; g++) {
-      const groupWrap = document.createElement("div");
-      groupWrap.className = "accordion-group";
-      groupWrap.id = `accGroup_${g}`;
+  buildingsConfig.forEach((b, idx) => {
+    const card = document.createElement("div");
+    card.className = `building-card b-group-${b.gIdx}`;
+    card.id = b.id;
 
-      const header = document.createElement("div");
-      header.className = "accordion-header";
-      header.onclick = () => toggleAccordionGroup(`accGroup_${g}`);
-      header.innerHTML = `
-        <span>▼ ${p.groupTitles[g]}</span>
-        <span class="accordion-icon">▲</span>
+    card.addEventListener("dragover", (e) => e.preventDefault());
+    card.addEventListener("dragenter", function (e) { e.preventDefault(); this.classList.add("drag-over"); });
+    card.addEventListener("dragleave", function () { this.classList.remove("drag-over"); });
+    card.addEventListener("drop", handleDrop);
+
+    const list = currentData.buildings[b.id] || [];
+    const bPower = list.reduce((sum, item) => sum + (item.power || 0), 0);
+
+    const tagsHtml = list.map((player, pIdx) => {
+      let roleClass = "";
+      let badge = "";
+      if (player.isLeader) {
+        roleClass = "is-leader";
+        badge = `<span class="tag-badge tag-leader-label">${p.leaderTag}</span>`;
+      } else if (player.isVice) {
+        roleClass = "is-vice";
+        badge = `<span class="tag-badge tag-vice-label">${p.viceTag}</span>`;
+      }
+
+      const isLocked = player.isManualLeader || player.isManualVice;
+      const dragAttr = !isLocked ? `draggable="true" ondragstart="dragStart(event, '${b.id}', ${pIdx})"` : "";
+      const delBtn = !isLocked ? `<button class="btn-del-mini" onclick="removePlayer('${b.id}', ${pIdx}, event)" title="移除">✕</button>` : "";
+
+      return `
+        <div class="player-tag ${roleClass}" ${dragAttr}>
+          <span>${badge}${player.name}</span>
+          <div class="player-right">
+            <span class="player-power-val">${player.power || 0}</span>
+            ${delBtn}
+          </div>
+        </div>
       `;
+    }).join("");
 
-      const body = document.createElement("div");
-      body.className = "accordion-body";
-
-      const b1 = buildingsConfig[g * 2];
-      const b2 = buildingsConfig[g * 2 + 1];
-
-      body.appendChild(createBuildingCardElement(b1, p));
-      body.appendChild(createBuildingCardElement(b2, p));
-
-      groupWrap.appendChild(header);
-      groupWrap.appendChild(body);
-      grid.appendChild(groupWrap);
-    }
-
-    const specWrap = document.createElement("div");
-    specWrap.className = "accordion-group";
-    specWrap.id = "accGroup_spec";
-
-    const specHeader = document.createElement("div");
-    specHeader.className = "accordion-header";
-    specHeader.onclick = () => toggleAccordionGroup("accGroup_spec");
-    specHeader.innerHTML = `
-      <span>▼ ${p.groupTitles[4]}</span>
-      <span class="accordion-icon">▲</span>
+    card.innerHTML = `
+      <div class="building-title">${isEn ? b.nameEn : b.nameZht}</div>
+      <div class="building-power">${p.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
+      <div class="drop-zone">${tagsHtml}</div>
+      <div class="inline-add-row">
+        <input type="text" class="in-name" id="inName_${b.id}" placeholder="${isEn ? "Name" : "名字"}" onkeydown="if(event.key==='Enter') inlineAddPlayer('${b.id}')" />
+        <input type="number" class="in-power" id="inPower_${b.id}" placeholder="${isEn ? "Power" : "戰力"}" onkeydown="if(event.key==='Enter') inlineAddPlayer('${b.id}')" />
+        <button type="button" class="btn-inline-add" onclick="inlineAddPlayer('${b.id}')">+</button>
+      </div>
     `;
 
-    const specBody = document.createElement("div");
-    specBody.className = "accordion-body";
-    specBody.appendChild(gatherCard);
-    specBody.appendChild(ammoCard);
+    grid.appendChild(card);
 
-    specWrap.appendChild(specHeader);
-    specWrap.appendChild(specBody);
-    grid.appendChild(specWrap);
-
-    if (currentData.unassignedPool && currentData.unassignedPool.length > 0) {
-      grid.appendChild(createUnassignedPoolCard(p));
+    if (idx === 3) {
+      grid.appendChild(gatherCard);
+      grid.appendChild(ammoCard);
     }
-  } else {
-    buildingsConfig.forEach((b, idx) => {
-      const card = createBuildingCardElement(b, p);
-      grid.appendChild(card);
-
-      if (idx === 3) {
-        grid.appendChild(gatherCard);
-        grid.appendChild(ammoCard);
-      }
-    });
-
-    if (currentData.unassignedPool && currentData.unassignedPool.length > 0) {
-      const poolCard = createUnassignedPoolCard(p);
-      poolCard.style.gridColumn = "span 6";
-      grid.appendChild(poolCard);
-    }
-  }
+  });
 
   updateTextOutputOnly();
 }
 
-window.addEventListener("resize", () => {
-  if (document.getElementById("resultSection").style.display !== "none") {
-    renderAll();
-  }
-});
-
-let draggedFromBuildingId = null;
-let draggedPlayerIdx = null;
+// 拖曳交換邏輯
+let dragFromId = null;
+let dragIdx = null;
 
 function dragStart(e, bId, pIdx) {
-  draggedFromBuildingId = bId;
-  draggedPlayerIdx = pIdx;
+  dragFromId = bId;
+  dragIdx = pIdx;
   e.dataTransfer.setData("text/plain", bId);
 }
-function dragOver(e) { e.preventDefault(); }
-function dragEnter(e) {
-  e.preventDefault();
-  this.classList.add("drag-over");
-}
-function dragLeave() { this.classList.remove("drag-over"); }
 
-function dragDrop() {
+function handleDrop() {
   this.classList.remove("drag-over");
-  const targetBuildingId = this.id;
+  const targetId = this.id;
+  if (!targetId || dragFromId === targetId) return;
 
-  if (targetBuildingId === "") return;
-  if (draggedFromBuildingId === targetBuildingId) return;
+  const moving = currentData.buildings[dragFromId]?.splice(dragIdx, 1)[0];
+  if (!moving) return;
 
-  let movingPlayer = null;
-  if (draggedFromBuildingId === "unassignedPool") {
-    movingPlayer = currentData.unassignedPool.splice(draggedPlayerIdx, 1)[0];
-  } else if (currentData.buildings[draggedFromBuildingId]) {
-    movingPlayer = currentData.buildings[draggedFromBuildingId].splice(draggedPlayerIdx, 1)[0];
-  }
-
-  if (!movingPlayer) return;
-
-  if (!movingPlayer.isManualLeader) {
-    movingPlayer.isVice = false;
-  }
-
-  if (targetBuildingId === "unassignedPool") {
-    currentData.unassignedPool.push(movingPlayer);
-  } else if (currentData.buildings[targetBuildingId]) {
-    currentData.buildings[targetBuildingId].push(movingPlayer);
-  }
-
+  if (!moving.isManualLeader) moving.isVice = false;
+  currentData.buildings[targetId].push(moving);
   renderAll();
 }
 
+// 6. 文字名單產生與複製
+function getFormattedText(isEn) {
+  let out = "";
+  buildingsConfig.forEach((b) => {
+    const bName = isEn ? b.nameEn : b.nameZht;
+    const names = (currentData.buildings[b.id] || []).map((pl) => pl.name);
+    out += `${bName}～ ${names.join(" & ")}\n`;
+  });
+  out += "========================\n";
+  if (isEn) {
+    out += `[Gathering Squad]:${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (None)"}\n`;
+    out += `[Ammo Squad]:${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (None)"}`;
+  } else {
+    out += `【採集小隊】：${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (無)"}\n`;
+    out += `【子彈小隊】：${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (無)"}`;
+  }
+  return out.trim();
+}
+
+function updateTextOutputOnly() {
+  document.getElementById("copyTextarea").value = getFormattedText(currentData.copyLang === "en");
+}
+
 function copyTextOutput() {
-  const copyTextarea = document.getElementById("copyTextarea");
-  copyTextarea.select();
-  copyTextarea.setSelectionRange(0, 99999);
-  navigator.clipboard.writeText(copyTextarea.value);
+  const ta = document.getElementById("copyTextarea");
+  ta.select();
+  navigator.clipboard.writeText(ta.value);
   alert(langPack[currentData.currentLang].alertSuccess);
 }
 
-function showError(msg) {
-  const errorDiv = document.getElementById("errorMessage");
-  errorDiv.innerText = msg;
-  errorDiv.style.display = "block";
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
+// 7. 乾淨清爽一鍵匯出圖片
 function captureBuildingGrid() {
   const btn = document.getElementById("btnScreenshot");
-  const originalText = btn.innerText;
-
-  btn.innerText = "⏳ Processing...";
+  const origHtml = btn.innerHTML;
+  btn.innerText = "⏳ 匯出中...";
   btn.disabled = true;
 
-  const p = langPack[currentData.currentLang];
+  const exportWrap = document.createElement("div");
+  exportWrap.className = "export-board-wrapper";
 
-  const tempContainer = document.createElement("div");
-  tempContainer.className = "capture-grid-forced";
-
-  const watermark = document.createElement("div");
-  watermark.className = "capture-watermark";
-  watermark.innerText = "2647 RGN";
-  tempContainer.appendChild(watermark);
-
-  const smallWatermark = document.createElement("div");
-  smallWatermark.className = "capture-bottom-right-watermark";
-  smallWatermark.innerText = "TSENG";
-  tempContainer.appendChild(smallWatermark);
-
-  const gatherCard = document.createElement("div");
-  gatherCard.className = "building-card b-group-spec";
-  let gatherArr = currentData.manualGatherText ? currentData.manualGatherText.split("\n") : [];
-  let gatherTags = gatherArr
-    .map((name) => name.trim() ? `<div class="player-tag" style="cursor:default;"><span>⚡ ${name.trim()}</span></div>` : "")
-    .join("");
-  gatherCard.innerHTML = `
-    <div class="building-title">${p.specTitleGather}</div>
-    <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabel : p.specLabelGather}</div>
-    <div class="drop-zone">${gatherTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
+  const titleStr = currentEditingTitle || document.getElementById("publishTitleInput").value || "2647 RGN 兵工廠人員分配表";
+  exportWrap.innerHTML = `
+    <div class="export-header">
+      <div class="export-title">${titleStr}</div>
+      <div class="export-meta">總人數：${currentData.totalPeople} 人 ｜ 總戰力：${currentData.totalPower.toLocaleString()} ｜ 2647 RGN</div>
+    </div>
   `;
 
-  const ammoCard = document.createElement("div");
-  ammoCard.className = "building-card b-group-spec";
-  let ammoArr = currentData.manualAmmoText ? currentData.manualAmmoText.split("\n") : [];
-  let ammoTags = ammoArr
-    .map((name) => name.trim() ? `<div class="player-tag" style="border-color:#ff3838;"><span>🎒 ${name.trim()}</span></div>` : "")
-    .join("");
-  ammoCard.innerHTML = `
-    <div class="building-title">${p.specTitleAmmo}</div>
-    <div class="building-power">${currentData.currentLang === "en" ? p.specPowerLabelAmmo : p.specLabelAmmo}</div>
-    <div class="drop-zone">${ammoTags || `<div style="color:var(--text-muted);font-size:0.85rem;padding:10px;">${currentData.currentLang === "en" ? "(None)" : "(未指派人員)"}</div>`}</div>
-  `;
+  const clonedGrid = document.getElementById("buildingGrid").cloneNode(true);
+  exportWrap.appendChild(clonedGrid);
+  document.body.appendChild(exportWrap);
 
-  buildingsConfig.forEach((b, idx) => {
-    const card = createBuildingCardElement(b, p);
-    tempContainer.appendChild(card);
-
-    if (idx === 3) {
-      tempContainer.appendChild(gatherCard);
-      tempContainer.appendChild(ammoCard);
-    }
-  });
-
-  // 截圖前自動移除「新增按鈕」與「刪除垃圾桶」
-  tempContainer.querySelectorAll(".btn-card-add, .btn-player-delete").forEach((el) => el.remove());
-
-  document.body.appendChild(tempContainer);
-
-  html2canvas(tempContainer, {
-    backgroundColor: "#0f1524",
+  html2canvas(exportWrap, {
+    backgroundColor: "#0b0f19",
     scale: 2,
     useCORS: true,
-    width: 1400,
-  })
-    .then((canvas) => {
-      const link = document.createElement("a");
-      const now = new Date();
-      const timestamp = `${now.getFullYear()}${now.getMonth() + 1}${now.getDate()}_${now.getHours()}${now.getMinutes()}`;
-      link.download = `兵工廠人員分配表_${timestamp}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+    width: 1360
+  }).then((canvas) => {
+    const link = document.createElement("a");
+    const d = new Date();
+    const ts = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+    link.download = `兵工廠人員分配表_${ts}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
 
-      document.body.removeChild(tempContainer);
-      btn.innerText = originalText;
-      btn.disabled = false;
-    })
-    .catch((err) => {
-      console.error("截圖失敗：", err);
-      alert("截圖失敗，請稍後再試！");
-      if (document.body.contains(tempContainer)) {
-        document.body.removeChild(tempContainer);
-      }
-      btn.innerText = originalText;
-      btn.disabled = false;
-    });
+    document.body.removeChild(exportWrap);
+    btn.innerHTML = origHtml;
+    btn.disabled = false;
+  }).catch(() => {
+    document.body.removeChild(exportWrap);
+    btn.innerHTML = origHtml;
+    btn.disabled = false;
+    alert("匯出圖片失敗，請稍後再試！");
+  });
 }
 
+// 8. 編輯歷史紀錄（只顯示 [軍團] 標題，無時間戳記，一鍵直達）
 function openLoadHistoryModal() {
-  if (!GAS_WEB_APP_URL) {
-    alert("請先設定 GAS_WEB_APP_URL！");
-    return;
-  }
-
-  fetch(`${GAS_WEB_APP_URL}?action=getHistory&t=${new Date().getTime()}`)
+  fetch(`${GAS_WEB_APP_URL}?action=getHistory&t=${Date.now()}`)
     .then((res) => res.json())
     .then((res) => {
       if (res.status === "empty" || !res.history || res.history.length === 0) {
@@ -1335,19 +768,22 @@ function openLoadHistoryModal() {
       for (let i = historyRecordsList.length - 1; i >= 0; i--) {
         const item = historyRecordsList[i];
         const option = document.createElement("option");
-        option.value = item.rowIndex;
-        const lockIcon = item.hasPasscode ? "🔒 " : "";
-        option.innerText = `${lockIcon}[${item.updateTime}] ${item.title} (${item.author})`;
+        // 將列號與該筆紀錄的軍團一起綁定在 value 中
+        const legionCode = item.activeLegion === "LegionB" ? "LegionB" : "LegionA";
+        option.value = `${item.rowIndex}|${legionCode}`;
+
+        let legionTag = "[軍團 1]";
+        if (item.activeLegion === "LegionB") legionTag = "[軍團 2]";
+        else if (item.activeLegion === "both") legionTag = "[軍團 1 & 2]";
+
+        // 乾淨只顯示：[軍團] 標題 (發布者)，徹底拿掉時間戳記
+        option.innerText = `${legionTag} ${item.title} (${item.author})`;
         select.appendChild(option);
       }
 
-      document.getElementById("loadPasscodeInput").value = "";
       document.getElementById("loadHistoryModal").style.display = "flex";
     })
-    .catch((err) => {
-      console.error("無法取得歷史紀錄：", err);
-      alert("無法連線至雲端讀取歷史紀錄。");
-    });
+    .catch(() => alert("無法連線至雲端讀取歷史紀錄。"));
 }
 
 function closeLoadHistoryModal() {
@@ -1355,120 +791,62 @@ function closeLoadHistoryModal() {
 }
 
 function fetchAndRestoreGridData() {
-  const rowIndex = parseInt(document.getElementById("loadHistorySelect").value);
-  const selectedLegion = document.getElementById("loadLegionSelect").value;
-  const passcode = document.getElementById("loadPasscodeInput").value.trim();
+  const val = document.getElementById("loadHistorySelect").value;
+  if (!val) return;
+  const [rowIndexStr, autoLegion] = val.split("|");
+  const rowIndex = parseInt(rowIndexStr);
 
-  let url = `${GAS_WEB_APP_URL}?action=getHistory&rowIndex=${rowIndex}&t=${new Date().getTime()}`;
-  if (passcode) {
-    url += `&passcode=${encodeURIComponent(passcode)}`;
-  }
-
-  fetch(url)
+  fetch(`${GAS_WEB_APP_URL}?action=getHistory&rowIndex=${rowIndex}&t=${Date.now()}`)
     .then((res) => res.json())
     .then((res) => {
-      if (res.status === "locked") {
-        alert("密碼驗證失敗！該紀錄受密碼保護，請輸入正確密碼。");
-        return;
-      }
-
       if (res.status === "success" && res.payload) {
         const payload = res.payload;
-        let legionData = payload;
+        const selectedLegion = payload.activeLegion || autoLegion || "LegionA";
+        const legionData = (payload.legions && payload.legions[selectedLegion]) ? payload.legions[selectedLegion] : payload;
 
-        if (payload.legions && payload.legions[selectedLegion]) {
-          legionData = payload.legions[selectedLegion];
-        }
-
-        if (legionData.buildings) {
-          currentData.buildings = legionData.buildings;
-        }
-        currentData.unassignedPool = [];
+        if (legionData.buildings) currentData.buildings = legionData.buildings;
         currentData.manualGatherText = legionData.manualGatherText || "";
         currentData.manualAmmoText = legionData.manualAmmoText || "";
+
+        document.getElementById("gatherInput").value = currentData.manualGatherText;
+        document.getElementById("ammoInput").value = currentData.manualAmmoText;
 
         currentEditingRowIndex = rowIndex;
         currentEditingLegion = selectedLegion;
         currentEditingTitle = res.title || "";
-        currentEditingAuthor =
-          res.author || (currentUser ? currentUser.displayName : "指揮官");
+        currentEditingAuthor = res.author || (currentUser ? currentUser.displayName : "指揮官");
 
         document.getElementById("publishLegionSelect").value = selectedLegion;
         document.getElementById("publishTitleInput").value = currentEditingTitle;
         document.getElementById("publishAuthorInput").value = currentEditingAuthor;
 
-        document.getElementById("editingNoticeText").innerText =
-          `✏️ 目前正在編輯歷史紀錄「${res.title}」(${selectedLegion === "LegionA" ? "軍團1" : "軍團2"}) - 發布時將覆蓋原資料`;
+        const legionLabel = selectedLegion === "LegionB" ? "軍團 2" : "軍團 1";
+        document.getElementById("editingNoticeText").innerText = `✏️ 正在編輯：[${legionLabel}] ${res.title}（發布時將直接覆蓋更新）`;
         document.getElementById("editingNoticeBar").style.display = "flex";
 
         closeLoadHistoryModal();
-
         renderAll();
         const resSec = document.getElementById("resultSection");
         resSec.style.display = "block";
-        resSec.classList.add("fade-in-view");
         resSec.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        alert("讀取失敗，資料格式有誤。");
       }
     })
-    .catch((err) => {
-      console.error("載入舊紀錄失敗：", err);
-      alert("載入舊紀錄時發生錯誤。");
-    });
+    .catch(() => alert("載入紀錄失敗"));
 }
 
 function exitEditMode() {
   currentEditingRowIndex = null;
   currentEditingTitle = "";
-  currentEditingAuthor = "";
   document.getElementById("editingNoticeBar").style.display = "none";
-  alert("已退出編輯模式，接下來發布將建立「全新紀錄」。");
 }
 
-function resetToInitialState() {
-  currentEditingRowIndex = null;
-  currentEditingTitle = "";
-  currentEditingAuthor = "";
-  document.getElementById("editingNoticeBar").style.display = "none";
-
-  for (let i = 0; i < 4; i++) {
-    document.getElementById(`leaderName${i}`).value = "";
-    document.getElementById(`leaderPower${i}`).value = "";
-    document.getElementById(`viceName${i}`).value = "";
-    document.getElementById(`vicePower${i}`).value = "";
-  }
-
-  document.getElementById("memberInput").value = "";
-  document.getElementById("gatherInput").value = "";
-  document.getElementById("ammoInput").value = "";
-
-  currentData.buildings = {
-    b0: [], b1: [], b2: [], b3: [],
-    b4: [], b5: [], b6: [], b7: []
-  };
-  currentData.unassignedPool = [];
-  currentData.manualGatherText = "";
-  currentData.manualAmmoText = "";
-  currentData.totalPeople = 0;
-  currentData.totalPower = 0;
-  currentData.avgPower = 0;
-
-  document.getElementById("resultSection").style.display = "none";
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
+// 9. 發布至雲端
 function getNextSundayDateString() {
   const now = new Date();
-  const dayOfWeek = now.getDay();
-  const distanceToSunday = (7 - dayOfWeek) % 7;
-  const sundayDate = new Date(now);
-  sundayDate.setDate(now.getDate() + distanceToSunday);
-
-  const year = sundayDate.getFullYear();
-  const month = String(sundayDate.getMonth() + 1).padStart(2, "0");
-  const day = String(sundayDate.getDate()).padStart(2, "0");
-  return `${year}/${month}/${day}`;
+  const diff = (7 - now.getDay()) % 7;
+  const sun = new Date(now);
+  sun.setDate(now.getDate() + diff);
+  return `${sun.getFullYear()}/${String(sun.getMonth() + 1).padStart(2, "0")}/${String(sun.getDate()).padStart(2, "0")}`;
 }
 
 function onPublishEventTypeChange() {
@@ -1482,64 +860,34 @@ function onPublishEventTypeChange() {
   } else if (type === "tundra") {
     tundraGroup.style.display = "block";
     const picker = document.getElementById("tundraDatePicker");
-    if (picker.value) onTundraDateChange();
-    else titleInput.value = `雪域兵器聯賽`;
-  } else if (type === "test") {
+    titleInput.value = picker.value ? `${picker.value.replace(/-/g, "/")} 雪域兵器聯賽` : "雪域兵器聯賽";
+  } else {
     tundraGroup.style.display = "none";
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    titleInput.value = `${year}/${month}/${day} 測試`;
+    const d = new Date();
+    titleInput.value = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")} 測試`;
   }
 }
 
 function onTundraDateChange() {
-  const pickerVal = document.getElementById("tundraDatePicker").value;
-  const titleInput = document.getElementById("publishTitleInput");
-  if (pickerVal) {
-    const formattedDate = pickerVal.replace(/-/g, "/");
-    titleInput.value = `${formattedDate} 雪域兵器聯賽`;
-  }
+  const val = document.getElementById("tundraDatePicker").value;
+  if (val) document.getElementById("publishTitleInput").value = `${val.replace(/-/g, "/")} 雪域兵器聯賽`;
 }
 
 function openPublishModal() {
   const eventGroup = document.getElementById("eventTypeGroup");
-  const tundraGroup = document.getElementById("tundraDatePickerGroup");
   const titleInput = document.getElementById("publishTitleInput");
-  const titleLabel = document.getElementById("lblPublishTitle");
   const authorInput = document.getElementById("publishAuthorInput");
 
   if (currentEditingRowIndex) {
     eventGroup.style.display = "none";
-    tundraGroup.style.display = "none";
-    titleLabel.innerText = "3. 發布紀錄標題 (沿用原紀錄)：";
-    titleInput.disabled = true;
-    titleInput.style.backgroundColor = "#060a12";
+    document.getElementById("tundraDatePickerGroup").style.display = "none";
     titleInput.value = currentEditingTitle;
     authorInput.value = currentEditingAuthor;
   } else {
     eventGroup.style.display = "block";
-    titleLabel.innerText = "3. 標題 / Title：(自動填入 / Auto fill in)：";
-    titleInput.disabled = true;
-    titleInput.style.backgroundColor = "#060a12";
     document.getElementById("publishEventTypeSelect").value = "foundry";
     onPublishEventTypeChange();
-
-    if (currentUser) {
-      authorInput.value = currentUser.displayName;
-    }
-  }
-
-  const headerTitle = document.getElementById("publishModalHeaderTitle");
-  const confirmBtn = document.getElementById("btnConfirmPublish");
-
-  if (currentEditingRowIndex) {
-    headerTitle.innerText = `💾 發布更新「${currentEditingTitle}」`;
-    confirmBtn.innerText = "確認並發布最新版";
-  } else {
-    headerTitle.innerText = langPack[currentData.currentLang].publishHeader;
-    confirmBtn.innerText = langPack[currentData.currentLang].btnConfirmPublish;
+    if (currentUser) authorInput.value = currentUser.displayName;
   }
 
   document.getElementById("publishModal").style.display = "flex";
@@ -1551,97 +899,64 @@ function closePublishModal() {
 
 function submitToGoogleSheet() {
   const title = document.getElementById("publishTitleInput").value.trim();
-  const author =
-    document.getElementById("publishAuthorInput").value.trim() ||
-    (currentUser ? currentUser.displayName : "指揮官");
-  const passcode = document.getElementById("publishPasscodeInput").value.trim();
+  const author = document.getElementById("publishAuthorInput").value.trim() || "指揮官";
   const activeLegion = document.getElementById("publishLegionSelect").value;
 
   if (!title) {
-    alert("請輸入標題！");
-    return;
-  }
-
-  if (!GAS_WEB_APP_URL) {
-    alert("錯誤：尚未設定 GAS_WEB_APP_URL！");
+    alert("請輸入紀錄標題！");
     return;
   }
 
   const btn = document.getElementById("btnConfirmPublish");
-  const originalBtnText = btn.innerText;
-  btn.innerText = "Processing...";
+  const orig = btn.innerText;
+  btn.innerText = "發布中...";
   btn.disabled = true;
-
-  const isEditingOldRecord = currentEditingRowIndex !== null;
 
   const legionData = {
     summary: {
       totalPeople: currentData.totalPeople,
       totalPower: currentData.totalPower,
-      avgPower: currentData.avgPower,
+      avgPower: currentData.avgPower
     },
     buildings: currentData.buildings,
     manualGatherText: currentData.manualGatherText,
     manualAmmoText: currentData.manualAmmoText,
     copyTextZht: getFormattedText(false),
-    copyTextEn: getFormattedText(true),
+    copyTextEn: getFormattedText(true)
   };
-
-  const legionsObj = {};
-  legionsObj[activeLegion] = legionData;
 
   const payload = {
     action: "publish",
-    title: title,
-    author: author,
-    passcode: passcode,
-    activeLegion: activeLegion,
-    legions: legionsObj,
+    title,
+    author,
+    passcode: "",
+    activeLegion,
+    legions: { [activeLegion]: legionData }
   };
 
-  if (currentEditingRowIndex) {
-    payload.rowIndex = currentEditingRowIndex;
-  }
+  if (currentEditingRowIndex) payload.rowIndex = currentEditingRowIndex;
 
   fetch(GAS_WEB_APP_URL, {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload)
   })
     .then((res) => res.json())
-    .then((data) => {
-      btn.innerText = originalBtnText;
+    .then(() => {
+      btn.innerText = orig;
       btn.disabled = false;
       closePublishModal();
-
-      if (data.status === "error") {
-        alert("作業失敗：" + data.message);
-      } else {
-        if (isEditingOldRecord) {
-          alert(`💾 成功覆寫更新歷史分配紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}\n\n檢視系統已自動同步至最新版本！`);
-        } else {
-          alert(`🎉 成功發布全新分配紀錄！\n標題：${title}\n分配員：${author}\n軍團：${activeLegion === "LegionA" ? "軍團1" : "軍團2"}`);
-        }
-        resetToInitialState();
-      }
+      alert(`✅ 發布成功！\n[${activeLegion === "LegionB" ? "軍團 2" : "軍團 1"}] ${title}`);
+      exitEditMode();
     })
-    .catch((err) => {
-      btn.innerText = originalBtnText;
+    .catch(() => {
+      btn.innerText = orig;
       btn.disabled = false;
-      console.error("發布完成：", err);
-      if (isEditingOldRecord) {
-        alert(`💾 成功覆寫更新歷史分配紀錄！\n標題：${title}\n分配員：${author}\n\n檢視系統已自動同步至最新版本！`);
-      } else {
-        alert(`🎉 成功發布全新分配紀錄！\n標題：${title}\n分配員：${author}`);
-      }
       closePublishModal();
-      resetToInitialState();
+      alert("✅ 已送出發布請求！");
     });
 }
 
 function InputTestData() {
-  const now = new Date();
-  const TestTitle = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} 測試`;
-  document.getElementById("publishTitleInput").value = TestTitle;
   document.getElementById("leaderName0").value = "炙炎梵天";
   document.getElementById("leaderName1").value = "Classic 陀螺";
   document.getElementById("leaderName2").value = "AKB";
@@ -1651,96 +966,5 @@ function InputTestData() {
   document.getElementById("leaderPower2").value = "35000";
   document.getElementById("leaderPower3").value = "38000";
   document.getElementById("memberInput").value =
-    "TSENG 8888 \nSophia 3089 \nLiam 4732 \nEmma 3540 \nOliver 4891 \nAva 3167\nLucas 4423 \nMia 3805 \nNoah 4158 \nIsabella 3290 \nJames 4612 \nCharlotte 3945 \nAlexander 4380 \nAmelia 3418 \nBenjamin 4073 \nHarper 3629";
-}
-
-function captureMapWithAllocation() {
-  const btn = document.getElementById("btnMapScreenshot");
-  const p = langPack[currentData.currentLang];
-  const originalText = btn ? btn.innerText : "";
-
-  if (btn) {
-    btn.innerText = p.mapProcessing;
-    btn.disabled = true;
-  }
-
-  const mapContainer = document.createElement("div");
-  mapContainer.id = "mapContainer";
-
-  const centerWatermark = document.createElement("div");
-  centerWatermark.className = "map-center-watermark";
-  centerWatermark.innerText = "2647 RGN 兵工廠人員分配";
-  mapContainer.appendChild(centerWatermark);
-
-  const mapCoords = {
-    b0: { top: "42%", left: "12%" },
-    b1: { top: "52%", left: "10%" },
-    b2: { top: "60%", left: "75%" },
-    b3: { top: "45%", left: "82%" },
-    b4: { top: "82%", left: "32%" },
-    b5: { top: "82%", left: "65%" },
-    b6: { top: "15%", left: "62%" },
-    b7: { top: "15%", left: "28%" },
-  };
-
-  buildingsConfig.forEach((b) => {
-    const coord = mapCoords[b.id];
-    if (!coord) return;
-
-    let playersHtml = (currentData.buildings[b.id] || [])
-      .map((pl) => `<div>• ${pl.name} (${pl.power})</div>`)
-      .join("");
-
-    const nodeDiv = document.createElement("div");
-    nodeDiv.className = "map-node-card";
-    nodeDiv.style.top = coord.top;
-    nodeDiv.style.left = coord.left;
-    nodeDiv.style.zIndex = "2";
-    nodeDiv.innerHTML = `
-      <div class="map-node-title">${b.nameZht}</div>
-      <div class="map-node-players">${playersHtml || "(無)"}</div>
-    `;
-    mapContainer.appendChild(nodeDiv);
-  });
-
-  const smallWatermark = document.createElement("div");
-  smallWatermark.className = "map-bottom-right-watermark";
-  smallWatermark.innerText = "TSENG";
-  smallWatermark.style.zIndex = "2";
-  mapContainer.appendChild(smallWatermark);
-
-  document.body.appendChild(mapContainer);
-
-  html2canvas(mapContainer, {
-    backgroundColor: null,
-    scale: 2,
-    useCORS: true,
-    width: 1200,
-    height: 1200,
-  })
-    .then((canvas) => {
-      const link = document.createElement("a");
-      const now = new Date();
-      const timestamp = `${now.getFullYear()}${now.getMonth() + 1}${now.getDate()}_${now.getHours()}${now.getMinutes()}`;
-      link.download = `兵工廠地圖分配圖_${timestamp}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-
-      document.body.removeChild(mapContainer);
-      if (btn) {
-        btn.innerText = originalText;
-        btn.disabled = false;
-      }
-    })
-    .catch((err) => {
-      console.error("地圖截圖合成失敗：", err);
-      alert("地圖合成失敗，請稍後再試！");
-      if (document.body.contains(mapContainer)) {
-        document.body.removeChild(mapContainer);
-      }
-      if (btn) {
-        btn.innerText = originalText;
-        btn.disabled = false;
-      }
-    });
+    "TSENG 8888\nSophia 3089\nLiam 4732\nEmma 3540\nOliver 4891\nAva 3167\nLucas 4423\nMia 3805\nNoah 4158\nIsabella 3290\nJames 4612\nCharlotte 3945\nAlexander 4380\nAmelia 3418\nBenjamin 4073\nHarper 3629";
 }
