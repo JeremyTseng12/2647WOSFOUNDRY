@@ -752,7 +752,7 @@ function captureBuildingGrid() {
   });
 }
 
-// 8. 編輯歷史紀錄（只顯示 [軍團] 標題，無時間戳記，一鍵直達）
+// 8. 編輯歷史紀錄（純顯示標題，由使用者自行選擇軍團）
 function openLoadHistoryModal() {
   fetch(`${GAS_WEB_APP_URL}?action=getHistory&t=${Date.now()}`)
     .then((res) => res.json())
@@ -768,16 +768,9 @@ function openLoadHistoryModal() {
       for (let i = historyRecordsList.length - 1; i >= 0; i--) {
         const item = historyRecordsList[i];
         const option = document.createElement("option");
-        // 將列號與該筆紀錄的軍團一起綁定在 value 中
-        const legionCode = item.activeLegion === "LegionB" ? "LegionB" : "LegionA";
-        option.value = `${item.rowIndex}|${legionCode}`;
-
-        let legionTag = "[軍團 1]";
-        if (item.activeLegion === "LegionB") legionTag = "[軍團 2]";
-        else if (item.activeLegion === "both") legionTag = "[軍團 1 & 2]";
-
-        // 乾淨只顯示：[軍團] 標題 (發布者)，徹底拿掉時間戳記
-        option.innerText = `${legionTag} ${item.title} (${item.author})`;
+        option.value = item.rowIndex;
+        // 純顯示標題與發布者，拿掉時間戳記與自動軍團標籤
+        option.innerText = `${item.title} (${item.author})`;
         select.appendChild(option);
       }
 
@@ -791,18 +784,19 @@ function closeLoadHistoryModal() {
 }
 
 function fetchAndRestoreGridData() {
-  const val = document.getElementById("loadHistorySelect").value;
-  if (!val) return;
-  const [rowIndexStr, autoLegion] = val.split("|");
-  const rowIndex = parseInt(rowIndexStr);
+  const rowIndex = parseInt(document.getElementById("loadHistorySelect").value);
+  const selectedLegion = document.getElementById("loadLegionSelect").value;
+  if (!rowIndex) return;
 
   fetch(`${GAS_WEB_APP_URL}?action=getHistory&rowIndex=${rowIndex}&t=${Date.now()}`)
     .then((res) => res.json())
     .then((res) => {
       if (res.status === "success" && res.payload) {
         const payload = res.payload;
-        const selectedLegion = payload.activeLegion || autoLegion || "LegionA";
-        const legionData = (payload.legions && payload.legions[selectedLegion]) ? payload.legions[selectedLegion] : payload;
+        // 依照使用者在下拉選單自己挑選的軍團讀取對應資料
+        const legionData = (payload.legions && payload.legions[selectedLegion])
+          ? payload.legions[selectedLegion]
+          : payload;
 
         if (legionData.buildings) currentData.buildings = legionData.buildings;
         currentData.manualGatherText = legionData.manualGatherText || "";
