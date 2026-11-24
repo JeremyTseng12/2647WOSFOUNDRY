@@ -2,12 +2,12 @@
    2647 WOS FOUNDRY 3.0 - 完整多國語系字典檔 (118n.js)
    ============================================================ */
 const buildingsConfig = [
-  { id: "b0", gIdx: 0, nameZht: "1號武器試驗場 (6000)", nameEn: "Facility 1 (6000)", needVice: false },
+  { id: "b0", gIdx: 0, nameZht: "1號武器試驗場 (6000)", nameEn: "Prototype 1 (6000)", needVice: false },
   { id: "b1", gIdx: 0, nameZht: "1號武器維修站 (3000)", nameEn: "Repair 1 (3000)", needVice: true },
-  { id: "b2", gIdx: 1, nameZht: "2號武器試驗場 (6000)", nameEn: "Facility 2 (6000)", needVice: false },
+  { id: "b2", gIdx: 1, nameZht: "2號武器試驗場 (6000)", nameEn: "Prototype 2 (6000)", needVice: false },
   { id: "b3", gIdx: 1, nameZht: "2號武器維修站 (3000)", nameEn: "Repair 2 (3000)", needVice: true },
   { id: "b4", gIdx: 2, nameZht: "3號武器維修站 (3000)", nameEn: "Repair 3 (3000)", needVice: false },
-  { id: "b5", gIdx: 2, nameZht: "中轉站 (1200)", nameEn: "Relay (1200)", needVice: true },
+  { id: "b5", gIdx: 2, nameZht: "中轉站 (1200)", nameEn: "Transit (1200)", needVice: true },
   { id: "b6", gIdx: 3, nameZht: "4號武器維修站 (3000)", nameEn: "Repair 4 (3000)", needVice: false },
   { id: "b7", gIdx: 3, nameZht: "蒸氣鍋爐 (1700)", nameEn: "Boiler (1700)", needVice: true }
 ];
@@ -154,9 +154,9 @@ const langPack = {
     // Leader Setup
     leaderTitle: "1. Squad Leader Settings (Power ≥ 4000)",
     labels: [
-      "Group 1 (Facility 1 & Repair 1)",
-      "Group 2 (Facility 2 & Repair 2)",
-      "Group 3 (Repair 3 & Relay)",
+      "Group 1 (Prototype 1 & Repair 1)",
+      "Group 2 (Prototype 2 & Repair 2)",
+      "Group 3 (Repair 3 & Transit)",
       "Group 4 (Repair 4 & Boiler)"
     ],
     placeholders: { name: "Leader Name", power: "Power" },
