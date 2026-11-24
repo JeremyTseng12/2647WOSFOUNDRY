@@ -974,13 +974,26 @@ function fetchAndRestoreGridData() {
     .then((res) => {
       if (res.status === "success" && res.payload) {
         const payload = res.payload;
-        const legionData = (payload.legions && payload.legions[selectedLegion])
-          ? payload.legions[selectedLegion]
-          : payload;
+        const legionsObj = payload.legions || {};
+        const legionData = legionsObj[selectedLegion];
 
-        if (legionData.buildings) currentData.buildings = legionData.buildings;
-        currentData.manualGatherText = legionData.manualGatherText || "";
-        currentData.manualAmmoText = legionData.manualAmmoText || "";
+        const legionLabel = selectedLegion === "LegionB" ? "軍團 2" : "軍團 1";
+
+        if (legionData && legionData.buildings) {
+          // 該軍團已有資料，正常載入
+          currentData.buildings = legionData.buildings;
+          currentData.manualGatherText = legionData.manualGatherText || "";
+          currentData.manualAmmoText = legionData.manualAmmoText || "";
+        } else {
+          // 該場次尚未發布過此軍團的資料，清空看板並提示可直接分配
+          currentData.buildings = {
+            b0: [], b1: [], b2: [], b3: [],
+            b4: [], b5: [], b6: [], b7: []
+          };
+          currentData.manualGatherText = "";
+          currentData.manualAmmoText = "";
+          alert(`ℹ️ 此場次目前尚未建立「${legionLabel}」的分配資料。\n\n您現在可以直接輸入名單進行分配，發布時將會自動合併至此場次！`);
+        }
 
         document.getElementById("gatherInput").value = currentData.manualGatherText;
         document.getElementById("ammoInput").value = currentData.manualAmmoText;
@@ -994,8 +1007,7 @@ function fetchAndRestoreGridData() {
         document.getElementById("publishTitleInput").value = currentEditingTitle;
         document.getElementById("publishAuthorInput").value = currentEditingAuthor;
 
-        const legionLabel = selectedLegion === "LegionB" ? "軍團 2" : "軍團 1";
-        document.getElementById("editingNoticeText").innerText = `✏️ 正在編輯：[${legionLabel}] ${res.title}（發布時將直接覆蓋更新）`;
+        document.getElementById("editingNoticeText").innerText = `✏️ 正在編輯：[${legionLabel}] ${res.title}（發布時將自動合併覆蓋更新）`;
         document.getElementById("editingNoticeBar").style.display = "flex";
 
         closeLoadHistoryModal();
