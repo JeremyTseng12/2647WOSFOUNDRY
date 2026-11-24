@@ -930,7 +930,7 @@ function captureMapWithAllocation() {
     });
 }
 
-// 8. 編輯歷史紀錄（純標題顯示＋同標題自動去重＋自選軍團）
+// 8. 編輯歷史紀錄（支援跨列自動合併軍團 1 與軍團 2）
 function openLoadHistoryModal() {
   fetch(`${GAS_WEB_APP_URL}?action=getHistory&t=${Date.now()}`)
     .then((res) => res.json())
@@ -939,19 +939,34 @@ function openLoadHistoryModal() {
         alert("雲端目前尚無歷史紀錄！");
         return;
       }
-      historyRecordsList = res.history;
+
+      // 依標題合併分組，收集同一場次的所有 rowIndex
+      const mergedMap = {};
+      res.history.forEach((item) => {
+        const titleKey = (item.title || "未命名分配結果").trim();
+        if (!mergedMap[titleKey]) {
+          mergedMap[titleKey] = {
+            title: titleKey,
+            authors: [item.author],
+            rowIndices: [item.rowIndex]
+          };
+        } else {
+          mergedMap[titleKey].rowIndices.push(item.rowIndex);
+          if (item.author && !mergedMap[titleKey].authors.includes(item.author)) {
+            mergedMap[titleKey].authors.push(item.author);
+          }
+        }
+      });
+
+      historyRecordsList = Object.values(mergedMap);
       const select = document.getElementById("loadHistorySelect");
       select.innerHTML = "";
 
-      const seenTitles = new Set();
       for (let i = historyRecordsList.length - 1; i >= 0; i--) {
-        const item = historyRecordsList[i];
-        if (seenTitles.has(item.title)) continue;
-        seenTitles.add(item.title);
-
+        const group = historyRecordsList[i];
         const option = document.createElement("option");
-        option.value = item.rowIndex;
-        option.innerText = `${item.title} (${item.author})`;
+        option.value = i; // 對應 historyRecordsList 的索引
+        option.innerText = `${group.title} (${group.authors.join(" & ")})`;
         select.appendChild(option);
       }
 
@@ -965,61 +980,90 @@ function closeLoadHistoryModal() {
 }
 
 function fetchAndRestoreGridData() {
-  const rowIndex = parseInt(document.getElementById("loadHistorySelect").value);
-  const selectedLegion = document.getElementById("loadLegionSelect").value;
-  if (!rowIndex) return;
+  const groupIdx = parseInt(document.getElementById("loadHistorySelect").value);
+  const selectedLegion = document.getElementById("loadLegionSelect").value; // "LegionA" 或 "LegionB"
+  const targetGroup = historyRecordsList[groupIdx];
+  if (!targetGroup) return;
 
-  fetch(`${GAS_WEB_APP_URL}?action=getHistory&rowIndex=${rowIndex}&t=${Date.now()}`)
-    .then((res) => res.json())
-    .then((res) => {
-      if (res.status === "success" && res.payload) {
-        const payload = res.payload;
-        const legionsObj = payload.legions || {};
-        const legionData = legionsObj[selectedLegion];
+  const btnConfirm = document.getElementById("btnConfirmLoad");
+  const origBtnText = btnConfirm.innerText;
+  btnConfirm.innerText = "載入中...";
+  btnConfirm.disabled = true;
 
-        const legionLabel = selectedLegion === "LegionB" ? "軍團 2" : "軍團 1";
+  // 同時抓取該標題底下的所有列，確保無論軍團一、二存在同一列或分開兩列都能抓到
+  const fetchPromises = targetGroup.rowIndices.map((rIdx) =>
+    fetch(`${GAS_WEB_APP_URL}?action=getHistory&rowIndex=${rIdx}&t=${Date.now()}`).then((r) => r.json())
+  );
 
-        if (legionData && legionData.buildings) {
-          // 該軍團已有資料，正常載入
-          currentData.buildings = legionData.buildings;
-          currentData.manualGatherText = legionData.manualGatherText || "";
-          currentData.manualAmmoText = legionData.manualAmmoText || "";
-        } else {
-          // 該場次尚未發布過此軍團的資料，清空看板並提示可直接分配
-          currentData.buildings = {
-            b0: [], b1: [], b2: [], b3: [],
-            b4: [], b5: [], b6: [], b7: []
-          };
-          currentData.manualGatherText = "";
-          currentData.manualAmmoText = "";
-          alert(`ℹ️ 此場次目前尚未建立「${legionLabel}」的分配資料。\n\n您現在可以直接輸入名單進行分配，發布時將會自動合併至此場次！`);
+  Promise.all(fetchPromises)
+    .then((results) => {
+      btnConfirm.innerText = origBtnText;
+      btnConfirm.disabled = false;
+
+      let foundLegionData = null;
+      let matchedRowIndex = targetGroup.rowIndices[targetGroup.rowIndices.length - 1];
+      let matchedAuthor = targetGroup.authors[0] || (currentUser ? currentUser.displayName : "指揮官");
+
+      results.forEach((res, idx) => {
+        if (res.status === "success" && res.payload) {
+          const p = res.payload;
+          const rIdx = targetGroup.rowIndices[idx];
+
+          if (p.legions && p.legions[selectedLegion] && Object.keys(p.legions[selectedLegion]).length > 0) {
+            foundLegionData = p.legions[selectedLegion];
+            matchedRowIndex = rIdx;
+            if (res.author) matchedAuthor = res.author;
+          } else if (!p.legions && p.buildings && selectedLegion === "LegionA") {
+            // 相容舊版單軍團格式
+            foundLegionData = p;
+            matchedRowIndex = rIdx;
+            if (res.author) matchedAuthor = res.author;
+          }
         }
+      });
 
-        document.getElementById("gatherInput").value = currentData.manualGatherText;
-        document.getElementById("ammoInput").value = currentData.manualAmmoText;
+      const legionLabel = selectedLegion === "LegionB" ? "軍團 2" : "軍團 1";
 
-        currentEditingRowIndex = rowIndex;
-        currentEditingLegion = selectedLegion;
-        currentEditingTitle = res.title || "";
-        currentEditingAuthor = res.author || (currentUser ? currentUser.displayName : "指揮官");
-
-        document.getElementById("publishLegionSelect").value = selectedLegion;
-        document.getElementById("publishTitleInput").value = currentEditingTitle;
-        document.getElementById("publishAuthorInput").value = currentEditingAuthor;
-
-        document.getElementById("editingNoticeText").innerText = `✏️ 正在編輯：[${legionLabel}] ${res.title}（發布時將自動合併覆蓋更新）`;
-        document.getElementById("editingNoticeBar").style.display = "flex";
-
-        closeLoadHistoryModal();
-        renderAll();
-        const resSec = document.getElementById("resultSection");
-        resSec.style.display = "block";
-        resSec.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (foundLegionData && foundLegionData.buildings) {
+        const defaultB = { b0: [], b1: [], b2: [], b3: [], b4: [], b5: [], b6: [], b7: [] };
+        currentData.buildings = Object.assign(defaultB, foundLegionData.buildings);
+        currentData.manualGatherText = foundLegionData.manualGatherText || "";
+        currentData.manualAmmoText = foundLegionData.manualAmmoText || "";
+      } else {
+        currentData.buildings = { b0: [], b1: [], b2: [], b3: [], b4: [], b5: [], b6: [], b7: [] };
+        currentData.manualGatherText = "";
+        currentData.manualAmmoText = "";
+        alert(`ℹ️ 此場次目前尚未建立「${legionLabel}」的分配資料。\n\n您現在可以直接輸入名單進行分配，發布時將會自動合併至此場次！`);
       }
-    })
-    .catch(() => alert("載入紀錄失敗"));
-}
 
+      document.getElementById("gatherInput").value = currentData.manualGatherText;
+      document.getElementById("ammoInput").value = currentData.manualAmmoText;
+
+      currentEditingRowIndex = matchedRowIndex;
+      currentEditingLegion = selectedLegion;
+      currentEditingTitle = targetGroup.title;
+      currentEditingAuthor = matchedAuthor;
+
+      document.getElementById("publishLegionSelect").value = selectedLegion;
+      document.getElementById("publishTitleInput").value = currentEditingTitle;
+      document.getElementById("publishAuthorInput").value = currentEditingAuthor;
+
+      document.getElementById("editingNoticeText").innerText = `✏️ 正在編輯：[${legionLabel}] ${targetGroup.title}（發布時將自動覆蓋更新）`;
+      document.getElementById("editingNoticeBar").style.display = "flex";
+
+      closeLoadHistoryModal();
+      renderAll();
+      const resSec = document.getElementById("resultSection");
+      resSec.style.display = "block";
+      resSec.scrollIntoView({ behavior: "smooth", block: "start" });
+    })
+    .catch((err) => {
+      btnConfirm.innerText = origBtnText;
+      btnConfirm.disabled = false;
+      console.error("載入紀錄失敗：", err);
+      alert("載入紀錄失敗，請稍後再試！");
+    });
+}
 function exitEditMode() {
   currentEditingRowIndex = null;
   currentEditingTitle = "";
