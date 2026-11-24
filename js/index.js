@@ -3,7 +3,7 @@
    ============================================================ */
 
 const GAS_WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbz-nozNOlqqn3EmBwjDNU_vPkpf6lPiM2RYWFpQ82pd8GCHv-p9Tov4UaWgkrCEleL6/exec";
+  "https://script.google.com/macros/s/AKfycbx0sfm-dAwGnet_GbaLF-Mc0hjMrau8qJi06g-WDLSvnoYL1Fy5LTEA312cr6XfjqTz/exec";
 
 let currentUser = null;
 
@@ -27,6 +27,9 @@ let currentEditingTitle = "";
 let currentEditingAuthor = "";
 let historyRecordsList = [];
 let isCurrentlyMaintenance = false;
+
+let pendingExportDataUrl = "";
+let pendingExportFilename = "";
 
 // 1. 系統狀態檢查
 async function checkSystemStatus() {
@@ -121,7 +124,6 @@ function updateUserBadge() {
   }
 }
 
-// 初始化
 window.addEventListener("load", async () => {
   const prefLang = localStorage.getItem("wos_pref_lang") || "zht";
   changeLanguage(prefLang);
@@ -138,7 +140,7 @@ window.addEventListener("load", async () => {
   }
 });
 
-// 3. 多國語言切換
+// 3. 全面多國語系切換
 function changeLanguage(lang) {
   if (typeof langPack === "undefined" || !langPack[lang]) return;
   currentData.currentLang = lang;
@@ -185,6 +187,7 @@ function changeLanguage(lang) {
   setText("uiLeaderTitle", p.leaderTitle);
   setText("uiMemberTitle", p.memberTitle);
   setText("uiLabelMainList", p.labelMainList);
+  setPh("memberInput", p.mainListPlaceholder);
   setText("uiLabelGatherList", p.labelGatherList);
   setText("uiLabelAmmoList", p.labelAmmoList);
   setPh("gatherInput", p.gatherPlaceholder);
@@ -210,25 +213,47 @@ function changeLanguage(lang) {
     }
   }
 
+  // 發布彈窗
   setText("publishModalHeaderTitle", p.publishHeader);
   setText("lblPublishLegion", p.lblPublishLegion);
+  setText("optLegionA", p.optLegionA);
+  setText("optLegionB", p.optLegionB);
   setText("lblPublishEventType", p.lblPublishEventType);
+  setText("optEventFoundry", p.optEventFoundry);
+  setText("optEventTundra", p.optEventTundra);
+  setText("optEventTest", p.optEventTest);
+  setText("lblPublishDate", p.lblPublishDate);
   setText("lblPublishTitle", p.lblPublishTitle);
   setText("lblPublishAuthor", p.lblPublishAuthor);
+  setPh("publishAuthorInput", p.authorPlaceholder);
   setText("btnPublishCancel", p.btnPublishCancel);
   setText("btnConfirmPublish", p.btnConfirmPublish);
 
+  // 歷史載入彈窗
   setText("uiLoadHistoryTitle", p.uiLoadHistoryTitle);
   setText("lblLoadHistory", p.lblLoadHistory);
+  setText("lblLoadLegion", p.lblLoadLegion);
+  setText("optLoadLegionA", p.optLegionA);
+  setText("optLoadLegionB", p.optLegionB);
   setText("btnLoadCancel", p.btnLoadCancel);
   setText("btnConfirmLoad", p.btnConfirmLoad);
 
+  // 匯出預覽彈窗
+  setText("uiExportPreviewHint", p.exportPreviewHint);
+  setText("btnExportCancel", p.btnExportCancel);
+  setText("btnConfirmDownloadImg", p.btnConfirmDownloadImg);
+
+  // 結果看板與複製區
+  setText("btnPublish", p.btnPublish);
+  setText("uiCopyTitle", p.copyTitle);
+  setText("btnCopyLangZht", p.btnCopyLangZht);
+  setText("btnCopyLangEn", p.btnCopyLangEn);
+  setText("btnCopyText", p.btnCopyText);
+  setText("uiTweakTitle", p.tweakTitle);
+  setText("btnScreenshotText", p.btnScreenshotText);
+  setText("btnMapScreenshotText", p.btnMapScreenshotText);
+
   if (document.getElementById("resultSection").style.display !== "none") {
-    setText("btnPublish", p.btnPublish);
-    setText("uiCopyTitle", p.copyTitle);
-    setText("btnCopyText", p.btnCopyText);
-    setText("uiTweakTitle", p.tweakTitle);
-    setText("btnScreenshotText", p.btnScreenshotText);
     renderAll();
   }
 }
@@ -278,7 +303,7 @@ function quickAssignLeader(name) {
   alert(p.alertFull);
 }
 
-// 4. 名單解析與直接平衡分配 (無多余彈窗)
+// 4. 名單解析與平衡分配
 function parseLines(text) {
   return text
     .split("\n")
@@ -401,7 +426,6 @@ function distributeMembers(pool) {
   currentData.buildings = { b0: [], b1: [], b2: [], b3: [], b4: [], b5: [], b6: [], b7: [] };
 
   let groups = [];
-  let totalLeadersPower = 0;
 
   for (let i = 0; i < 4; i++) {
     const lData = pool.leaders[i];
@@ -418,7 +442,6 @@ function distributeMembers(pool) {
       members: [],
       totalPower: lData.power + (viceObj ? viceObj.power : 0)
     });
-    totalLeadersPower += lData.power + (viceObj ? viceObj.power : 0);
   }
 
   const sortedMain = [...pool.mainMembers].sort((a, b) => b.power - a.power);
@@ -565,7 +588,6 @@ function renderAll() {
   const grid = document.getElementById("buildingGrid");
   grid.innerHTML = "";
 
-  // 特殊小隊卡片
   const createSpecCard = (type, title, label, textVal, badgeIcon) => {
     const card = document.createElement("div");
     card.className = "building-card b-group-spec";
@@ -573,7 +595,7 @@ function renderAll() {
     const tagsHtml = arr.map((name, idx) => `
       <div class="player-tag" style="cursor:default;">
         <span>${badgeIcon} ${name.trim()}</span>
-        <button class="btn-del-mini" onclick="removePlayer('${type}', ${idx}, event)" title="移除">✕</button>
+        <button class="btn-del-mini" onclick="removePlayer('${type}', ${idx}, event)" title="${p.removeTip}">✕</button>
       </div>
     `).join("");
 
@@ -582,7 +604,7 @@ function renderAll() {
       <div class="building-power">${label}</div>
       <div class="drop-zone">${tagsHtml}</div>
       <div class="inline-add-row">
-        <input type="text" class="in-name" id="inName_${type}" placeholder="${isEn ? "Add name..." : "輸入名字..."}" onkeydown="if(event.key==='Enter') inlineAddPlayer('${type}')" />
+        <input type="text" class="in-name" id="inName_${type}" placeholder="${p.inlineSpecPh}" onkeydown="if(event.key==='Enter') inlineAddPlayer('${type}')" />
         <button type="button" class="btn-inline-add" onclick="inlineAddPlayer('${type}')">+</button>
       </div>
     `;
@@ -618,7 +640,7 @@ function renderAll() {
 
       const isLocked = player.isManualLeader || player.isManualVice;
       const dragAttr = !isLocked ? `draggable="true" ondragstart="dragStart(event, '${b.id}', ${pIdx})"` : "";
-      const delBtn = !isLocked ? `<button class="btn-del-mini" onclick="removePlayer('${b.id}', ${pIdx}, event)" title="移除">✕</button>` : "";
+      const delBtn = !isLocked ? `<button class="btn-del-mini" onclick="removePlayer('${b.id}', ${pIdx}, event)" title="${p.removeTip}">✕</button>` : "";
 
       return `
         <div class="player-tag ${roleClass}" ${dragAttr}>
@@ -636,8 +658,8 @@ function renderAll() {
       <div class="building-power">${p.buildingPower}<strong>${bPower.toLocaleString()}</strong></div>
       <div class="drop-zone">${tagsHtml}</div>
       <div class="inline-add-row">
-        <input type="text" class="in-name" id="inName_${b.id}" placeholder="${isEn ? "Name" : "名字"}" onkeydown="if(event.key==='Enter') inlineAddPlayer('${b.id}')" />
-        <input type="number" class="in-power" id="inPower_${b.id}" placeholder="${isEn ? "Power" : "戰力"}" onkeydown="if(event.key==='Enter') inlineAddPlayer('${b.id}')" />
+        <input type="text" class="in-name" id="inName_${b.id}" placeholder="${p.inlineNamePh}" onkeydown="if(event.key==='Enter') inlineAddPlayer('${b.id}')" />
+        <input type="number" class="in-power" id="inPower_${b.id}" placeholder="${p.inlinePowerPh}" onkeydown="if(event.key==='Enter') inlineAddPlayer('${b.id}')" />
         <button type="button" class="btn-inline-add" onclick="inlineAddPlayer('${b.id}')">+</button>
       </div>
     `;
@@ -653,7 +675,6 @@ function renderAll() {
   updateTextOutputOnly();
 }
 
-// 拖曳交換邏輯
 let dragFromId = null;
 let dragIdx = null;
 
@@ -706,26 +727,78 @@ function copyTextOutput() {
   alert(langPack[currentData.currentLang].alertSuccess);
 }
 
-// 7. 乾淨清爽一鍵匯出圖片
+// 7. 浮水印生成與圖片預覽確認視窗
+function createSignatureWatermarkElement() {
+  const p = langPack[currentData.currentLang];
+  const allocatorName = currentUser
+    ? `${currentUser.displayName}${currentUser.account ? ` (${currentUser.account})` : ""}`
+    : (document.getElementById("publishAuthorInput")?.value.trim() || "指揮官");
+
+  const sig = document.createElement("div");
+  sig.className = "export-signature-badge";
+  sig.innerHTML = `
+    <div class="sig-line-1">SYSTEM MADE BY TSENG</div>
+    <div class="sig-line-2">${p.allocatorPrefix}${allocatorName}</div>
+  `;
+  return sig;
+}
+
+function openExportPreviewModal(dataUrl, filename, modalTitle) {
+  pendingExportDataUrl = dataUrl;
+  pendingExportFilename = filename;
+  document.getElementById("exportPreviewTitle").innerText = modalTitle;
+  document.getElementById("exportPreviewImg").src = dataUrl;
+  document.getElementById("exportPreviewModal").style.display = "flex";
+}
+
+function closeExportPreviewModal() {
+  document.getElementById("exportPreviewModal").style.display = "none";
+  pendingExportDataUrl = "";
+  pendingExportFilename = "";
+}
+
+function confirmDownloadExportedImage() {
+  if (!pendingExportDataUrl) return;
+  const link = document.createElement("a");
+  link.download = pendingExportFilename;
+  link.href = pendingExportDataUrl;
+  link.click();
+  closeExportPreviewModal();
+}
+
+// 匯出「表格版」分配圖（跳出預覽確認）
 function captureBuildingGrid() {
   const btn = document.getElementById("btnScreenshot");
+  const p = langPack[currentData.currentLang];
   const origHtml = btn.innerHTML;
-  btn.innerText = "⏳ 匯出中...";
+  btn.innerText = "⏳ ...";
   btn.disabled = true;
 
   const exportWrap = document.createElement("div");
   exportWrap.className = "export-board-wrapper";
 
-  const titleStr = currentEditingTitle || document.getElementById("publishTitleInput").value || "2647 RGN 兵工廠人員分配表";
-  exportWrap.innerHTML = `
-    <div class="export-header">
-      <div class="export-title">${titleStr}</div>
-      <div class="export-meta">總人數：${currentData.totalPeople} 人 ｜ 總戰力：${currentData.totalPower.toLocaleString()} ｜ 2647 RGN</div>
-    </div>
+  const centerWm = document.createElement("div");
+  centerWm.className = "export-center-watermark";
+  centerWm.innerText = "2647 RGN";
+  exportWrap.appendChild(centerWm);
+
+  const legionTag = currentEditingLegion === "LegionB" ? "[軍團 2] " : "[軍團 1] ";
+  const titleStr = currentEditingTitle
+    ? `${legionTag}${currentEditingTitle}`
+    : (document.getElementById("publishTitleInput").value || "2647 RGN 兵工廠人員分配表");
+
+  const headerDiv = document.createElement("div");
+  headerDiv.className = "export-header";
+  headerDiv.innerHTML = `
+    <div class="export-title">${titleStr}</div>
+    <div class="export-meta">${p.summaryText[0]}${currentData.totalPeople} ｜ ${p.summaryText[1]}${currentData.totalPower.toLocaleString()}</div>
   `;
+  exportWrap.appendChild(headerDiv);
 
   const clonedGrid = document.getElementById("buildingGrid").cloneNode(true);
   exportWrap.appendChild(clonedGrid);
+  exportWrap.appendChild(createSignatureWatermarkElement());
+
   document.body.appendChild(exportWrap);
 
   html2canvas(exportWrap, {
@@ -733,26 +806,131 @@ function captureBuildingGrid() {
     scale: 2,
     useCORS: true,
     width: 1360
-  }).then((canvas) => {
-    const link = document.createElement("a");
-    const d = new Date();
-    const ts = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
-    link.download = `兵工廠人員分配表_${ts}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+  })
+    .then((canvas) => {
+      const d = new Date();
+      const ts = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+      const dataUrl = canvas.toDataURL("image/png");
 
-    document.body.removeChild(exportWrap);
-    btn.innerHTML = origHtml;
-    btn.disabled = false;
-  }).catch(() => {
-    document.body.removeChild(exportWrap);
-    btn.innerHTML = origHtml;
-    btn.disabled = false;
-    alert("匯出圖片失敗，請稍後再試！");
-  });
+      document.body.removeChild(exportWrap);
+      btn.innerHTML = origHtml;
+      btn.disabled = false;
+
+      openExportPreviewModal(dataUrl, `兵工廠人員分配表_${ts}.png`, p.exportPreviewTitleTable);
+    })
+    .catch(() => {
+      if (document.body.contains(exportWrap)) document.body.removeChild(exportWrap);
+      btn.innerHTML = origHtml;
+      btn.disabled = false;
+      alert("生成圖片失敗，請稍後再試！");
+    });
 }
 
-// 8. 編輯歷史紀錄（純顯示標題，由使用者自行選擇軍團）
+// 匯出「地圖版」分配圖（跳出預覽確認）
+function captureMapWithAllocation() {
+  const btn = document.getElementById("btnMapScreenshot");
+  const p = langPack[currentData.currentLang];
+  const origHtml = btn ? btn.innerHTML : "";
+
+  if (btn) {
+    btn.innerText = "⏳ ...";
+    btn.disabled = true;
+  }
+
+  const mapContainer = document.createElement("div");
+  mapContainer.id = "mapContainer";
+
+  const centerWm = document.createElement("div");
+  centerWm.className = "export-center-watermark";
+  centerWm.style.color = "rgba(255, 255, 255, 0.14)";
+  centerWm.style.zIndex = "2";
+  centerWm.innerText = "2647 RGN";
+  mapContainer.appendChild(centerWm);
+
+  const legionTag = currentEditingLegion === "LegionB" ? "[軍團 2] " : "[軍團 1] ";
+  const titleStr = currentEditingTitle
+    ? `${legionTag}${currentEditingTitle}`
+    : (document.getElementById("publishTitleInput").value || "2647 RGN 兵工廠人員分配圖");
+
+  const banner = document.createElement("div");
+  banner.className = "map-top-banner";
+  banner.style.zIndex = "3";
+  banner.innerHTML = `
+    <div class="map-banner-title">${titleStr}</div>
+    <div class="map-banner-meta">${p.summaryText[0]}${currentData.totalPeople} ｜ ${p.summaryText[1]}${currentData.totalPower.toLocaleString()}</div>
+  `;
+  mapContainer.appendChild(banner);
+
+  const mapCoords = {
+    b0: { top: "40%", left: "8%" },
+    b1: { top: "55%", left: "6%" },
+    b2: { top: "58%", left: "74%" },
+    b3: { top: "42%", left: "78%" },
+    b4: { top: "80%", left: "28%" },
+    b5: { top: "80%", left: "62%" },
+    b6: { top: "16%", left: "60%" },
+    b7: { top: "16%", left: "24%" }
+  };
+
+  const isEn = currentData.currentLang === "en";
+  buildingsConfig.forEach((b) => {
+    const coord = mapCoords[b.id];
+    if (!coord) return;
+
+    const list = currentData.buildings[b.id] || [];
+    const playersHtml = list
+      .map((pl) => {
+        const tag = pl.isLeader ? `[${p.leaderTag}] ` : pl.isVice ? `[${p.viceTag}] ` : "";
+        return `<div>• ${tag}${pl.name} (${pl.power || 0})</div>`;
+      })
+      .join("");
+
+    const nodeDiv = document.createElement("div");
+    nodeDiv.className = "map-node-card";
+    nodeDiv.style.top = coord.top;
+    nodeDiv.style.left = coord.left;
+    nodeDiv.style.zIndex = "3";
+    nodeDiv.innerHTML = `
+      <div class="map-node-title">${isEn ? b.nameEn : b.nameZht}</div>
+      <div class="map-node-players">${playersHtml || "(無)"}</div>
+    `;
+    mapContainer.appendChild(nodeDiv);
+  });
+
+  mapContainer.appendChild(createSignatureWatermarkElement());
+  document.body.appendChild(mapContainer);
+
+  html2canvas(mapContainer, {
+    backgroundColor: null,
+    scale: 2,
+    useCORS: true,
+    width: 1200,
+    height: 1200
+  })
+    .then((canvas) => {
+      const d = new Date();
+      const ts = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+      const dataUrl = canvas.toDataURL("image/png");
+
+      document.body.removeChild(mapContainer);
+      if (btn) {
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+      }
+
+      openExportPreviewModal(dataUrl, `兵工廠地圖分配圖_${ts}.png`, p.exportPreviewTitleMap);
+    })
+    .catch(() => {
+      if (document.body.contains(mapContainer)) document.body.removeChild(mapContainer);
+      if (btn) {
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+      }
+      alert("地圖預覽生成失敗，請稍後再試！");
+    });
+}
+
+// 8. 編輯歷史紀錄（純標題顯示＋同標題自動去重＋自選軍團）
 function openLoadHistoryModal() {
   fetch(`${GAS_WEB_APP_URL}?action=getHistory&t=${Date.now()}`)
     .then((res) => res.json())
@@ -765,11 +943,14 @@ function openLoadHistoryModal() {
       const select = document.getElementById("loadHistorySelect");
       select.innerHTML = "";
 
+      const seenTitles = new Set();
       for (let i = historyRecordsList.length - 1; i >= 0; i--) {
         const item = historyRecordsList[i];
+        if (seenTitles.has(item.title)) continue;
+        seenTitles.add(item.title);
+
         const option = document.createElement("option");
         option.value = item.rowIndex;
-        // 純顯示標題與發布者，拿掉時間戳記與自動軍團標籤
         option.innerText = `${item.title} (${item.author})`;
         select.appendChild(option);
       }
@@ -793,7 +974,6 @@ function fetchAndRestoreGridData() {
     .then((res) => {
       if (res.status === "success" && res.payload) {
         const payload = res.payload;
-        // 依照使用者在下拉選單自己挑選的軍團讀取對應資料
         const legionData = (payload.legions && payload.legions[selectedLegion])
           ? payload.legions[selectedLegion]
           : payload;
@@ -935,11 +1115,12 @@ function submitToGoogleSheet() {
     body: JSON.stringify(payload)
   })
     .then((res) => res.json())
-    .then(() => {
+    .then((res) => {
       btn.innerText = orig;
       btn.disabled = false;
       closePublishModal();
-      alert(`✅ 發布成功！\n[${activeLegion === "LegionB" ? "軍團 2" : "軍團 1"}] ${title}`);
+      const actionMsg = res.merged ? "已合併更新至同場次紀錄！" : "發布成功！";
+      alert(`✅ ${actionMsg}\n[${activeLegion === "LegionB" ? "軍團 2" : "軍團 1"}] ${title}`);
       exitEditMode();
     })
     .catch(() => {
