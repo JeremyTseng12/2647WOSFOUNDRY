@@ -475,6 +475,7 @@ textarea {
 .toolbar-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .section-bar {
@@ -486,7 +487,6 @@ textarea {
   color: #e2e8f0;
 }
 
-/* 6x2 建築卡片網格 */
 .building-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -520,7 +520,6 @@ textarea {
   background: rgba(16, 185, 129, 0.08);
 }
 
-/* 各組左側色條辨識 */
 .b-group-0 { border-top: 3px solid #3b82f6; }
 .b-group-1 { border-top: 3px solid #8b5cf6; }
 .b-group-2 { border-top: 3px solid #f59e0b; }
@@ -563,7 +562,6 @@ textarea {
   min-height: 80px;
 }
 
-/* 人員標籤 */
 .player-tag {
   background: var(--bg-card);
   border: 1px solid #26334d;
@@ -635,7 +633,6 @@ textarea {
   color: var(--danger);
 }
 
-/* 卡片底部行內直接新增列 */
 .inline-add-row {
   display: flex;
   gap: 4px;
@@ -675,7 +672,6 @@ textarea {
   background: var(--primary);
 }
 
-/* 文字複製區 */
 .copy-panel {
   margin-top: 24px;
   background: var(--bg-surface);
@@ -771,7 +767,7 @@ textarea {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -822,7 +818,7 @@ textarea {
 }
 
 /* ============================================================
-   6. 匯出圖片專用乾淨排版 (隱藏所有輸入框與刪除鈕)
+   6. 匯出圖片浮水印與預覽樣式 (表格圖 + 地圖版通用)
    ============================================================ */
 .export-board-wrapper {
   position: absolute;
@@ -830,32 +826,38 @@ textarea {
   left: -9999px;
   width: 1360px;
   background: #0b0f19;
-  padding: 24px;
+  padding: 28px 28px 74px 28px;
   border: 1px solid #243049;
+  overflow: hidden;
 }
 
 .export-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   padding-bottom: 12px;
   border-bottom: 1px solid #243049;
+  position: relative;
+  z-index: 2;
 }
 
 .export-title {
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 800;
   color: #fff;
 }
 
 .export-meta {
-  font-size: 0.9rem;
-  color: #94a3b8;
+  font-size: 0.92rem;
+  color: #34d399;
+  font-weight: 600;
 }
 
 .export-board-wrapper .building-grid {
   grid-template-columns: repeat(6, 1fr) !important;
+  position: relative;
+  z-index: 2;
 }
 
 .export-board-wrapper .b-group-spec {
@@ -865,4 +867,119 @@ textarea {
 .export-board-wrapper .inline-add-row,
 .export-board-wrapper .btn-del-mini {
   display: none !important;
+}
+
+.export-center-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  font-size: 7.5rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.05);
+  letter-spacing: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.export-signature-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 24px;
+  background: rgba(11, 15, 25, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  border-left: 4px solid #10b981;
+  border-radius: 6px;
+  padding: 8px 18px;
+  text-align: right;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
+}
+
+.export-signature-badge .sig-line-1 {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 1.5px;
+}
+
+.export-signature-badge .sig-line-2 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #34d399;
+  margin-top: 3px;
+}
+
+/* 地圖版匯出容器 */
+#mapContainer {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  width: 1200px;
+  height: 1200px;
+  background-image: url("https://jeremytseng12.github.io/2647WOSFOUNDRY/media/map.jpg");
+  background-size: cover;
+  background-position: center;
+  font-family: "Noto Sans TC", "Noto Sans HK", sans-serif;
+  z-index: -9999;
+}
+
+.map-top-banner {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+}
+
+.map-banner-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.map-banner-meta {
+  font-size: 0.9rem;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.map-node-card {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  width: 225px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
+}
+
+.map-node-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #38bdf8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+}
+
+.map-node-players {
+  font-size: 0.8rem;
+  color: #f1f5f9;
+  line-height: 1.4;
+}
+
+.map-node-players div {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
