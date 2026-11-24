@@ -1,5 +1,5 @@
 const GAS_URL =
-  "https://script.google.com/macros/s/AKfycbzcQjFmRntKq1wHfQez9ixdVfo9HOMR89CfQKTZ67xEj78bpG14MjWVs7ILdkydX_8Q/exec";
+  "https://script.google.com/macros/s/AKfycbx0sfm-dAwGnet_GbaLF-Mc0hjMrau8qJi06g-WDLSvnoYL1Fy5LTEA312cr6XfjqTz/exec";
 
 let currentUser = null;
 let historyCache = [];
