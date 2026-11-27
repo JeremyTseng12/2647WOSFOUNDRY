@@ -1,5 +1,6 @@
 /* ============================================================
    2647 WOS FOUNDRY 3.0 - 完整多國語系字典檔 (118n.js)
+   相容：distribution.html (index.js) 與 viewsystem (viewsystem.js)
    ============================================================ */
 const buildingsConfig = [
   { id: "b0", gIdx: 0, nameZht: "1號武器試驗場 (6000)", nameEn: "Prototype 1 (6000)", needVice: false },
@@ -28,6 +29,7 @@ const langPack = {
     btnLogout: "登出",
 
     // 頂部導覽與橫幅
+    introText: "MADE BY TSENG",
     mainTitle: "兵工廠人員分配系統 3.0",
     btnHistoryModal: "📂 編輯歷史紀錄",
     btnViewSystem: "📲 公開檢視頁",
@@ -77,12 +79,23 @@ const langPack = {
     viceTag: "副隊",
     specTitleGather: "⚡ 採集小隊",
     specLabelGather: "負責採集資源",
+    specPowerLabel: "負責採集資源",
     specTitleAmmo: "🎒 子彈小隊",
     specLabelAmmo: "負責提供備用彈藥",
+    specPowerLabelAmmo: "負責提供備用彈藥",
     inlineNamePh: "名字",
     inlinePowerPh: "戰力",
     inlineSpecPh: "輸入名字...",
     removeTip: "移除",
+
+    // 手機版手風琴分組標題 (viewsystem 專用)
+    groupTitles: [
+      "第一組（1號試驗場 & 1號維修站）",
+      "第二組（2號試驗場 & 2號維修站）",
+      "第三組（3號維修站 & 中轉站）",
+      "第四組（4號維修站 & 蒸氣鍋爐）",
+      "特殊小隊（採集 & 子彈）"
+    ],
 
     // 文字複製區
     copyTitle: "📋 文字公告名單（可直接複製貼上至遊戲頻道）",
@@ -145,6 +158,7 @@ const langPack = {
     btnLogout: "Logout",
 
     // Topbar & Banner
+    introText: "MADE BY TSENG",
     mainTitle: "WOS FOUNDRY ALLOCATION 3.0",
     btnHistoryModal: "📂 Edit History",
     btnViewSystem: "📲 Public View",
@@ -194,12 +208,23 @@ const langPack = {
     viceTag: "V-CDR",
     specTitleGather: "⚡ Gathering Squad",
     specLabelGather: "Resource Gathering",
+    specPowerLabel: "Resource Gathering",
     specTitleAmmo: "🎒 Ammo Squad",
     specLabelAmmo: "Ammo Support",
+    specPowerLabelAmmo: "Ammo Support",
     inlineNamePh: "Name",
     inlinePowerPh: "Power",
     inlineSpecPh: "Add name...",
     removeTip: "Remove",
+
+    // Mobile Accordion Titles (for viewsystem)
+    groupTitles: [
+      "Group 1 (Prototype 1 & Repair 1)",
+      "Group 2 (Prototype 2 & Repair 2)",
+      "Group 3 (Repair 3 & Transit)",
+      "Group 4 (Repair 4 & Boiler)",
+      "Special Squads (Gathering & Ammo)"
+    ],
 
     // Text Copy Panel
     copyTitle: "📋 Text Roster (One-click Copy for In-game Chat)",
