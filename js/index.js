@@ -1275,7 +1275,7 @@ function InputTestData() {
   ].join("\n");
 }
 
-// 11. 戰前報名系統一鍵匯入與兼職戰力分流
+// 11. 戰前報名系統一鍵匯入（自動指派最高戰力隊長＋不重疊兼職自動遞補）
 let cachedImportResponses = [];
 
 async function openImportSignupModal() {
@@ -1314,46 +1314,99 @@ async function onImportFormChange(isInit = false) {
 }
 
 function classifySignupsByPower(legion) {
-  // 取得左側已設定的正/副隊長名單，避免重複排入
-  const leaders = new Set();
-  for (let i = 0; i < 4; i++) {
-    const l = document.getElementById(`leaderName${i}`).value.trim();
-    const v = document.getElementById(`viceName${i}`).value.trim();
-    if (l) leaders.add(l);
-    if (v) leaders.add(v);
-  }
-
   const allInLegion = cachedImportResponses.filter((r) => r.legion === legion);
   const subs = allInLegion
     .filter((r) => r.attendance === "sub")
     .sort((a, b) => b.power - a.power);
 
-  // 所有非替補且非正/副隊長的正選成員，全數進入主平衡名單（建築分配）
-  const mainPool = allInLegion
-    .filter((r) => r.attendance !== "sub" && !leaders.has(r.playerName))
+  // 所有非替補的正選成員（依戰力由高到低排序）
+  const regulars = allInLegion
+    .filter((r) => r.attendance !== "sub")
     .sort((a, b) => b.power - a.power);
 
-  // 兼職指派：戰力 7500 ~ 11000 由高到低挑前 8 人兼任採集
-  const gatherPool = mainPool
-    .filter((r) => r.power >= 7500 && r.power <= 11000)
-    .slice(0, 8);
+  // 1. 檢查左側隊長空缺，依戰力由高到低自動指派隊長（優先第 1、2 組試驗場）
+  const manualLeaders = new Set();
+  const manualVices = new Set();
+  for (let i = 0; i < 4; i++) {
+    const l = document.getElementById(`leaderName${i}`).value.trim();
+    const v = document.getElementById(`viceName${i}`).value.trim();
+    if (l) manualLeaders.add(l);
+    if (v) manualVices.add(v);
+  }
 
-  // 兼職指派：戰力 < 7500 由高到低挑前 15 人兼任子彈
-  const ammoPool = mainPool
-    .filter((r) => r.power < 7500)
-    .slice(0, 15);
+  const availableForLeaders = regulars.filter(
+    (r) => !manualLeaders.has(r.playerName) && !manualVices.has(r.playerName)
+  );
 
-  return { mainPool, gatherPool, ammoPool, subs, allInLegion };
+  const assignedLeaders = [null, null, null, null];
+  const assignedLeaderNames = new Set(manualLeaders);
+  let pickIdx = 0;
+
+  for (let i = 0; i < 4; i++) {
+    const existingName = document.getElementById(`leaderName${i}`).value.trim();
+    const existingPower = parseInt(document.getElementById(`leaderPower${i}`).value) || 0;
+    if (existingName) {
+      assignedLeaders[i] = { playerName: existingName, power: existingPower, isManual: true };
+    } else if (pickIdx < availableForLeaders.length) {
+      const candidate = availableForLeaders[pickIdx++];
+      assignedLeaders[i] = { playerName: candidate.playerName, power: candidate.power, isManual: false };
+      assignedLeaderNames.add(candidate.playerName);
+    }
+  }
+
+  // 2. 扣除 4 位正隊長與手動副隊長後，其餘正選成員全數進主平衡名單（建築分配）
+  const mainPool = regulars.filter(
+    (r) => !assignedLeaderNames.has(r.playerName) && !manualVices.has(r.playerName)
+  );
+
+  // 3. 兼職採集小隊（目標 8 人，不與隊長重疊）：
+  // 優先挑 7500 ~ 11000（由高到低），不足 8 人時先拿 < 7500（由高到低）補滿，再不夠拿 > 11000（由低到高）補齊
+  const usedForPartTime = new Set();
+  const gatherPool = [];
+
+  const midBand = mainPool.filter((r) => r.power >= 7500 && r.power <= 11000);
+  const lowBandDesc = mainPool.filter((r) => r.power < 7500);
+  const highBandAsc = [...mainPool.filter((r) => r.power > 11000)].sort((a, b) => a.power - b.power);
+
+  for (const r of [...midBand, ...lowBandDesc, ...highBandAsc]) {
+    if (gatherPool.length >= 8) break;
+    if (!usedForPartTime.has(r.playerName)) {
+      gatherPool.push(r);
+      usedForPartTime.add(r.playerName);
+    }
+  }
+
+  // 4. 兼職子彈小隊（目標 15 人，絕不與採集小隊重疊）：
+  // 優先挑 < 7500（由高到低），不足 15 人時從剩餘人員依戰力由低到高補滿
+  const ammoPool = [];
+  const remainingAsc = [...mainPool]
+    .filter((r) => !usedForPartTime.has(r.playerName))
+    .sort((a, b) => a.power - b.power);
+
+  for (const r of [...lowBandDesc, ...remainingAsc]) {
+    if (ammoPool.length >= 15) break;
+    if (!usedForPartTime.has(r.playerName)) {
+      ammoPool.push(r);
+      usedForPartTime.add(r.playerName);
+    }
+  }
+
+  return { assignedLeaders, mainPool, gatherPool, ammoPool, subs, allInLegion };
 }
 
 function previewImportedSignups() {
   const legion = document.getElementById("importLegionSelect").value;
-  const { mainPool, gatherPool, ammoPool, subs, allInLegion } = classifySignupsByPower(legion);
+  const { assignedLeaders, mainPool, gatherPool, ammoPool, subs, allInLegion } =
+    classifySignupsByPower(legion);
 
   if (allInLegion.length === 0) {
     document.getElementById("importPreviewBox").innerHTML = "此軍團目前尚無人報名。";
     return;
   }
+
+  const leaderLines = assignedLeaders
+    .map((l, idx) => (l ? `第${idx + 1}組：${l.playerName} (${l.power})` : `第${idx + 1}組：(空缺)`))
+    .join(" ｜ ");
 
   const notes = allInLegion
     .filter((r) => r.note || r.attendance === "partial")
@@ -1364,10 +1417,11 @@ function previewImportedSignups() {
     });
 
   let html = `
-    <strong>共 ${allInLegion.length} 人報名（採集與子彈為兼職指派）：</strong><br>
+    <strong>共 ${allInLegion.length} 人報名（自動指派隊長＋兼職不重疊補位）：</strong><br>
+    👑 自動指派隊長（試驗場優先）：<span style="color:#38bdf8;">${leaderLines}</span><br>
     🔥 主平衡名單（全員進建築）：<strong>${mainPool.length}</strong> 人<br>
-    ⚡ 兼任採集（7,500～11,000 前 8 名）：<strong>${gatherPool.length}</strong> 人<br>
-    🎒 兼任子彈（&lt; 7,500 前 15 名）：<strong>${ammoPool.length}</strong> 人<br>
+    ⚡ 兼任採集小隊（不重疊遞補）：<strong>${gatherPool.length}</strong> 人<br>
+    🎒 兼任子彈小隊（不重疊遞補）：<strong>${ammoPool.length}</strong> 人<br>
     🔄 替補待命（不分配、顯示於表格）：<strong>${subs.length}</strong> 人
   `;
 
@@ -1380,13 +1434,23 @@ function previewImportedSignups() {
 
 function applyImportedSignups() {
   const legion = document.getElementById("importLegionSelect").value;
-  const { mainPool, gatherPool, ammoPool, subs, allInLegion } = classifySignupsByPower(legion);
+  const { assignedLeaders, mainPool, gatherPool, ammoPool, subs, allInLegion } =
+    classifySignupsByPower(legion);
 
   if (allInLegion.length === 0) {
     alert("此軍團目前尚無人報名！");
     return;
   }
 
+  // 填入左側 4 組隊長
+  for (let i = 0; i < 4; i++) {
+    if (assignedLeaders[i]) {
+      document.getElementById(`leaderName${i}`).value = assignedLeaders[i].playerName;
+      document.getElementById(`leaderPower${i}`).value = assignedLeaders[i].power;
+    }
+  }
+
+  // 填入右側主平衡名單、兼職採集名單、兼職子彈名單
   document.getElementById("memberInput").value = mainPool
     .map((r) => `${r.playerName} ${r.power}`)
     .join("\n");
@@ -1408,11 +1472,12 @@ function applyImportedSignups() {
   document.getElementById("importSignupModal").style.display = "none";
 
   alert(
-    `✅ 匯入完成！\n\n` +
+    `✅ 匯入與自動指派完成！\n\n` +
+      `👑 已自動指派 4 組隊長（最高戰力優先分配至 1、2 號試驗場）\n` +
       `🔥 主平衡名單（全員進建築）：${mainPool.length} 人\n` +
       `⚡ 兼任採集小隊：${gatherPool.length} 人\n` +
       `🎒 兼任子彈小隊：${ammoPool.length} 人\n` +
       `🔄 替補待命：${subs.length} 人（已排入表格顯示，不參與分配）\n\n` +
-      `確認左側 4 位隊長後，按下「⚡ 立即平衡分配」即可！`
+      `按下「⚡ 立即平衡分配」即可生成完整結果！`
   );
 }
