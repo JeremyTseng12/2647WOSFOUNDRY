@@ -177,7 +177,10 @@
           <section class="panel">
             <div class="panel-header">
               <h2 id="uiMemberTitle">2. 參戰隊員名單</h2>
-              <button type="button" class="btn btn-ghost btn-xs" id="btnLoadTestData" onclick="InputTestData()">填入測試資料</button>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" class="btn btn-outline btn-xs" onclick="openImportSignupModal()">📥 匯入報名名單</button>
+                <button type="button" class="btn btn-ghost btn-xs" id="btnLoadTestData" onclick="InputTestData()">填入測試資料</button>
+              </div>
             </div>
 
             <div class="field-group">
@@ -243,6 +246,39 @@
           </div>
         </section>
       </main>
+    </div>
+
+    <!-- 匯入戰前報名名單視窗 -->
+    <div id="importSignupModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box" style="max-width: 520px;">
+        <div class="modal-head">
+          <h3>📥 匯入戰前報名名單（自動戰力分流）</h3>
+          <button class="close-x" onclick="document.getElementById('importSignupModal').style.display='none'">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="field-group">
+            <label>1. 選擇報名場次：</label>
+            <select id="importFormSelect" onchange="onImportFormChange(false)"></select>
+          </div>
+          <div class="field-group">
+            <label>2. 選擇軍團：</label>
+            <select id="importLegionSelect" onchange="previewImportedSignups()">
+              <option value="LegionA">🛡️ 軍團 1 (Legion 1)</option>
+              <option value="LegionB">⚔️ 軍團 2 (Legion 2)</option>
+            </select>
+          </div>
+          <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px; line-height: 1.5;">
+            ⚙️ 分流規則：排除正/副隊長後，<strong>&gt; 11,000</strong> 全進主名單；<strong>7,500～11,000</strong> 依戰力由高到低挑 8 人採集；<strong>&lt; 7,500</strong> 依戰力由高到低挑 15 人撿子彈；<strong>替補成員</strong>不分配但顯示於表格。
+          </div>
+          <div id="importPreviewBox" style="background: #0d1322; border: 1px solid #243049; padding: 12px; border-radius: 6px; font-size: 0.85rem; color: #cbd5e1; max-height: 240px; overflow-y: auto; line-height: 1.6;">
+            讀取中...
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" onclick="document.getElementById('importSignupModal').style.display='none'">取消</button>
+          <button class="btn btn-primary" onclick="applyImportedSignups()">確認填入並分流</button>
+        </div>
+      </div>
     </div>
 
     <!-- 發布視窗 -->
