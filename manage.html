@@ -54,14 +54,15 @@
 
       <!-- 頁籤導覽 -->
       <nav class="sub-nav">
-        <button class="tab-btn active" onclick="switchTab('dashboard')">
+        <button class="tab-btn active" onclick="switchTab('dashboard', this)">
           系統總覽
         </button>
-        <button class="tab-btn" onclick="switchTab('history')">歷史紀錄</button>
-        <button class="tab-btn supreme-only" onclick="switchTab('users')">
+        <button class="tab-btn" onclick="switchTab('history', this)">歷史紀錄</button>
+        <button class="tab-btn" onclick="switchTab('signup', this)">報名表單</button>
+        <button class="tab-btn supreme-only" onclick="switchTab('users', this)">
           帳號管理
         </button>
-        <button class="tab-btn supreme-only" onclick="switchTab('config')">
+        <button class="tab-btn supreme-only" onclick="switchTab('config', this)">
           系統設定
         </button>
         <a
@@ -125,7 +126,107 @@
           </div>
         </section>
 
-        <!-- 3. 帳號管理 (最高管理員專屬) -->
+        <!-- 3. 報名表單管理 (新增分頁) -->
+        <section id="tabSignup" class="tab-panel">
+          <!-- 建立新場次表單 -->
+          <div style="background: var(--bg-sub); border: 1px solid var(--border-color); border-radius: 6px; padding: 20px; margin-bottom: 24px;">
+            <h3 style="margin-bottom: 6px;">建立新報名表單</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+              表單採用系統固定 6 題格式（暱稱、戰力上限 50000、軍團、出戰確定度、語音、備註），建立後報名頁將自動切換為最新場次。
+            </p>
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr auto; gap: 12px; align-items: end;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>場次標題</label>
+                <input
+                  type="text"
+                  id="newFormTitle"
+                  class="form-control"
+                  placeholder="例：2026/12/06 兵工廠爭奪戰報名"
+                />
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>報名截止日期與時間</label>
+                <input
+                  type="datetime-local"
+                  id="newFormDeadline"
+                  class="form-control"
+                />
+              </div>
+              <button
+                type="button"
+                class="btn-primary"
+                style="height: 41px;"
+                onclick="createNewSignupForm()"
+              >
+                建立表單
+              </button>
+            </div>
+          </div>
+
+          <!-- 查看表單填寫情況與截止設定 -->
+          <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+            <h3>查看表單填寫情況</h3>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <select
+                id="manageFormSelect"
+                class="form-control"
+                style="width: auto; min-width: 240px;"
+                onchange="loadManageSignupDetails()"
+              ></select>
+              <button type="button" class="btn-secondary" onclick="loadManageSignupDetails()">
+                重新整理
+              </button>
+              <button type="button" class="btn-primary" onclick="copySignupLink()">
+                複製報名連結
+              </button>
+            </div>
+          </div>
+
+          <!-- 截止日期設定列 -->
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: var(--bg-sub); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+            <span style="font-weight: 600; font-size: 13px;">截止日期設定：</span>
+            <input
+              type="datetime-local"
+              id="editFormDeadline"
+              class="form-control"
+              style="width: auto;"
+            />
+            <button type="button" class="btn-secondary" onclick="updateFormDeadline('active')">
+              更新截止時間 / 開放
+            </button>
+            <button type="button" class="btn-danger" style="padding: 8px 14px; font-size: 13px;" onclick="updateFormDeadline('closed')">
+              手動立即截止
+            </button>
+            <span id="manageFormStatusBadge" style="margin-left: auto; font-weight: 600; font-size: 13px;"></span>
+          </div>
+
+          <!-- 填寫統計摘要 -->
+          <div id="manageSignupSummary" style="margin-bottom: 14px; font-size: 14px; color: var(--text-main);"></div>
+
+          <!-- 填寫明細表 -->
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>報名軍團</th>
+                  <th>遊戲暱稱</th>
+                  <th>戰力數值</th>
+                  <th>出戰確定度</th>
+                  <th>Discord 語音</th>
+                  <th>備註</th>
+                  <th>填寫時間</th>
+                </tr>
+              </thead>
+              <tbody id="manageSignupTableBody">
+                <tr>
+                  <td colspan="7" class="text-center">載入中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 4. 帳號管理 (最高管理員專屬) -->
         <section id="tabUsers" class="tab-panel supreme-only">
           <div class="panel-header">
             <h3>管理員名冊</h3>
@@ -156,7 +257,7 @@
           </div>
         </section>
 
-        <!-- 4. 系統設定 (最高管理員專屬) -->
+        <!-- 5. 系統設定 (最高管理員專屬) -->
         <section id="tabConfig" class="tab-panel supreme-only">
           <h3>系統設定與公告</h3>
           <div class="config-card">
