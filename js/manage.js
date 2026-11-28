@@ -1,5 +1,5 @@
 const GAS_URL =
-  "https://script.google.com/macros/s/AKfycbx0sfm-dAwGnet_GbaLF-Mc0hjMrau8qJi06g-WDLSvnoYL1Fy5LTEA312cr6XfjqTz/exec";
+  "https://script.google.com/macros/s/AKfycbzAZhQTvjH1XqBRCIgYFaeJAz7arbC5GNsxXyxNAx0oYslzFn9zLJDm4r1gHvZG_Y_3/exec";
 
 let currentUser = null;
 let historyCache = [];
@@ -113,7 +113,7 @@ async function loadDashboardStats() {
 }
 
 // 切換頁籤
-function switchTab(tabName) {
+function switchTab(tabName, btnEl) {
   document
     .querySelectorAll(".tab-panel")
     .forEach((p) => p.classList.remove("active"));
@@ -121,21 +121,22 @@ function switchTab(tabName) {
     .querySelectorAll(".tab-btn")
     .forEach((b) => b.classList.remove("active"));
 
+  if (btnEl) btnEl.classList.add("active");
+
   if (tabName === "dashboard") {
     document.getElementById("tabDashboard").classList.add("active");
-    event.target.classList.add("active");
     loadDashboardStats();
   } else if (tabName === "history") {
     document.getElementById("tabHistory").classList.add("active");
-    event.target.classList.add("active");
     loadHistoryData();
+  } else if (tabName === "signup") {
+    document.getElementById("tabSignup").classList.add("active");
+    loadManageSignupDetails();
   } else if (tabName === "users") {
     document.getElementById("tabUsers").classList.add("active");
-    event.target.classList.add("active");
     loadUsersData();
   } else if (tabName === "config") {
     document.getElementById("tabConfig").classList.add("active");
-    event.target.classList.add("active");
   }
 }
 
@@ -146,7 +147,7 @@ async function loadHistoryData() {
 
   try {
     const response = await fetch(
-      `${GAS_URL}?action=getHistory&includeDeleted=true`,
+      `${GAS_URL}?action=getHistory&includeDeleted=true`
     );
     const result = await response.json();
 
@@ -243,12 +244,169 @@ async function changeRecordStatus(rowIndex, actionType) {
   }
 }
 
+// ============================================================
+// 報名表單管理功能
+// ============================================================
+async function createNewSignupForm() {
+  const title = document.getElementById("newFormTitle").value.trim();
+  const deadline = document.getElementById("newFormDeadline").value;
+
+  if (!title || !deadline) {
+    alert("請填寫場次標題與報名截止時間！");
+    return;
+  }
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "createSignupForm",
+        title,
+        deadline,
+        createdBy: currentUser ? currentUser.displayName : "管理員",
+      }),
+    });
+    const data = await res.json();
+    alert(data.message || "建立完成！");
+    if (data.status === "success") {
+      document.getElementById("newFormTitle").value = "";
+      document.getElementById("newFormDeadline").value = "";
+      loadManageSignupDetails(data.formId);
+    }
+  } catch (err) {
+    alert("建立表單失敗，請檢查網路連線");
+  }
+}
+
+async function loadManageSignupDetails(selectedId = "") {
+  const selectEl = document.getElementById("manageFormSelect");
+  const tbody = document.getElementById("manageSignupTableBody");
+  const queryId = selectedId || (selectEl ? selectEl.value : "");
+
+  tbody.innerHTML = `<tr><td colspan="7" class="text-center">資料載入中...</td></tr>`;
+
+  try {
+    const res = await fetch(
+      `${GAS_URL}?action=getSignupData&formId=${encodeURIComponent(queryId)}&t=${Date.now()}`
+    );
+    const data = await res.json();
+
+    if (selectEl && data.forms) {
+      selectEl.innerHTML = "";
+      for (let i = data.forms.length - 1; i >= 0; i--) {
+        const f = data.forms[i];
+        const opt = document.createElement("option");
+        opt.value = f.formId;
+        opt.innerText = `${f.title} (${f.status === "closed" ? "已截止" : "開放中"})`;
+        selectEl.appendChild(opt);
+      }
+      if (data.activeForm) selectEl.value = data.activeForm.formId;
+    }
+
+    if (!data.activeForm) {
+      document.getElementById("manageSignupSummary").innerText = "目前尚未建立任何報名表單。";
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center">請先於上方建立新報名表單</td></tr>`;
+      return;
+    }
+
+    const form = data.activeForm;
+    document.getElementById("editFormDeadline").value = form.deadline;
+
+    const deadlineMs = new Date(form.deadline).getTime();
+    const isExpired =
+      form.status === "closed" || (!isNaN(deadlineMs) && Date.now() > deadlineMs);
+
+    const statusBadge = document.getElementById("manageFormStatusBadge");
+    statusBadge.innerText = isExpired ? "狀態：已截止" : "狀態：開放報名中";
+    statusBadge.style.color = isExpired ? "#dc2626" : "#03543f";
+
+    const list = data.responses || [];
+    const l1Count = list.filter((r) => r.legion === "LegionA").length;
+    const l2Count = list.filter((r) => r.legion === "LegionB").length;
+
+    document.getElementById("manageSignupSummary").innerHTML =
+      `總報名人數：<strong>${list.length}</strong> 人（軍團 1：<strong>${l1Count}</strong> 人 ｜ 軍團 2：<strong>${l2Count}</strong> 人）`;
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center">目前尚無成員填寫此表單</td></tr>`;
+      return;
+    }
+
+    const attMap = {
+      confirmed: '<span class="status-badge status-active">確定準時</span>',
+      partial: '<span class="status-badge" style="background:#fef3c7; color:#92400e;">遲到 / 早退</span>',
+      sub: '<span class="status-badge status-deleted">可排替補</span>',
+    };
+
+    tbody.innerHTML = list
+      .sort((a, b) => b.power - a.power)
+      .map(
+        (r) => `
+          <tr>
+            <td>${r.legion === "LegionB" ? "⚔️ 軍團 2" : "🛡️ 軍團 1"}</td>
+            <td><strong>${r.playerName}</strong></td>
+            <td><strong>${r.power.toLocaleString()}</strong></td>
+            <td>${attMap[r.attendance] || r.attendance}</td>
+            <td>${r.voice === "yes" ? "🎙️ 可以" : "🔇 無法語音"}</td>
+            <td>${r.note || "-"}</td>
+            <td style="color: var(--text-muted); font-size: 12px;">${r.submitTime}</td>
+          </tr>
+        `
+      )
+      .join("");
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center">讀取失敗</td></tr>`;
+  }
+}
+
+async function updateFormDeadline(statusOverride) {
+  const formId = document.getElementById("manageFormSelect").value;
+  const deadline = document.getElementById("editFormDeadline").value;
+
+  if (!formId) {
+    alert("請先選擇表單！");
+    return;
+  }
+  if (statusOverride === "active" && !deadline) {
+    alert("請設定有效的截止日期與時間！");
+    return;
+  }
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "updateSignupDeadline",
+        formId,
+        deadline,
+        status: statusOverride,
+      }),
+    });
+    const data = await res.json();
+    alert(data.message || "已更新！");
+    loadManageSignupDetails(formId);
+  } catch (err) {
+    alert("更新失敗，請稍後再試");
+  }
+}
+
+function copySignupLink() {
+  const formId = document.getElementById("manageFormSelect").value;
+  const url = `https://jeremytseng12.github.io/2647WOSFOUNDRY/signup.html${
+    formId ? `?formId=${formId}` : ""
+  }`;
+  navigator.clipboard.writeText(url);
+  alert("報名表單連結已複製到剪貼簿：\n" + url);
+}
+
+// ============================================================
 // 載入使用者名冊
+// ============================================================
 async function loadUsersData() {
   const tbody = document.getElementById("usersTableBody");
   try {
     const response = await fetch(
-      `${GAS_URL}?action=getUsers&role=${currentUser.role}`,
+      `${GAS_URL}?action=getUsers&role=${currentUser.role}`
     );
     const result = await response.json();
 
@@ -271,7 +429,7 @@ async function loadUsersData() {
                 ${u.account !== currentUser.account ? `<button class="btn-danger" onclick="deleteUser(${u.rowIndex})">刪除</button>` : "-"}
               </td>
             </tr>
-          `,
+          `
         )
         .join("");
     }
