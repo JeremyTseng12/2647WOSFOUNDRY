@@ -3,7 +3,7 @@
    ============================================================ */
 
 const GAS_WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbx0sfm-dAwGnet_GbaLF-Mc0hjMrau8qJi06g-WDLSvnoYL1Fy5LTEA312cr6XfjqTz/exec";
+  "https://script.google.com/macros/s/AKfycbzAZhQTvjH1XqBRCIgYFaeJAz7arbC5GNsxXyxNAx0oYslzFn9zLJDm4r1gHvZG_Y_3/exec";
 
 let currentUser = null;
 
@@ -18,7 +18,8 @@ let currentData = {
     b4: [], b5: [], b6: [], b7: []
   },
   manualGatherText: "",
-  manualAmmoText: ""
+  manualAmmoText: "",
+  substituteList: [] // 替補成員（不參與分配，僅顯示在表格中）
 };
 
 let currentEditingRowIndex = null;
@@ -538,6 +539,8 @@ function inlineAddPlayer(targetId) {
     const cur = document.getElementById("ammoInput").value.trim();
     document.getElementById("ammoInput").value = cur ? `${cur}\n${name}` : name;
     currentData.manualAmmoText = document.getElementById("ammoInput").value;
+  } else if (targetId === "subs") {
+    currentData.substituteList.push({ name, power, note: "" });
   } else if (currentData.buildings[targetId]) {
     currentData.buildings[targetId].push({
       name,
@@ -565,6 +568,8 @@ function removePlayer(sourceId, idx, event) {
     arr.splice(idx, 1);
     currentData.manualAmmoText = arr.join("\n");
     document.getElementById("ammoInput").value = currentData.manualAmmoText;
+  } else if (sourceId === "subs") {
+    currentData.substituteList.splice(idx, 1);
   } else if (currentData.buildings[sourceId]) {
     currentData.buildings[sourceId].splice(idx, 1);
   }
@@ -579,10 +584,16 @@ function renderAll() {
   const p = langPack[currentData.currentLang];
   const isEn = currentData.currentLang === "en";
 
+  const subCount = (currentData.substituteList || []).length;
+  const subSummaryHtml = subCount > 0
+    ? `<span>${isEn ? "Substitutes:" : "替補待命："} <strong>${subCount}</strong></span>`
+    : "";
+
   document.getElementById("summaryBox").innerHTML = `
     <span>${p.summaryText[0]} <strong>${currentData.totalPeople}</strong></span>
     <span>${p.summaryText[1]} <strong>${currentData.totalPower.toLocaleString()}</strong></span>
     <span>${p.summaryText[2]} <strong>${currentData.avgPower.toLocaleString()}</strong></span>
+    ${subSummaryHtml}
   `;
 
   const grid = document.getElementById("buildingGrid");
@@ -672,6 +683,35 @@ function renderAll() {
     }
   });
 
+  // 若有替補成員，獨立顯示在表格最後一格（不參與分配，僅顯示於表格中）
+  if (currentData.substituteList && currentData.substituteList.length > 0) {
+    const subCard = document.createElement("div");
+    subCard.className = "building-card b-group-spec";
+    subCard.style.borderColor = "#f59e0b";
+
+    const subTagsHtml = currentData.substituteList.map((s, sIdx) => `
+      <div class="player-tag" style="cursor:default;">
+        <span>🔄 ${s.name}${s.note ? ` <small style="color:#94a3b8;">(${s.note})</small>` : ""}</span>
+        <div class="player-right">
+          <span class="player-power-val">${s.power || 0}</span>
+          <button class="btn-del-mini" onclick="removePlayer('subs', ${sIdx}, event)" title="${p.removeTip}">✕</button>
+        </div>
+      </div>
+    `).join("");
+
+    subCard.innerHTML = `
+      <div class="building-title" style="color:#fbbf24;">${isEn ? "🔄 Substitute Roster" : "🔄 替補待命名單"}</div>
+      <div class="building-power">${isEn ? "Standby (Not Allocated)" : "不參與平衡分配・待命替補"}</div>
+      <div class="drop-zone">${subTagsHtml}</div>
+      <div class="inline-add-row">
+        <input type="text" class="in-name" id="inName_subs" placeholder="${p.inlineNamePh}" onkeydown="if(event.key==='Enter') inlineAddPlayer('subs')" />
+        <input type="number" class="in-power" id="inPower_subs" placeholder="${p.inlinePowerPh}" onkeydown="if(event.key==='Enter') inlineAddPlayer('subs')" />
+        <button type="button" class="btn-inline-add" onclick="inlineAddPlayer('subs')">+</button>
+      </div>
+    `;
+    grid.appendChild(subCard);
+  }
+
   updateTextOutputOnly();
 }
 
@@ -709,9 +749,15 @@ function getFormattedText(isEn) {
   if (isEn) {
     out += `[Gathering Squad]:${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (None)"}\n`;
     out += `[Ammo Squad]:${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (None)"}`;
+    if (currentData.substituteList && currentData.substituteList.length > 0) {
+      out += `\n[Substitutes]: ${currentData.substituteList.map((s) => s.name).join(", ")}`;
+    }
   } else {
     out += `【採集小隊】：${currentData.manualGatherText ? "\n" + currentData.manualGatherText : " (無)"}\n`;
     out += `【子彈小隊】：${currentData.manualAmmoText ? "\n" + currentData.manualAmmoText : " (無)"}`;
+    if (currentData.substituteList && currentData.substituteList.length > 0) {
+      out += `\n【替補名單】：${currentData.substituteList.map((s) => s.name).join("、")}`;
+    }
   }
   return out.trim();
 }
@@ -940,7 +986,6 @@ function openLoadHistoryModal() {
         return;
       }
 
-      // 依標題合併分組，收集同一場次的所有 rowIndex
       const mergedMap = {};
       res.history.forEach((item) => {
         const titleKey = (item.title || "未命名分配結果").trim();
@@ -965,7 +1010,7 @@ function openLoadHistoryModal() {
       for (let i = historyRecordsList.length - 1; i >= 0; i--) {
         const group = historyRecordsList[i];
         const option = document.createElement("option");
-        option.value = i; // 對應 historyRecordsList 的索引
+        option.value = i;
         option.innerText = `${group.title} (${group.authors.join(" & ")})`;
         select.appendChild(option);
       }
@@ -981,7 +1026,7 @@ function closeLoadHistoryModal() {
 
 function fetchAndRestoreGridData() {
   const groupIdx = parseInt(document.getElementById("loadHistorySelect").value);
-  const selectedLegion = document.getElementById("loadLegionSelect").value; // "LegionA" 或 "LegionB"
+  const selectedLegion = document.getElementById("loadLegionSelect").value;
   const targetGroup = historyRecordsList[groupIdx];
   if (!targetGroup) return;
 
@@ -990,7 +1035,6 @@ function fetchAndRestoreGridData() {
   btnConfirm.innerText = "載入中...";
   btnConfirm.disabled = true;
 
-  // 同時抓取該標題底下的所有列，確保無論軍團一、二存在同一列或分開兩列都能抓到
   const fetchPromises = targetGroup.rowIndices.map((rIdx) =>
     fetch(`${GAS_WEB_APP_URL}?action=getHistory&rowIndex=${rIdx}&t=${Date.now()}`).then((r) => r.json())
   );
@@ -1014,7 +1058,6 @@ function fetchAndRestoreGridData() {
             matchedRowIndex = rIdx;
             if (res.author) matchedAuthor = res.author;
           } else if (!p.legions && p.buildings && selectedLegion === "LegionA") {
-            // 相容舊版單軍團格式
             foundLegionData = p;
             matchedRowIndex = rIdx;
             if (res.author) matchedAuthor = res.author;
@@ -1029,10 +1072,12 @@ function fetchAndRestoreGridData() {
         currentData.buildings = Object.assign(defaultB, foundLegionData.buildings);
         currentData.manualGatherText = foundLegionData.manualGatherText || "";
         currentData.manualAmmoText = foundLegionData.manualAmmoText || "";
+        currentData.substituteList = foundLegionData.substituteList || [];
       } else {
         currentData.buildings = { b0: [], b1: [], b2: [], b3: [], b4: [], b5: [], b6: [], b7: [] };
         currentData.manualGatherText = "";
         currentData.manualAmmoText = "";
+        currentData.substituteList = [];
         alert(`ℹ️ 此場次目前尚未建立「${legionLabel}」的分配資料。\n\n您現在可以直接輸入名單進行分配，發布時將會自動合併至此場次！`);
       }
 
@@ -1064,6 +1109,7 @@ function fetchAndRestoreGridData() {
       alert("載入紀錄失敗，請稍後再試！");
     });
 }
+
 function exitEditMode() {
   currentEditingRowIndex = null;
   currentEditingTitle = "";
@@ -1151,6 +1197,7 @@ function submitToGoogleSheet() {
     buildings: currentData.buildings,
     manualGatherText: currentData.manualGatherText,
     manualAmmoText: currentData.manualAmmoText,
+    substituteList: currentData.substituteList || [],
     copyTextZht: getFormattedText(false),
     copyTextEn: getFormattedText(true)
   };
@@ -1187,6 +1234,7 @@ function submitToGoogleSheet() {
     });
 }
 
+// 10. 測試用資料（右側補滿 26 位參戰人員）
 function InputTestData() {
   document.getElementById("leaderName0").value = "炙炎梵天";
   document.getElementById("leaderName1").value = "Classic 陀螺";
@@ -1196,6 +1244,178 @@ function InputTestData() {
   document.getElementById("leaderPower1").value = "50000";
   document.getElementById("leaderPower2").value = "35000";
   document.getElementById("leaderPower3").value = "38000";
-  document.getElementById("memberInput").value =
-    "TSENG 8888\nSophia 3089\nLiam 4732\nEmma 3540\nOliver 4891\nAva 3167\nLucas 4423\nMia 3805\nNoah 4158\nIsabella 3290\nJames 4612\nCharlotte 3945\nAlexander 4380\nAmelia 3418\nBenjamin 4073\nHarper 3629";
+  document.getElementById("memberInput").value = [
+    "TSENG 18888",
+    "Oliver 14891",
+    "Liam 14732",
+    "James 14612",
+    "Lucas 14423",
+    "Alexander 14380",
+    "Noah 14158",
+    "Benjamin 14073",
+    "Charlotte 13945",
+    "Mia 13805",
+    "Harper 13629",
+    "Emma 13540",
+    "Amelia 13418",
+    "Isabella 13290",
+    "Ava 13167",
+    "Sophia 13089",
+    "Ethan 12850",
+    "Mason 12610",
+    "Logan 12340",
+    "Elijah 11980",
+    "Aiden 11650",
+    "Jackson 11320",
+    "Evelyn 10890",
+    "Abigail 10450",
+    "Emily 9980",
+    "Madison 9620"
+  ].join("\n");
+}
+
+// 11. 戰前報名系統一鍵匯入與自動戰力分流
+let cachedImportResponses = [];
+
+async function openImportSignupModal() {
+  document.getElementById("importSignupModal").style.display = "flex";
+  document.getElementById("importPreviewBox").innerText = "⏳ 正在讀取雲端報名資料...";
+  await onImportFormChange(true);
+}
+
+async function onImportFormChange(isInit = false) {
+  const selectEl = document.getElementById("importFormSelect");
+  const formId = isInit ? "" : selectEl.value;
+
+  try {
+    const res = await fetch(
+      `${GAS_WEB_APP_URL}?action=getSignupData&formId=${encodeURIComponent(formId)}&t=${Date.now()}`
+    );
+    const data = await res.json();
+
+    if (isInit && data.forms) {
+      selectEl.innerHTML = "";
+      for (let i = data.forms.length - 1; i >= 0; i--) {
+        const f = data.forms[i];
+        const opt = document.createElement("option");
+        opt.value = f.formId;
+        opt.innerText = f.title;
+        selectEl.appendChild(opt);
+      }
+      if (data.activeForm) selectEl.value = data.activeForm.formId;
+    }
+
+    cachedImportResponses = data.responses || [];
+    previewImportedSignups();
+  } catch (err) {
+    document.getElementById("importPreviewBox").innerText = "讀取失敗，請檢查網路連線";
+  }
+}
+
+function classifySignupsByPower(legion) {
+  // 取得左側已設定的正/副隊長名單，避免重複排入
+  const leaders = new Set();
+  for (let i = 0; i < 4; i++) {
+    const l = document.getElementById(`leaderName${i}`).value.trim();
+    const v = document.getElementById(`viceName${i}`).value.trim();
+    if (l) leaders.add(l);
+    if (v) leaders.add(v);
+  }
+
+  const allInLegion = cachedImportResponses.filter((r) => r.legion === legion);
+  const subs = allInLegion
+    .filter((r) => r.attendance === "sub")
+    .sort((a, b) => b.power - a.power);
+
+  const regular = allInLegion
+    .filter((r) => r.attendance !== "sub" && !leaders.has(r.playerName))
+    .sort((a, b) => b.power - a.power);
+
+  // 戰力 > 11000 全進主平衡名單
+  const over11k = regular.filter((r) => r.power > 11000);
+
+  // 戰力 7500 ~ 11000 由高到低挑前 8 人進採集，超過 8 人併入主名單
+  const midBand = regular.filter((r) => r.power >= 7500 && r.power <= 11000);
+  const gatherPool = midBand.slice(0, 8);
+  const midOverflow = midBand.slice(8);
+
+  // 戰力 < 7500 由高到低挑前 15 人進子彈，超過 15 人併入主名單
+  const lowBand = regular.filter((r) => r.power < 7500);
+  const ammoPool = lowBand.slice(0, 15);
+  const lowOverflow = lowBand.slice(15);
+
+  const mainPool = [...over11k, ...midOverflow, ...lowOverflow].sort((a, b) => b.power - a.power);
+
+  return { mainPool, gatherPool, ammoPool, subs, allInLegion };
+}
+
+function previewImportedSignups() {
+  const legion = document.getElementById("importLegionSelect").value;
+  const { mainPool, gatherPool, ammoPool, subs, allInLegion } = classifySignupsByPower(legion);
+
+  if (allInLegion.length === 0) {
+    document.getElementById("importPreviewBox").innerHTML = "此軍團目前尚無人報名。";
+    return;
+  }
+
+  const notes = allInLegion
+    .filter((r) => r.note || r.attendance === "partial")
+    .map((r) => {
+      const tag = r.attendance === "partial" ? "[遲到/早退] " : r.attendance === "sub" ? "[替補] " : "";
+      const mic = r.voice === "yes" ? "🎙️" : "🔇";
+      return `• ${mic} ${r.playerName} (${r.power})：${tag}${r.note}`;
+    });
+
+  let html = `
+    <strong>共 ${allInLegion.length} 人報名（已自動套用戰力分流）：</strong><br>
+    🔥 主平衡名單：<strong>${mainPool.length}</strong> 人<br>
+    ⚡ 採集小隊（7,500～11,000 前 8 名）：<strong>${gatherPool.length}</strong> 人<br>
+    🎒 子彈小隊（&lt; 7,500 前 15 名）：<strong>${ammoPool.length}</strong> 人<br>
+    🔄 替補待命（不分配、顯示於表格）：<strong>${subs.length}</strong> 人
+  `;
+
+  if (notes.length > 0) {
+    html += `<div style="margin-top:8px; padding-top:8px; border-top:1px dashed #243049; color:#fbbf24;"><strong>特別提醒與備註：</strong><br>${notes.join("<br>")}</div>`;
+  }
+
+  document.getElementById("importPreviewBox").innerHTML = html;
+}
+
+function applyImportedSignups() {
+  const legion = document.getElementById("importLegionSelect").value;
+  const { mainPool, gatherPool, ammoPool, subs, allInLegion } = classifySignupsByPower(legion);
+
+  if (allInLegion.length === 0) {
+    alert("此軍團目前尚無人報名！");
+    return;
+  }
+
+  document.getElementById("memberInput").value = mainPool
+    .map((r) => `${r.playerName} ${r.power}`)
+    .join("\n");
+  document.getElementById("gatherInput").value = gatherPool
+    .map((r) => r.playerName)
+    .join("\n");
+  document.getElementById("ammoInput").value = ammoPool
+    .map((r) => r.playerName)
+    .join("\n");
+
+  // 存入替補名單（不參與分配，僅顯示在結果表格與文字公告中）
+  currentData.substituteList = subs.map((s) => ({
+    name: s.playerName,
+    power: s.power,
+    note: s.note || ""
+  }));
+
+  document.getElementById("publishLegionSelect").value = legion;
+  document.getElementById("importSignupModal").style.display = "none";
+
+  alert(
+    `✅ 匯入與戰力分流完成！\n\n` +
+      `🔥 主平衡名單：${mainPool.length} 人\n` +
+      `⚡ 採集小隊：${gatherPool.length} 人\n` +
+      `🎒 子彈小隊：${ammoPool.length} 人\n` +
+      `🔄 替補待命：${subs.length} 人（已排入表格顯示，不參與分配）\n\n` +
+      `確認左側 4 位隊長後，按下「⚡ 立即平衡分配」即可！`
+  );
 }
