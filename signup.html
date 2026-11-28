@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2647 RGN 戰前報名系統</title>
+    <link
+      rel="icon"
+      type="image/webp"
+      href="https://jeremytseng12.github.io/2647WOSFOUNDRY/media/foundry.webp"
+    />
+    <style>
+      :root {
+        --bg-page: #0b0f19;
+        --bg-surface: #111827;
+        --bg-card: #161f33;
+        --bg-input: #0d1322;
+        --border: #243049;
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --accent: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg-page);
+        color: var(--text);
+        font-family: "Noto Sans TC", "Noto Sans HK", -apple-system, BlinkMacSystemFont, sans-serif;
+        min-height: 100vh;
+        padding: 24px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .wrapper {
+        width: 100%;
+        max-width: 560px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      }
+      .top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .badge {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
+      }
+      .deadline-pill {
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+      }
+      .deadline-pill.closed {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.4);
+      }
+      h1 {
+        font-size: 1.35rem;
+        margin-bottom: 6px;
+        color: #fff;
+      }
+      .subtitle {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 20px;
+        line-height: 1.5;
+      }
+      .field {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: #cbd5e1;
+        margin-bottom: 6px;
+      }
+      .req {
+        color: #f87171;
+      }
+      input,
+      select {
+        width: 100%;
+        background: var(--bg-input);
+        border: 1px solid var(--border);
+        color: #fff;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-family: inherit;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+      .hint {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 5px;
+      }
+      .btn-submit {
+        width: 100%;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 13px;
+        font-size: 1rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 6px;
+        transition: background 0.15s;
+      }
+      .btn-submit:hover {
+        background: var(--primary-hover);
+      }
+      .btn-submit:disabled {
+        background: #334155;
+        color: #94a3b8;
+        cursor: not-allowed;
+      }
+      .result-box {
+        display: none;
+        margin-top: 16px;
+        padding: 14px;
+        border-radius: 8px;
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        color: #6ee7b7;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        text-align: center;
+      }
+      .closed-banner {
+        display: none;
+        padding: 18px;
+        border-radius: 8px;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: #fca5a5;
+        text-align: center;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+
+      /* 即時已報名名單看板 */
+      .roster-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      .roster-header h2 {
+        font-size: 1rem;
+        color: #fff;
+      }
+      .btn-refresh {
+        background: #1e293b;
+        color: #cbd5e1;
+        border: 1px solid #334155;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .btn-refresh:hover {
+        background: #283548;
+        color: #fff;
+      }
+      .roster-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 500px) {
+        .roster-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .legion-col {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+      }
+      .legion-col h3 {
+        font-size: 0.88rem;
+        color: #38bdf8;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .player-item {
+        font-size: 0.82rem;
+        padding: 6px 8px;
+        background: var(--bg-input);
+        border-radius: 5px;
+        margin-bottom: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .tag-sub {
+        font-size: 0.7rem;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        margin-left: 4px;
+      }
+      .tag-mic {
+        font-size: 0.72rem;
+        margin-left: 4px;
+      }
+      .footer-sign {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #475569;
+        letter-spacing: 1px;
+        margin-top: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <!-- 報名表單主卡片 -->
+      <div class="card">
+        <div class="top-row">
+          <span class="badge">2647 RGN</span>
+          <span class="deadline-pill" id="deadlineBadge">載入表單資訊中...</span>
+        </div>
+
+        <h1 id="formTitle">⏳ 載入中...</h1>
+        <p class="subtitle">
+          請準確填寫以下 6 項資訊，若戰力更新或需修改，使用相同遊戲暱稱重新送出即可自動覆蓋更新。
+        </p>
+
+        <div id="closedBanner" class="closed-banner">
+          ⛔ 本場次報名已截止，目前僅供檢視已報名名單。
+        </div>
+
+        <form id="signupForm" onsubmit="submitSignup(event)" style="display: none;">
+          <!-- 1. 遊戲暱稱 -->
+          <div class="field">
+            <label>1. 遊戲暱稱 <span class="req">*</span></label>
+            <input type="text" id="playerName" placeholder="請輸入遊戲內完整 ID" required />
+          </div>
+
+          <!-- 2. 出戰戰力數值 (最高 50000) -->
+          <div class="field">
+            <label>2. 出戰戰力數值（最高 50,000） <span class="req">*</span></label>
+            <input
+              type="number"
+              id="playerPower"
+              placeholder="例：4500（上限 50000）"
+              required
+              min="1"
+              max="50000"
+            />
+            <div class="hint">💡 單位為「萬」，最高上限 50,000（例：4,500 萬請填 4500）</div>
+          </div>
+
+          <!-- 3. 報名軍團 -->
+          <div class="field">
+            <label>3. 報名軍團 <span class="req">*</span></label>
+            <select id="playerLegion">
+              <option value="LegionA">🛡️ 軍團 1 (Legion 1)</option>
+              <option value="LegionB">⚔️ 軍團 2 (Legion 2)</option>
+            </select>
+          </div>
+
+          <!-- 4. 出戰確定度 -->
+          <div class="field">
+            <label>4. 出戰確定度 <span class="req">*</span></label>
+            <select id="playerAttendance">
+              <option value="confirmed">✅ 確定準時全程參加</option>
+              <option value="partial">⏰ 可參加，但可能遲到或早退</option>
+              <option value="sub">🔄 不確定，可排替補</option>
+            </select>
+          </div>
+
+          <!-- 5. 是否可上語音 -->
+          <div class="field">
+            <label>5. 是否可上語音（Discord） <span class="req">*</span></label>
+            <select id="playerVoice">
+              <option value="yes">🎙️ 可以（開麥或聽指揮）</option>
+              <option value="no">🔇 無法語音（看頻道文字）</option>
+            </select>
+          </div>
+
+          <!-- 6. 備註 -->
+          <div class="field">
+            <label>6. 備註（選填）</label>
+            <input type="text" id="playerNote" placeholder="例：可能晚 10 分鐘進場、需提早下線..." />
+          </div>
+
+          <button type="submit" class="btn-submit" id="btnSubmit">送出報名</button>
+        </form>
+
+        <div id="resultBox" class="result-box"></div>
+      </div>
+
+      <!-- 即時已報名名單看板 -->
+      <div class="card">
+        <div class="roster-header">
+          <h2>📋 即時已報名名單</h2>
+          <button type="button" class="btn-refresh" onclick="loadActiveForm()">🔄 刷新名單</button>
+        </div>
+        <div class="roster-grid">
+          <div class="legion-col">
+            <h3><span>🛡️ 軍團 1</span> <span id="countL1">0 人</span></h3>
+            <div id="listL1"></div>
+          </div>
+          <div class="legion-col">
+            <h3><span>⚔️ 軍團 2</span> <span id="countL2">0 人</span></h3>
+            <div id="listL2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-sign">SYSTEM MADE BY TSENG</div>
+    </div>
+
+    <script>
+      const GAS_WEB_APP_URL =
+        "https://script.google.com/macros/s/AKfycbzAZhQTvjH1XqBRCIgYFaeJAz7arbC5GNsxXyxNAx0oYslzFn9zLJDm4r1gHvZG_Y_3/exec";
+
+      let currentFormId = "";
+
+      window.addEventListener("load", loadActiveForm);
+
+      async function loadActiveForm() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryFormId = urlParams.get("formId") || "";
+
+        try {
+          const res = await fetch(
+            `${GAS_WEB_APP_URL}?action=getSignupData&formId=${encodeURIComponent(queryFormId)}&t=${Date.now()}`
+          );
+          const data = await res.json();
+
+          if (!data.activeForm) {
+            document.getElementById("formTitle").innerText = "目前尚無開放中的報名表單";
+            document.getElementById("deadlineBadge").innerText = "未開放";
+            document.getElementById("deadlineBadge").classList.add("closed");
+            document.getElementById("signupForm").style.display = "none";
+            return;
+          }
+
+          const form = data.activeForm;
+          currentFormId = form.formId;
+          document.getElementById("formTitle").innerText = form.title;
+
+          const formattedDeadline = form.deadline.replace("T", " ");
+          const deadlineMs = new Date(form.deadline).getTime();
+          const isExpired =
+            form.status === "closed" || (!isNaN(deadlineMs) && Date.now() > deadlineMs);
+
+          const badge = document.getElementById("deadlineBadge");
+          if (isExpired) {
+            badge.innerText = `⛔ 已截止 (${formattedDeadline})`;
+            badge.classList.add("closed");
+            document.getElementById("closedBanner").style.display = "block";
+            document.getElementById("signupForm").style.display = "none";
+          } else {
+            badge.innerText = `⏰ 截止：${formattedDeadline}`;
+            badge.classList.remove("closed");
+            document.getElementById("closedBanner").style.display = "none";
+            document.getElementById("signupForm").style.display = "block";
+          }
+
+          renderLiveRoster(data.responses || []);
+        } catch (err) {
+          document.getElementById("formTitle").innerText = "載入失敗，請重新整理網頁";
+        }
+      }
+
+      function renderLiveRoster(list) {
+        const l1 = list
+          .filter((i) => i.legion === "LegionA")
+          .sort((a, b) => b.power - a.power);
+        const l2 = list
+          .filter((i) => i.legion === "LegionB")
+          .sort((a, b) => b.power - a.power);
+
+        document.getElementById("countL1").innerText = `${l1.length} 人`;
+        document.getElementById("countL2").innerText = `${l2.length} 人`;
+
+        const buildHtml = (arr) => {
+          if (arr.length === 0) {
+            return `<div style="color:#64748b; font-size:0.8rem; text-align:center; padding:12px 0;">尚無人報名</div>`;
+          }
+          return arr
+            .map((p) => {
+              const subTag =
+                p.attendance === "sub"
+                  ? `<span class="tag-sub">替補</span>`
+                  : p.attendance === "partial"
+                    ? `<span class="tag-sub">晚到/早退</span>`
+                    : "";
+              const micIcon =
+                p.voice === "yes" ? `<span class="tag-mic" title="可語音">🎙️</span>` : "";
+              return `
+                <div class="player-item">
+                  <span>${p.playerName}${subTag}${micIcon}</span>
+                  <strong style="color:#34d399;">${p.power}</strong>
+                </div>
+              `;
+            })
+            .join("");
+        };
+
+        document.getElementById("listL1").innerHTML = buildHtml(l1);
+        document.getElementById("listL2").innerHTML = buildHtml(l2);
+      }
+
+      async function submitSignup(e) {
+        e.preventDefault();
+        const powerVal = parseInt(document.getElementById("playerPower").value);
+        if (isNaN(powerVal) || powerVal <= 0 || powerVal > 50000) {
+          alert("⚠️ 戰力數值必須填寫 1 ～ 50,000 之間的數字！");
+          return;
+        }
+
+        const btn = document.getElementById("btnSubmit");
+        const resBox = document.getElementById("resultBox");
+        btn.disabled = true;
+        btn.innerText = "⏳ 送出中...";
+        resBox.style.display = "none";
+
+        const payload = {
+          action: "submitSignup",
+          formId: currentFormId,
+          playerName: document.getElementById("playerName").value.trim(),
+          power: powerVal,
+          legion: document.getElementById("playerLegion").value,
+          attendance: document.getElementById("playerAttendance").value,
+          voice: document.getElementById("playerVoice").value,
+          note: document.getElementById("playerNote").value.trim()
+        };
+
+        try {
+          const res = await fetch(GAS_WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          btn.disabled = false;
+          btn.innerText = "送出報名";
+
+          if (data.status === "success") {
+            resBox.innerHTML = `✅ <strong>${data.message}</strong><br>已同步更新至下方即時報名名單！`;
+            resBox.style.display = "block";
+            loadActiveForm();
+          } else {
+            alert(data.message || "送出失敗！");
+            loadActiveForm();
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerText = "送出報名";
+          alert("網路連線異常，請再試一次！");
+        }
+      }
+    </script>
+  </body>
+</html>
